@@ -98,6 +98,8 @@ ifneq ($(wildcard config-host.mak),)
 include $(SRC_PATH)/Makefile.objs
 endif
 
+include $(SRC_PATH)/Makefile.docs
+
 $(universal-obj-y) $(common-obj-y): $(GENERATED_HEADERS)
 subdir-libcacard: $(oslib-obj-y) $(trace-obj-y) qemu-timer-common.o
 
@@ -209,7 +211,7 @@ qemu-ga$(EXESUF): qemu-ga.o $(qga-obj-y) $(tools-obj-y) $(qapi-obj-y) $(qobject-
 
 QEMULIBS=libhw32 libhw64 libuser libdis libdis-user
 
-clean:
+clean: gtkdoc-clean
 # avoid old build problems by removing potentially incorrect old files
 	rm -f config.mak op-i386.h opc-i386.h gen-op-i386.h op-arm.h opc-arm.h gen-op-arm.h
 	rm -f qemu-options.def

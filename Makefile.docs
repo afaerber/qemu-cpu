@@ -1,0 +1,29 @@
+# -*- Mode: makefile -*-
+
+GTKDOC_SCAN=$(DOC_PREFIX)/gtkdoc-scan
+GTKDOC_MKDB=$(DOC_PREFIX)/gtkdoc-mkdb
+GTKDOC_MKHTML=$(DOC_PREFIX)/gtkdoc-mkhtml
+GTKDOC_FIXXREF=$(DOC_PREFIX)/gtkdoc-fixxref
+
+DOC_SRC=$(wildcard $(SRC_PATH)/include/qemu/*.h)
+
+ifeq ($(wildcard $(DOC_PREFIX)/gtkdoc-scan),)
+gtkdoc:
+	@echo Please set DOC_PREFIX before calling to a built version of:
+	@echo "  git://git.qemu.org/gtk-doc.git"
+	@exit 1
+else
+gtkdoc: html/index.html
+
+html/index.html: $(DOC_SRC)
+	$(GTKDOC_SCAN) --module=QEMU --source-dir=$(SRC_PATH)/include && \
+        cp $(SRC_PATH)/QEMU-docs.xml . && \
+	$(GTKDOC_MKDB) --module=QEMU --output-format=xml --source-dir=$(SRC_PATH)/include && \
+	mkdir -p html && \
+        (cd html && $(GTKDOC_MKHTML) QEMU ../QEMU-docs.xml && cd ..) && \
+	$(GTKDOC_FIXXREF) --module=QEMU --module-dir=html
+endif
+
+gtkdoc-clean:
+	$(RM) -r html xml
+	$(RM) $(SCAN_GEN) sgml.stamp *.bak html.stamp
