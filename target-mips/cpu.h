@@ -478,7 +478,6 @@ struct CPUMIPSState {
     CPUMIPSTLBContext *tlb;
 #endif
 
-    const mips_def_t *cpu_model;
     void *irq[8];
     struct QEMUTimer *timer; /* Internal timer */
 };
@@ -729,6 +728,7 @@ static inline int cpu_has_work(CPUMIPSState *env)
 }
 
 #include "exec-all.h"
+#include "cpu-qom.h"
 
 static inline void cpu_pc_from_tb(CPUMIPSState *env, TranslationBlock *tb)
 {
