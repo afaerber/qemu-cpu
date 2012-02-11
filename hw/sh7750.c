@@ -77,10 +77,11 @@ typedef struct SH7750State {
     struct intc_desc intc;
 } SH7750State;
 
-static inline int has_bcr3_and_bcr4(SH7750State * s)
+static inline int has_bcr3_and_bcr4(SH7750State *s)
 {
-	return (s->cpu->features & SH_FEATURE_BCR3_AND_BCR4);
+    return sh_env_get_cpu(s->cpu)->features & SH_FEATURE_BCR3_AND_BCR4;
 }
+
 /**********************************************************************
  I/O ports
 **********************************************************************/

@@ -49,6 +49,7 @@ typedef struct SuperHCPUClass {
 /**
  * SuperHCPU:
  * @env: #CPUSH4State
+ * @features: CPU feature flags, see #sh_features.
  *
  * A SuperH CPU.
  */
@@ -58,6 +59,8 @@ typedef struct SuperHCPU {
     /*< public >*/
 
     CPUSH4State env;
+
+    uint32_t features;
 } SuperHCPU;
 
 static inline SuperHCPU *sh_env_get_cpu(CPUSH4State *env)
