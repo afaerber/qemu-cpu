@@ -180,107 +180,62 @@ void cpu_dump_state(CPUSH4State * env, FILE * f,
 
 void cpu_state_reset(CPUSH4State *env)
 {
-    if (qemu_loglevel_mask(CPU_LOG_RESET)) {
-        qemu_log("CPU Reset (CPU %d)\n", env->cpu_index);
-        log_cpu_state(env, 0);
-    }
-
-    memset(env, 0, offsetof(CPUSH4State, breakpoints));
-    tlb_flush(env, 1);
-
-    env->pc = 0xA0000000;
-#if defined(CONFIG_USER_ONLY)
-    env->fpscr = FPSCR_PR; /* value for userspace according to the kernel */
-    set_float_rounding_mode(float_round_nearest_even, &env->fp_status); /* ?! */
-#else
-    env->sr = SR_MD | SR_RB | SR_BL | SR_I3 | SR_I2 | SR_I1 | SR_I0;
-    env->fpscr = FPSCR_DN | FPSCR_RM_ZERO; /* CPU reset value according to SH4 manual */
-    set_float_rounding_mode(float_round_to_zero, &env->fp_status);
-    set_flush_to_zero(1, &env->fp_status);
-#endif
-    set_default_nan_mode(1, &env->fp_status);
+    cpu_reset(ENV_GET_CPU(env));
 }
 
-typedef struct {
-    const char *name;
-    int id;
-    uint32_t pvr;
-    uint32_t prr;
-    uint32_t cvr;
-    uint32_t features;
-} sh4_def_t;
+typedef struct SuperHCPUListState {
+    fprintf_function cpu_fprintf;
+    FILE *file;
+} SuperHCPUListState;
 
-static sh4_def_t sh4_defs[] = {
-    {
-	.name = "SH7750R",
-	.id = SH_CPU_SH7750R,
-	.pvr = 0x00050000,
-	.prr = 0x00000100,
-	.cvr = 0x00110000,
-	.features = SH_FEATURE_BCR3_AND_BCR4,
-    }, {
-	.name = "SH7751R",
-	.id = SH_CPU_SH7751R,
-	.pvr = 0x04050005,
-	.prr = 0x00000113,
-	.cvr = 0x00110000,	/* Neutered caches, should be 0x20480000 */
-	.features = SH_FEATURE_BCR3_AND_BCR4,
-    }, {
-	.name = "SH7785",
-	.id = SH_CPU_SH7785,
-	.pvr = 0x10300700,
-	.prr = 0x00000200,
-	.cvr = 0x71440211,
-	.features = SH_FEATURE_SH4A,
-     },
-};
-
-static const sh4_def_t *cpu_sh4_find_by_name(const char *name)
+static gint sh_cpu_list_compare(gconstpointer a, gconstpointer b)
 {
-    int i;
+    ObjectClass *class_a = (ObjectClass *)a;
+    ObjectClass *class_b = (ObjectClass *)b;
 
-    if (strcasecmp(name, "any") == 0)
-	return &sh4_defs[0];
+    return strcasecmp(object_class_get_name(class_a),
+                      object_class_get_name(class_b));
+}
 
-    for (i = 0; i < ARRAY_SIZE(sh4_defs); i++)
-	if (strcasecmp(name, sh4_defs[i].name) == 0)
-	    return &sh4_defs[i];
+static void sh_cpu_list_entry(gpointer data, gpointer user_data)
+{
+    ObjectClass *klass = data;
+    SuperHCPUListState *s = user_data;
 
-    return NULL;
+    (*s->cpu_fprintf)(s->file, "%s\n",
+                      object_class_get_name(klass));
 }
 
 void sh4_cpu_list(FILE *f, fprintf_function cpu_fprintf)
 {
-    int i;
+    SuperHCPUListState s = {
+        .cpu_fprintf = cpu_fprintf,
+        .file = f,
+    };
+    GSList *list;
 
-    for (i = 0; i < ARRAY_SIZE(sh4_defs); i++)
-	(*cpu_fprintf)(f, "%s\n", sh4_defs[i].name);
-}
-
-static void cpu_register(CPUSH4State *env, const sh4_def_t *def)
-{
-    env->pvr = def->pvr;
-    env->prr = def->prr;
-    env->cvr = def->cvr;
-    env->id = def->id;
+    list = object_class_get_list(TYPE_SUPERH_CPU, false);
+    list = g_slist_sort(list, sh_cpu_list_compare);
+    g_slist_foreach(list, sh_cpu_list_entry, &s);
+    g_slist_free(list);
 }
 
 CPUSH4State *cpu_sh4_init(const char *cpu_model)
 {
+    SuperHCPU *cpu;
     CPUSH4State *env;
-    const sh4_def_t *def;
 
-    def = cpu_sh4_find_by_name(cpu_model);
-    if (!def)
-	return NULL;
-    env = g_malloc0(sizeof(CPUSH4State));
-    env->features = def->features;
-    cpu_exec_init(env);
-    env->movcal_backup_tail = &(env->movcal_backup);
+    if (strcasecmp(cpu_model, "any") == 0) {
+        cpu_model = "SH7750R";
+    }
+    if (object_class_by_name(cpu_model) == NULL) {
+        return NULL;
+    }
+    cpu = SUPERH_CPU(object_new(cpu_model));
+    env = &cpu->env;
+
     sh4_translate_init();
-    env->cpu_model_str = cpu_model;
-    cpu_state_reset(env);
-    cpu_register(env, def);
+
     qemu_init_vcpu(env);
     return env;
 }

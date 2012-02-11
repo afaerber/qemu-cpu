@@ -255,6 +255,7 @@ static inline void cpu_clone_regs(CPUSH4State *env, target_ulong newsp)
 #endif
 
 #include "cpu-all.h"
+#include "cpu-qom.h"
 
 /* Memory access type */
 enum {
