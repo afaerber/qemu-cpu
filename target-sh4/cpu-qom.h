@@ -55,6 +55,7 @@ typedef struct SuperHCPUClass {
 
 /**
  * SuperHCPU:
+ * @features: CPU feature flags, see #sh_features.
  * @env: Legacy CPU state.
  *
  * A SuperH CPU.
@@ -63,6 +64,8 @@ typedef struct SuperHCPU {
     /*< private >*/
     CPUState parent_obj;
     /*< public >*/
+
+    uint32_t features;
 
     CPUSH4State env;
 } SuperHCPU;

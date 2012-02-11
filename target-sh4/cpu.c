@@ -94,6 +94,8 @@ static void superh_cpu_initfn(Object *obj)
     SuperHCPUClass *klass = SUPERH_CPU_GET_CLASS(cpu);
     CPUSH4State *env = &cpu->env;
 
+    cpu->features = klass->features;
+
     memset(env, 0, sizeof(CPUSH4State));
     env->cpu_model_str = object_get_typename(obj);
     cpu_exec_init(env);
@@ -102,7 +104,6 @@ static void superh_cpu_initfn(Object *obj)
     env->pvr = klass->pvr;
     env->prr = klass->prr;
     env->cvr = klass->cvr;
-    env->features = klass->features;
 
     env->movcal_backup_tail = &(env->movcal_backup);
 
