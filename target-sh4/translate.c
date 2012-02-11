@@ -1876,6 +1876,7 @@ static inline void
 gen_intermediate_code_internal(CPUSH4State * env, TranslationBlock * tb,
                                int search_pc)
 {
+    SuperHCPU *cpu = sh_env_get_cpu(env);
     DisasContext ctx;
     target_ulong pc_start;
     static uint16_t *gen_opc_end;
@@ -1897,7 +1898,7 @@ gen_intermediate_code_internal(CPUSH4State * env, TranslationBlock * tb,
     ctx.delayed_pc = -1; /* use delayed pc from env pointer */
     ctx.tb = tb;
     ctx.singlestep_enabled = env->singlestep_enabled;
-    ctx.features = env->features;
+    ctx.features = cpu->features;
     ctx.has_movcal = (tb->flags & TB_FLAG_PENDING_MOVCA);
 
     ii = -1;

@@ -157,9 +157,6 @@ typedef struct CPUSH4State {
     /* float point status register */
     float_status fp_status;
 
-    /* The features that we should emulate. See sh_features above.  */
-    uint32_t features;
-
     /* Those belong to the specific unit (SH7750) but are handled here */
     uint32_t mmucr;		/* MMU control register */
     uint32_t pteh;		/* page table entry high register */
