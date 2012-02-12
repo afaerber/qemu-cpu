@@ -245,6 +245,7 @@ static inline void cpu_clone_regs(CPUM68KState *env, target_ulong newsp)
 #endif
 
 #include "cpu-all.h"
+#include "cpu-qom.h"
 
 static inline void cpu_get_tb_cpu_state(CPUM68KState *env, target_ulong *pc,
                                         target_ulong *cs_base, int *flags)
