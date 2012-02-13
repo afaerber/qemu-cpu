@@ -293,6 +293,7 @@ struct CPUAlphaState {
 #define cpu_signal_handler cpu_alpha_signal_handler
 
 #include "cpu-all.h"
+#include "cpu-qom.h"
 
 enum {
     FEATURE_ASN    = 0x00000001,
