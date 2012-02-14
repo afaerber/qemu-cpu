@@ -34,6 +34,7 @@
 
 /**
  * UniCore32CPUClass:
+ * @features: Internal CPU feature flags.
  *
  * A UniCore32 CPU model.
  */
@@ -47,6 +48,8 @@ typedef struct UniCore32CPUClass {
         uint32_t c0_cachetype;
         uint32_t c1_sys;
     } cp0;
+
+    uint32_t features;
 } UniCore32CPUClass;
 
 /**

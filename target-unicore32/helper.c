@@ -14,11 +14,6 @@
 #include "helper.h"
 #include "host-utils.h"
 
-static inline void set_feature(CPUUniCore32State *env, int feature)
-{
-    env->features |= feature;
-}
-
 CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
 {
     UniCore32CPU *cpu;
@@ -35,13 +30,9 @@ CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
     id = env->cp0.c0_cpuid;
     switch (id) {
     case UC32_CPUID_UCV2:
-        set_feature(env, UC32_HWCAP_CMOV);
-        set_feature(env, UC32_HWCAP_UCF64);
         env->ucf64.xregs[UC32_UCF64_FPSCR] = 0;
         break;
     case UC32_CPUID_ANY: /* For userspace emulation.  */
-        set_feature(env, UC32_HWCAP_CMOV);
-        set_feature(env, UC32_HWCAP_UCF64);
         break;
     default:
         cpu_abort(env, "Bad CPU ID: %x\n", id);

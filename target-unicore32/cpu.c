@@ -19,7 +19,10 @@ typedef struct UniCore32CPUInfo {
     uint32_t cp0_c0_cpuid;
     uint32_t cp0_c0_cachetype;
     uint32_t cp0_c1_sys;
+    uint32_t features;
 } UniCore32CPUInfo;
+
+#define UC32_FEATURE(feature) (1u << feature)
 
 static const UniCore32CPUInfo uc32_cpus[] = {
     {
@@ -27,10 +30,14 @@ static const UniCore32CPUInfo uc32_cpus[] = {
         .cp0_c0_cpuid = 0x40010863,
         .cp0_c0_cachetype = 0x1dd20d2,
         .cp0_c1_sys = 0x00090078,
+        .features = UC32_FEATURE(UC32_HWCAP_CMOV) |
+                    UC32_FEATURE(UC32_HWCAP_UCF64),
     },
     {
         .name = "any",
         .cp0_c0_cpuid = 0xffffffff,
+        .features = UC32_FEATURE(UC32_HWCAP_CMOV) |
+                    UC32_FEATURE(UC32_HWCAP_UCF64),
     }
 };
 
@@ -46,6 +53,7 @@ static void uc32_cpu_initfn(Object *obj)
     env->cp0.c0_cpuid = klass->cp0.c0_cpuid;
     env->cp0.c0_cachetype = klass->cp0.c0_cachetype;
     env->cp0.c1_sys = klass->cp0.c1_sys;
+    env->features = klass->features;
 
     env->uncached_asr = ASR_MODE_USER;
     env->regs[31] = 0;
@@ -61,6 +69,7 @@ static void uc32_cpu_class_init(ObjectClass *klass, void *data)
     k->cp0.c0_cpuid = info->cp0_c0_cpuid;
     k->cp0.c0_cachetype = info->cp0_c0_cachetype;
     k->cp0.c1_sys = info->cp0_c1_sys;
+    k->features = info->features;
 }
 
 static void uc32_register_cpu(const UniCore32CPUInfo *info)
