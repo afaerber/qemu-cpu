@@ -45,6 +45,7 @@ typedef struct UniCore32CPUClass {
     struct {
         uint32_t c0_cpuid;
         uint32_t c0_cachetype;
+        uint32_t c1_sys;
     } cp0;
 } UniCore32CPUClass;
 

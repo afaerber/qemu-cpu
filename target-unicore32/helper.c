@@ -38,7 +38,6 @@ CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
         set_feature(env, UC32_HWCAP_CMOV);
         set_feature(env, UC32_HWCAP_UCF64);
         env->ucf64.xregs[UC32_UCF64_FPSCR] = 0;
-        env->cp0.c1_sys = 0x00090078;
         break;
     case UC32_CPUID_ANY: /* For userspace emulation.  */
         set_feature(env, UC32_HWCAP_CMOV);

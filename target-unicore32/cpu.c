@@ -18,6 +18,7 @@ typedef struct UniCore32CPUInfo {
     const char *name;
     uint32_t cp0_c0_cpuid;
     uint32_t cp0_c0_cachetype;
+    uint32_t cp0_c1_sys;
 } UniCore32CPUInfo;
 
 static const UniCore32CPUInfo uc32_cpus[] = {
@@ -25,6 +26,7 @@ static const UniCore32CPUInfo uc32_cpus[] = {
         .name = "UniCore-II",
         .cp0_c0_cpuid = 0x40010863,
         .cp0_c0_cachetype = 0x1dd20d2,
+        .cp0_c1_sys = 0x00090078,
     },
     {
         .name = "any",
@@ -43,6 +45,7 @@ static void uc32_cpu_initfn(Object *obj)
     env->cpu_model_str = object_get_typename(obj);
     env->cp0.c0_cpuid = klass->cp0.c0_cpuid;
     env->cp0.c0_cachetype = klass->cp0.c0_cachetype;
+    env->cp0.c1_sys = klass->cp0.c1_sys;
 
     env->uncached_asr = ASR_MODE_USER;
     env->regs[31] = 0;
@@ -57,6 +60,7 @@ static void uc32_cpu_class_init(ObjectClass *klass, void *data)
 
     k->cp0.c0_cpuid = info->cp0_c0_cpuid;
     k->cp0.c0_cachetype = info->cp0_c0_cachetype;
+    k->cp0.c1_sys = info->cp0_c1_sys;
 }
 
 static void uc32_register_cpu(const UniCore32CPUInfo *info)
