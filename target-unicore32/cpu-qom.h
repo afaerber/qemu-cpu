@@ -49,6 +49,10 @@ typedef struct UniCore32CPUClass {
         uint32_t c1_sys;
     } cp0;
 
+    struct {
+        uint32_t fpscr;
+    } ucf64;
+
     uint32_t features;
 } UniCore32CPUClass;
 

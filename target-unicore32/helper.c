@@ -18,7 +18,6 @@ CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
 {
     UniCore32CPU *cpu;
     CPUUniCore32State *env;
-    uint32_t id;
     static int inited = 1;
 
     if (object_class_by_name(cpu_model) == NULL) {
@@ -26,17 +25,6 @@ CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
     }
     cpu = UNICORE32_CPU(object_new(cpu_model));
     env = &cpu->env;
-
-    id = env->cp0.c0_cpuid;
-    switch (id) {
-    case UC32_CPUID_UCV2:
-        env->ucf64.xregs[UC32_UCF64_FPSCR] = 0;
-        break;
-    case UC32_CPUID_ANY: /* For userspace emulation.  */
-        break;
-    default:
-        cpu_abort(env, "Bad CPU ID: %x\n", id);
-    }
 
     if (inited) {
         inited = 0;
