@@ -18,6 +18,7 @@
     <title>Core Device APIs</title>
     <xi:include href="xml/object.xml"/>
     <xi:include href="xml/qom-qobject.xml"/>
+    <xi:include href="xml/cpu.xml"/>
 
   </chapter>
   <index id="api-index-full">
