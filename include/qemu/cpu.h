@@ -22,9 +22,12 @@
 
 #include "qemu/object.h"
 
+typedef struct CPUClass CPUClass;
+typedef struct CPUState CPUState;
+
 /**
  * SECTION:cpu
- * @section_id: QEMU-cpu
+ * @section_id: QEMU-CPU
  * @title: CPU Class
  * @short_description: Base class for all CPUs
  */
@@ -35,21 +38,19 @@
 #define CPU_CLASS(class) OBJECT_CLASS_CHECK(CPUClass, (class), TYPE_CPU)
 #define CPU_GET_CLASS(obj) OBJECT_GET_CLASS(CPUClass, (obj), TYPE_CPU)
 
-typedef struct CPUState CPUState;
-
 /**
  * CPUClass:
- * @reset: Callback to reset the #CPU to its initial state.
+ * @reset: Callback to reset the CPU to its initial state.
  *
  * Represents a CPU family or model.
  */
-typedef struct CPUClass {
+struct CPUClass {
     /*< private >*/
     ObjectClass parent_class;
     /*< public >*/
 
     void (*reset)(CPUState *cpu);
-} CPUClass;
+};
 
 #ifdef HOST_WORDS_BIGENDIAN
 typedef struct icount_decr_u16 {
