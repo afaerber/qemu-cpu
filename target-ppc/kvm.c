@@ -910,18 +910,11 @@ static void alter_insns(uint64_t *word, uint64_t flags, bool on)
     }
 }
 
-const ppc_def_t *kvmppc_host_cpu_def(void)
+static void kvmppc_host_cpu_class_init(ObjectClass *klass, void *data)
 {
-    uint32_t host_pvr = mfpvr();
-    const ppc_def_t *base_spec;
-    ppc_def_t *spec;
+    PowerPCCPUClass *spec = POWERPC_CPU_CLASS(klass);
     uint32_t vmx = kvmppc_get_vmx();
     uint32_t dfp = kvmppc_get_dfp();
-
-    base_spec = ppc_find_by_pvr(host_pvr);
-
-    spec = g_malloc0(sizeof(*spec));
-    memcpy(spec, base_spec, sizeof(*spec));
 
     /* Now fix up the spec with information we can query from the host */
 
@@ -934,8 +927,6 @@ const ppc_def_t *kvmppc_host_cpu_def(void)
         /* Only override when we know what the host supports */
         alter_insns(&spec->insns_flags2, PPC2_DFP, dfp);
     }
-
-    return spec;
 }
 
 bool kvm_arch_stop_on_emulation_error(CPUPPCState *env)
@@ -952,3 +943,19 @@ int kvm_arch_on_sigbus(int code, void *addr)
 {
     return 1;
 }
+
+static void kvmppc_register_types(void)
+{
+    TypeInfo type = {
+        .name = "host",
+        .instance_size = sizeof(PowerPCCPU),
+        .instance_init = ppc_cpu_initfn,
+        .class_size = sizeof(PowerPCCPUClass),
+        .class_init = kvmppc_host_cpu_class_init,
+    };
+    uint32_t host_pvr = mfpvr();
+    type.parent = ppc_find_by_pvr(host_pvr);
+    type_register_static(&type);
+}
+
+type_init(kvmppc_register_types)

@@ -305,7 +305,6 @@ enum powerpc_input_t {
 #define PPC_INPUT(env) (env->bus_model)
 
 /*****************************************************************************/
-typedef struct ppc_def_t ppc_def_t;
 typedef struct opc_handler_t opc_handler_t;
 
 /*****************************************************************************/
@@ -877,22 +876,6 @@ enum {
 /* The whole PowerPC CPU context */
 #define NB_MMU_MODES 3
 
-struct ppc_def_t {
-    const char *name;
-    uint32_t pvr;
-    uint32_t svr;
-    uint64_t insns_flags;
-    uint64_t insns_flags2;
-    uint64_t msr_mask;
-    powerpc_mmu_t   mmu_model;
-    powerpc_excp_t  excp_model;
-    powerpc_input_t bus_model;
-    uint32_t flags;
-    int bfd_mach;
-    void (*init_proc)(CPUPPCState *env);
-    int  (*check_pow)(CPUPPCState *env);
-};
-
 struct CPUPPCState {
     /* First are the most commonly used resources
      * during translated code execution
@@ -1096,6 +1079,8 @@ struct mmu_ctx_t {
 };
 #endif
 
+#include "cpu-qom.h"
+
 /*****************************************************************************/
 CPUPPCState *cpu_ppc_init (const char *cpu_model);
 void ppc_translate_init(void);
@@ -1142,9 +1127,9 @@ void ppc_store_msr (CPUPPCState *env, target_ulong value);
 
 void ppc_cpu_list (FILE *f, fprintf_function cpu_fprintf);
 
-const ppc_def_t *ppc_find_by_pvr(uint32_t pvr);
-const ppc_def_t *cpu_ppc_find_by_name (const char *name);
-int cpu_ppc_register_internal (CPUPPCState *env, const ppc_def_t *def);
+void ppc_cpu_initfn(Object *obj);
+const char *ppc_find_by_pvr(uint32_t pvr);
+PowerPCCPU *cpu_ppc_find_by_name(const char *name);
 
 /* Time-base and decrementer management */
 #ifndef NO_CPU_IO_DEFS

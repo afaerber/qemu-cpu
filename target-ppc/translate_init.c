@@ -3,6 +3,7 @@
  *
  *  Copyright (c) 2003-2007 Jocelyn Mayer
  *  Copyright 2011 Freescale Semiconductor, Inc.
+ *  Copyright (c) 2012 SUSE LINUX Products GmbH
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,6 +28,7 @@
 #include "gdbstub.h"
 #include <kvm.h>
 #include "kvm_ppc.h"
+#include "cpus.h"
 
 //#define PPC_DUMP_CPU
 //#define PPC_DEBUG_SPR
@@ -7588,6 +7590,51 @@ enum {
 
 /*****************************************************************************/
 /* PowerPC CPU definitions                                                   */
+
+typedef struct PowerPCCPUInfo PowerPCCPUInfo;
+
+struct PowerPCCPUInfo {
+    const char *name;
+    uint32_t pvr;
+    uint32_t svr;
+    uint64_t insns_flags;
+    uint64_t insns_flags2;
+    uint64_t msr_mask;
+    powerpc_mmu_t   mmu_model;
+    powerpc_excp_t  excp_model;
+    powerpc_input_t bus_model;
+    uint32_t flags;
+    int bfd_mach;
+    void (*init_proc)(CPUPPCState *env);
+    int  (*check_pow)(CPUPPCState *env);
+};
+
+static void ppc_cpu_reset(CPUState *cpu);
+
+static void ppc_cpu_class_init(ObjectClass *klass, void *data)
+{
+    CPUClass *cpu_class = CPU_CLASS(klass);
+    PowerPCCPUClass *k = POWERPC_CPU_CLASS(klass);
+    const PowerPCCPUInfo *info = data;
+
+    k->parent_reset = cpu_class->reset;
+    cpu_class->reset = ppc_cpu_reset;
+
+    k->pvr = info->pvr;
+    k->svr = info->svr;
+    k->insns_flags = info->insns_flags;
+    k->insns_flags2 = info->insns_flags2;
+    k->msr_mask = info->msr_mask;
+    k->mmu_model = info->mmu_model;
+    k->excp_model = info->excp_model;
+    k->bus_model = info->bus_model;
+    k->flags = info->flags;
+    k->bfd_mach = info->bfd_mach;
+
+    k->init_proc = info->init_proc;
+    k->check_pow = info->check_pow;
+}
+
 #define POWERPC_DEF_SVR(_name, _pvr, _svr, _type)                             \
     {                                                                         \
         .name         = _name,                                                \
@@ -7607,7 +7654,7 @@ enum {
 #define POWERPC_DEF(_name, _pvr, _type)                                       \
 POWERPC_DEF_SVR(_name, _pvr, POWERPC_SVR_NONE, _type)
 
-static const ppc_def_t ppc_defs[] = {
+static const PowerPCCPUInfo ppc_cpus[] = {
     /* Embedded PowerPC                                                      */
     /* PowerPC 401 family                                                    */
     /* Generic PowerPC 401 */
@@ -9285,7 +9332,7 @@ static const ppc_def_t ppc_defs[] = {
 
 /*****************************************************************************/
 /* Generic CPU instantiation routine                                         */
-static void init_ppc_proc (CPUPPCState *env, const ppc_def_t *def)
+static void init_ppc_proc(CPUPPCState *env, PowerPCCPUClass *def)
 {
 #if !defined(CONFIG_USER_ONLY)
     int i;
@@ -9677,7 +9724,7 @@ static void fix_opcode_tables (opc_handler_t **ppc_opcodes)
 }
 
 /*****************************************************************************/
-static int create_ppc_opcodes (CPUPPCState *env, const ppc_def_t *def)
+static int create_ppc_opcodes(CPUPPCState *env, const PowerPCCPUClass *def)
 {
     opcode_t *opc;
 
@@ -9889,8 +9936,26 @@ static int gdb_set_spe_reg(CPUPPCState *env, uint8_t *mem_buf, int n)
     return 0;
 }
 
-int cpu_ppc_register_internal (CPUPPCState *env, const ppc_def_t *def)
+void ppc_cpu_initfn(Object *obj)
 {
+    PowerPCCPU *cpu = POWERPC_CPU(obj);
+    PowerPCCPUClass *def = POWERPC_CPU_GET_CLASS(cpu);
+    CPUPPCState *env = &cpu->env;
+
+    memset(env, 0, sizeof(*env));
+    cpu_exec_init(env);
+    env->cpu_model_str = object_get_typename(obj);
+
+    /* Adjust cpu index for SMT */
+#if !defined(CONFIG_USER_ONLY)
+    if (kvm_enabled()) {
+        int smt = kvmppc_smt_threads();
+
+        env->cpu_index = (env->cpu_index / smp_threads) * smt
+            + (env->cpu_index % smp_threads);
+    }
+#endif /* !CONFIG_USER_ONLY */
+
     env->msr_mask = def->msr_mask;
     env->mmu_model = def->mmu_model;
     env->excp_model = def->excp_model;
@@ -9916,8 +9981,9 @@ int cpu_ppc_register_internal (CPUPPCState *env, const ppc_def_t *def)
     env->flags = def->flags;
     env->bfd_mach = def->bfd_mach;
     env->check_pow = def->check_pow;
-    if (create_ppc_opcodes(env, def) < 0)
-        return -1;
+    if (create_ppc_opcodes(env, def) < 0) {
+        abort();
+    }
     init_ppc_proc(env, def);
 
     if (def->insns_flags & PPC_FLOAT) {
@@ -10094,11 +10160,64 @@ int cpu_ppc_register_internal (CPUPPCState *env, const ppc_def_t *def)
     dump_ppc_sprs(env);
     fflush(stdout);
 #endif
-
-    return 0;
 }
 
-static bool ppc_cpu_usable(const ppc_def_t *def)
+static void ppc_cpu_reset(CPUState *c)
+{
+    PowerPCCPU *cpu = POWERPC_CPU(c);
+    PowerPCCPUClass *klass = POWERPC_CPU_GET_CLASS(cpu);
+    CPUPPCState *env = &cpu->env;
+    target_ulong msr;
+
+    if (qemu_loglevel_mask(CPU_LOG_RESET)) {
+        qemu_log("CPU Reset (CPU %d)\n", env->cpu_index);
+        log_cpu_state(env, 0);
+    }
+
+    klass->parent_reset(c);
+
+    msr = (target_ulong)0;
+    if (0) {
+        /* XXX: find a suitable condition to enable the hypervisor mode */
+        msr |= (target_ulong)MSR_HVB;
+    }
+    msr |= (target_ulong)0 << MSR_AP; /* TO BE CHECKED */
+    msr |= (target_ulong)0 << MSR_SA; /* TO BE CHECKED */
+    msr |= (target_ulong)1 << MSR_EP;
+#if defined(DO_SINGLE_STEP) && 0
+    /* Single step trace mode */
+    msr |= (target_ulong)1 << MSR_SE;
+    msr |= (target_ulong)1 << MSR_BE;
+#endif
+#if defined(CONFIG_USER_ONLY)
+    msr |= (target_ulong)1 << MSR_FP; /* Allow floating point usage */
+    msr |= (target_ulong)1 << MSR_VR; /* Allow altivec usage */
+    msr |= (target_ulong)1 << MSR_SPE; /* Allow SPE usage */
+    msr |= (target_ulong)1 << MSR_PR;
+#else
+    env->excp_prefix = env->hreset_excp_prefix;
+    env->nip = env->hreset_vector | env->excp_prefix;
+    if (env->mmu_model != POWERPC_MMU_REAL) {
+        ppc_tlb_invalidate_all(env);
+    }
+#endif
+    env->msr = msr & env->msr_mask;
+#if defined(TARGET_PPC64)
+    if (env->mmu_model & POWERPC_MMU_64) {
+        env->msr |= (1ULL << MSR_SF);
+    }
+#endif
+    hreg_compute_hflags(env);
+    env->reserve_addr = (target_ulong)-1ULL;
+    /* Be sure no exception or interrupt is pending */
+    env->pending_interrupts = 0;
+    env->exception_index = POWERPC_EXCP_NONE;
+    env->error_code = 0;
+    /* Flush all TLBs */
+    tlb_flush(env, 1);
+}
+
+static bool ppc_cpu_usable(const PowerPCCPUInfo *def)
 {
 #if defined(TARGET_PPCEMB)
     /* When using the ppcemb target, we only support 440 style cores */
@@ -10110,18 +10229,18 @@ static bool ppc_cpu_usable(const ppc_def_t *def)
     return true;
 }
 
-const ppc_def_t *ppc_find_by_pvr(uint32_t pvr)
+const char *ppc_find_by_pvr(uint32_t pvr)
 {
     int i;
 
-    for (i = 0; i < ARRAY_SIZE(ppc_defs); i++) {
-        if (!ppc_cpu_usable(&ppc_defs[i])) {
+    for (i = 0; i < ARRAY_SIZE(ppc_cpus); i++) {
+        if (!ppc_cpu_usable(&ppc_cpus[i])) {
             continue;
         }
 
         /* If we have an exact match, we're done */
-        if (pvr == ppc_defs[i].pvr) {
-            return &ppc_defs[i];
+        if (pvr == ppc_cpus[i].pvr) {
+            return ppc_cpus[i].name;
         }
     }
 
@@ -10130,14 +10249,13 @@ const ppc_def_t *ppc_find_by_pvr(uint32_t pvr)
 
 #include <ctype.h>
 
-const ppc_def_t *cpu_ppc_find_by_name (const char *name)
+PowerPCCPU *cpu_ppc_find_by_name(const char *name)
 {
-    const ppc_def_t *ret;
     const char *p;
-    int i, max, len;
+    int i, len;
 
-    if (kvm_enabled() && (strcasecmp(name, "host") == 0)) {
-        return kvmppc_host_cpu_def();
+    if (!kvm_enabled() && (strcasecmp(name, "host") == 0)) {
+        return NULL;
     }
 
     /* Check if the given name is a PVR */
@@ -10152,36 +10270,104 @@ const ppc_def_t *cpu_ppc_find_by_name (const char *name)
             if (!qemu_isxdigit(*p++))
                 break;
         }
-        if (i == 8)
-            return ppc_find_by_pvr(strtoul(name, NULL, 16));
-    }
-    ret = NULL;
-    max = ARRAY_SIZE(ppc_defs);
-    for (i = 0; i < max; i++) {
-        if (!ppc_cpu_usable(&ppc_defs[i])) {
-            continue;
-        }
-
-        if (strcasecmp(name, ppc_defs[i].name) == 0) {
-            ret = &ppc_defs[i];
-            break;
+        if (i == 8) {
+            name = ppc_find_by_pvr(strtoul(name, NULL, 16));
+            if (name == NULL) {
+                return NULL;
+            }
         }
     }
 
-    return ret;
+    if (object_class_by_name(name) == NULL) {
+        return NULL;
+    }
+    return POWERPC_CPU(object_new(name));
 }
 
-void ppc_cpu_list (FILE *f, fprintf_function cpu_fprintf)
+typedef struct PowerPCCPUListState {
+    FILE *file;
+    fprintf_function cpu_fprintf;
+} PowerPCCPUListState;
+
+/* Sort by PVR and alphabetically. */
+static gint ppc_cpu_list_compare(gconstpointer a, gconstpointer b)
 {
-    int i, max;
+    PowerPCCPUClass *class_a = POWERPC_CPU_CLASS(a);
+    PowerPCCPUClass *class_b = POWERPC_CPU_CLASS(b);
 
-    max = ARRAY_SIZE(ppc_defs);
-    for (i = 0; i < max; i++) {
-        if (!ppc_cpu_usable(&ppc_defs[i])) {
-            continue;
-        }
-
-        (*cpu_fprintf)(f, "PowerPC %-16s PVR %08x\n",
-                       ppc_defs[i].name, ppc_defs[i].pvr);
+    if (class_a->pvr == class_b->pvr) {
+        return strcasecmp(object_class_get_name(OBJECT_CLASS(class_a)),
+                          object_class_get_name(OBJECT_CLASS(class_b)));
+    } else if (class_a->pvr > class_b->pvr) {
+        return 1;
+    } else {
+        return -1;
     }
 }
+
+static void ppc_cpu_list_entry(gpointer data, gpointer user_data)
+{
+    ObjectClass *klass = data;
+    PowerPCCPUClass *k = POWERPC_CPU_CLASS(klass);
+    PowerPCCPUListState *s = user_data;
+    const char *name;
+
+    name = object_class_get_name(klass);
+    if (strcmp(name, "host") == 0) {
+        return;
+    }
+    (*s->cpu_fprintf)(s->file, "PowerPC %-16s PVR %08x\n",
+                      name, k->pvr);
+}
+
+void ppc_cpu_list(FILE *f, fprintf_function cpu_fprintf)
+{
+    PowerPCCPUListState s = {
+        .file = f,
+        .cpu_fprintf = cpu_fprintf,
+    };
+    GSList *list;
+
+    list = object_class_get_list(TYPE_POWERPC_CPU, false);
+    list = g_slist_sort(list, ppc_cpu_list_compare);
+    g_slist_foreach(list, ppc_cpu_list_entry, &s);
+    g_slist_free(list);
+}
+
+static void ppc_register_cpu(const PowerPCCPUInfo *info)
+{
+    TypeInfo type = {
+        .name = info->name,
+        .parent = TYPE_POWERPC_CPU,
+        .instance_size = sizeof(PowerPCCPU),
+        .instance_init = ppc_cpu_initfn,
+        .class_size = sizeof(PowerPCCPUClass),
+        .class_init = ppc_cpu_class_init,
+        .class_data = (void *)info,
+    };
+
+    type_register_static(&type);
+}
+
+static TypeInfo ppc_cpu_type_info = {
+    .name = TYPE_POWERPC_CPU,
+    .parent = TYPE_CPU,
+    .instance_size = sizeof(PowerPCCPU),
+    .abstract = true,
+    .class_size = sizeof(PowerPCCPUClass),
+};
+
+static void ppc_cpu_register_types(void)
+{
+    int i;
+
+    type_register_static(&ppc_cpu_type_info);
+    for (i = 0; i < ARRAY_SIZE(ppc_cpus); i++) {
+        if (!ppc_cpu_usable(&ppc_cpus[i])) {
+            continue;
+        }
+        ppc_register_cpu(&ppc_cpus[i]);
+    }
+}
+
+type_init(ppc_cpu_register_types)

@@ -3138,85 +3138,31 @@ void cpu_dump_rfi (target_ulong RA, target_ulong msr)
 
 void cpu_state_reset(CPUPPCState *env)
 {
-    target_ulong msr;
-
-    if (qemu_loglevel_mask(CPU_LOG_RESET)) {
-        qemu_log("CPU Reset (CPU %d)\n", env->cpu_index);
-        log_cpu_state(env, 0);
-    }
-
-    msr = (target_ulong)0;
-    if (0) {
-        /* XXX: find a suitable condition to enable the hypervisor mode */
-        msr |= (target_ulong)MSR_HVB;
-    }
-    msr |= (target_ulong)0 << MSR_AP; /* TO BE CHECKED */
-    msr |= (target_ulong)0 << MSR_SA; /* TO BE CHECKED */
-    msr |= (target_ulong)1 << MSR_EP;
-#if defined (DO_SINGLE_STEP) && 0
-    /* Single step trace mode */
-    msr |= (target_ulong)1 << MSR_SE;
-    msr |= (target_ulong)1 << MSR_BE;
-#endif
-#if defined(CONFIG_USER_ONLY)
-    msr |= (target_ulong)1 << MSR_FP; /* Allow floating point usage */
-    msr |= (target_ulong)1 << MSR_VR; /* Allow altivec usage */
-    msr |= (target_ulong)1 << MSR_SPE; /* Allow SPE usage */
-    msr |= (target_ulong)1 << MSR_PR;
-#else
-    env->excp_prefix = env->hreset_excp_prefix;
-    env->nip = env->hreset_vector | env->excp_prefix;
-    if (env->mmu_model != POWERPC_MMU_REAL)
-        ppc_tlb_invalidate_all(env);
-#endif
-    env->msr = msr & env->msr_mask;
-#if defined(TARGET_PPC64)
-    if (env->mmu_model & POWERPC_MMU_64)
-        env->msr |= (1ULL << MSR_SF);
-#endif
-    hreg_compute_hflags(env);
-    env->reserve_addr = (target_ulong)-1ULL;
-    /* Be sure no exception or interrupt is pending */
-    env->pending_interrupts = 0;
-    env->exception_index = POWERPC_EXCP_NONE;
-    env->error_code = 0;
-    /* Flush all TLBs */
-    tlb_flush(env, 1);
+    cpu_reset(ENV_GET_CPU(env));
 }
 
-CPUPPCState *cpu_ppc_init (const char *cpu_model)
+CPUPPCState *cpu_ppc_init(const char *cpu_model)
 {
+    PowerPCCPU *cpu;
     CPUPPCState *env;
-    const ppc_def_t *def;
 
-    def = cpu_ppc_find_by_name(cpu_model);
-    if (!def)
+    cpu = cpu_ppc_find_by_name(cpu_model);
+    if (cpu == NULL) {
         return NULL;
+    }
+    env = &cpu->env;
 
-    env = g_malloc0(sizeof(CPUPPCState));
-    cpu_exec_init(env);
     if (tcg_enabled()) {
         ppc_translate_init();
     }
-    /* Adjust cpu index for SMT */
-#if !defined(CONFIG_USER_ONLY)
-    if (kvm_enabled()) {
-        int smt = kvmppc_smt_threads();
-
-        env->cpu_index = (env->cpu_index / smp_threads)*smt
-            + (env->cpu_index % smp_threads);
-    }
-#endif /* !CONFIG_USER_ONLY */
-    env->cpu_model_str = cpu_model;
-    cpu_ppc_register_internal(env, def);
 
     qemu_init_vcpu(env);
 
     return env;
 }
 
-void cpu_ppc_close (CPUPPCState *env)
+void cpu_ppc_close(CPUPPCState *env)
 {
     /* Should also remove all opcode tables... */
-    g_free(env);
+    object_delete(OBJECT(ppc_env_get_cpu(env)));
 }
