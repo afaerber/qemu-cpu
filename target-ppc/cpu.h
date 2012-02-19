@@ -1128,6 +1128,7 @@ void ppc_store_msr (CPUPPCState *env, target_ulong value);
 void ppc_cpu_list (FILE *f, fprintf_function cpu_fprintf);
 
 void ppc_cpu_initfn(Object *obj);
+void ppc_cpu_finalize(Object *obj);
 const char *ppc_find_by_pvr(uint32_t pvr);
 PowerPCCPU *cpu_ppc_find_by_name(const char *name);
 
