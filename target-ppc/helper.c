@@ -3163,6 +3163,5 @@ CPUPPCState *cpu_ppc_init(const char *cpu_model)
 
 void cpu_ppc_close(CPUPPCState *env)
 {
-    /* Should also remove all opcode tables... */
     object_delete(OBJECT(ppc_env_get_cpu(env)));
 }

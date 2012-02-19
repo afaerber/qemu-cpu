@@ -10217,6 +10217,11 @@ static void ppc_cpu_reset(CPUState *c)
     tlb_flush(env, 1);
 }
 
+void ppc_cpu_finalize(Object *obj)
+{
+    /* Should remove all opcode tables... */
+}
+
 static bool ppc_cpu_usable(const PowerPCCPUInfo *def)
 {
 #if defined(TARGET_PPCEMB)
@@ -10341,6 +10346,7 @@ static void ppc_register_cpu(const PowerPCCPUInfo *info)
         .parent = TYPE_POWERPC_CPU,
         .instance_size = sizeof(PowerPCCPU),
         .instance_init = ppc_cpu_initfn,
+        .instance_finalize = ppc_cpu_finalize,
         .class_size = sizeof(PowerPCCPUClass),
         .class_init = ppc_cpu_class_init,
         .class_data = (void *)info,

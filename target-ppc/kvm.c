@@ -950,6 +950,7 @@ static void kvmppc_register_types(void)
         .name = "host",
         .instance_size = sizeof(PowerPCCPU),
         .instance_init = ppc_cpu_initfn,
+        .instance_finalize = ppc_cpu_finalize,
         .class_size = sizeof(PowerPCCPUClass),
         .class_init = kvmppc_host_cpu_class_init,
     };
