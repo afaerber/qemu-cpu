@@ -237,22 +237,6 @@ typedef struct trap_state {
 } trap_state;
 #endif
 
-typedef struct sparc_def_t {
-    const char *name;
-    target_ulong iu_version;
-    uint32_t fpu_version;
-    uint32_t mmu_version;
-    uint32_t mmu_bm;
-    uint32_t mmu_ctpr_mask;
-    uint32_t mmu_cxr_mask;
-    uint32_t mmu_sfsr_mask;
-    uint32_t mmu_trcr_mask;
-    uint32_t mxcc_version;
-    uint32_t features;
-    uint32_t nwindows;
-    uint32_t maxtl;
-} sparc_def_t;
-
 #define CPU_FEATURE_FLOAT        (1 << 0)
 #define CPU_FEATURE_FLOAT128     (1 << 1)
 #define CPU_FEATURE_SWAP         (1 << 2)
@@ -502,7 +486,6 @@ struct CPUSPARCState {
 #define SOFTINT_INTRMASK (0xFFFE)
 #define SOFTINT_REG_MASK (SOFTINT_STIMER|SOFTINT_INTRMASK|SOFTINT_TIMER)
 #endif
-    sparc_def_t *def;
 
     void *irq_manager;
     void (*qemu_irq_ack)(CPUSPARCState *env, void *irq_manager, int intno);
@@ -510,6 +493,7 @@ struct CPUSPARCState {
     /* Leon3 cache control */
     uint32_t cache_control;
 };
+
 
 #ifndef NO_CPU_IO_DEFS
 /* cpu_init.c */
@@ -619,10 +603,12 @@ int cpu_sparc_signal_handler(int host_signum, void *pinfo, void *puc);
 #define MMU_MODE1_SUFFIX _kernel
 #endif
 
+static inline uint32_t sparc_env_get_features(CPUSPARCState *env);
+
 #if defined (TARGET_SPARC64)
 static inline int cpu_has_hypervisor(CPUSPARCState *env1)
 {
-    return env1->def->features & CPU_FEATURE_HYPV;
+    return sparc_env_get_features(env1) & CPU_FEATURE_HYPV;
 }
 
 static inline int cpu_hypervisor_mode(CPUSPARCState *env1)
@@ -691,6 +677,7 @@ static inline void cpu_clone_regs(CPUSPARCState *env, target_ulong newsp)
 #endif
 
 #include "cpu-all.h"
+#include "cpu-qom.h"
 
 #ifdef TARGET_SPARC64
 /* sun4u.c */
@@ -720,14 +707,14 @@ static inline void cpu_get_tb_cpu_state(CPUSPARCState *env, target_ulong *pc,
     if (env->pstate & PS_AM) {
         *flags |= TB_FLAG_AM_ENABLED;
     }
-    if ((env->def->features & CPU_FEATURE_FLOAT) && (env->pstate & PS_PEF)
-        && (env->fprs & FPRS_FEF)) {
+    if ((sparc_env_get_features(env) & CPU_FEATURE_FLOAT)
+        && (env->pstate & PS_PEF) && (env->fprs & FPRS_FEF)) {
         *flags |= TB_FLAG_FPU_ENABLED;
     }
 #else
     // FPU enable . Supervisor
     *flags = env->psrs;
-    if ((env->def->features & CPU_FEATURE_FLOAT) && env->psref) {
+    if ((sparc_env_get_features(env) & CPU_FEATURE_FLOAT) && env->psref) {
         *flags |= TB_FLAG_FPU_ENABLED;
     }
 #endif

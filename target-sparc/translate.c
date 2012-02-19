@@ -81,7 +81,7 @@ typedef struct DisasContext {
     int singlestep;
     uint32_t cc_op;  /* current CC operation */
     struct TranslationBlock *tb;
-    sparc_def_t *def;
+    SPARCCPU *def;
     TCGv_i32 t32[3];
     int n_t32;
 } DisasContext;
@@ -5250,7 +5250,7 @@ static inline void gen_intermediate_code_internal(TranslationBlock * tb,
     dc->npc = (target_ulong) tb->cs_base;
     dc->cc_op = CC_OP_DYNAMIC;
     dc->mem_idx = cpu_mmu_index(env);
-    dc->def = env->def;
+    dc->def = sparc_env_get_cpu(env);
     dc->fpu_enabled = tb_fpu_enabled(tb->flags);
     dc->address_mask_32bit = tb_am_enabled(tb->flags);
     dc->singlestep = (env->singlestep_enabled || singlestep);
