@@ -3470,50 +3470,63 @@ void cpu_dump_state (CPUCRISState *env, FILE *f, fprintf_function cpu_fprintf,
 
 }
 
-struct
+typedef struct CRISCPUListState {
+    fprintf_function cpu_fprintf;
+    FILE *file;
+} CRISCPUListState;
+
+/* Sort by version. */
+static gint cris_cpu_list_compare(gconstpointer a, gconstpointer b)
 {
-    uint32_t vr;
-    const char *name;
-} cris_cores[] = {
-	{8, "crisv8"},
-	{9, "crisv9"},
-	{10, "crisv10"},
-	{11, "crisv11"},
-	{32, "crisv32"},
-};
+    CRISCPUClass *class_a = CRIS_CPU_CLASS(a);
+    CRISCPUClass *class_b = CRIS_CPU_CLASS(b);
+
+    if (class_a->vr == class_b->vr) {
+        return 0;
+    } else if (class_a->vr > class_b->vr) {
+        return 1;
+    } else {
+        return -1;
+    }
+}
+
+static void cris_cpu_list_entry(gpointer data, gpointer user_data)
+{
+    ObjectClass *klass = data;
+    CRISCPUListState *s = user_data;
+
+    (*s->cpu_fprintf)(s->file, "  %s\n",
+                      object_class_get_name(klass));
+}
 
 void cris_cpu_list(FILE *f, fprintf_function cpu_fprintf)
 {
-    unsigned int i;
+    CRISCPUListState s = {
+        .file = f,
+        .cpu_fprintf = cpu_fprintf,
+    };
+    GSList *list;
 
+    list = object_class_get_list(TYPE_CRIS_CPU, false);
+    list = g_slist_sort(list, cris_cpu_list_compare);
     (*cpu_fprintf)(f, "Available CPUs:\n");
-    for (i = 0; i < ARRAY_SIZE(cris_cores); i++) {
-        (*cpu_fprintf)(f, "  %s\n", cris_cores[i].name);
-    }
+    g_slist_foreach(list, cris_cpu_list_entry, &s);
+    g_slist_free(list);
 }
 
-static uint32_t vr_by_name(const char *name)
+CPUCRISState *cpu_cris_init(const char *cpu_model)
 {
-    unsigned int i;
-    for (i = 0; i < ARRAY_SIZE(cris_cores); i++) {
-        if (strcmp(name, cris_cores[i].name) == 0) {
-            return cris_cores[i].vr;
-        }
-    }
-    return 32;
-}
-
-CPUCRISState *cpu_cris_init (const char *cpu_model)
-{
-	CPUCRISState *env;
+    CRISCPU *cpu;
+    CPUCRISState *env;
 	static int tcg_initialized = 0;
 	int i;
 
-	env = g_malloc0(sizeof(CPUCRISState));
+    if (object_class_by_name(cpu_model) == NULL) {
+        return NULL;
+    }
+    cpu = CRIS_CPU(object_new(cpu_model));
+    env = &cpu->env;
 
-	env->pregs[PR_VR] = vr_by_name(cpu_model);
-	cpu_exec_init(env);
-    cpu_state_reset(env);
 	qemu_init_vcpu(env);
 
 	if (tcg_initialized)
@@ -3575,25 +3588,7 @@ CPUCRISState *cpu_cris_init (const char *cpu_model)
 
 void cpu_state_reset(CPUCRISState *env)
 {
-	uint32_t vr;
-
-	if (qemu_loglevel_mask(CPU_LOG_RESET)) {
-		qemu_log("CPU Reset (CPU %d)\n", env->cpu_index);
-		log_cpu_state(env, 0);
-	}
-
-	vr = env->pregs[PR_VR];
-	memset(env, 0, offsetof(CPUCRISState, breakpoints));
-	env->pregs[PR_VR] = vr;
-	tlb_flush(env, 1);
-
-#if defined(CONFIG_USER_ONLY)
-	/* start in user mode with interrupts enabled.  */
-	env->pregs[PR_CCS] |= U_FLAG | I_FLAG | P_FLAG;
-#else
-	cris_mmu_init(env);
-	env->pregs[PR_CCS] = 0;
-#endif
+    cpu_reset(ENV_GET_CPU(env));
 }
 
 void restore_state_to_opc(CPUCRISState *env, TranslationBlock *tb, int pc_pos)
