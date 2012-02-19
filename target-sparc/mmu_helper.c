@@ -81,6 +81,8 @@ static int get_physical_address(CPUSPARCState *env, target_phys_addr_t *physical
                                 target_ulong address, int rw, int mmu_idx,
                                 target_ulong *page_size)
 {
+    SPARCCPU *cpu = sparc_env_get_cpu(env);
+    SPARCCPUClass *klass = SPARC_CPU_GET_CLASS(cpu);
     int access_perms = 0;
     target_phys_addr_t pde_ptr;
     uint32_t pde;
@@ -92,7 +94,7 @@ static int get_physical_address(CPUSPARCState *env, target_phys_addr_t *physical
     if ((env->mmuregs[0] & MMU_E) == 0) { /* MMU disabled */
         *page_size = TARGET_PAGE_SIZE;
         /* Boot mode: instruction fetches are taken from PROM */
-        if (rw == 2 && (env->mmuregs[0] & env->def->mmu_bm)) {
+        if (rw == 2 && (env->mmuregs[0] & klass->mmu_bm)) {
             *physical = env->prom_addr | (address & 0x7ffffULL);
             *prot = PAGE_READ | PAGE_EXEC;
             return 0;

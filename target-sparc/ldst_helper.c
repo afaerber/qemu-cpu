@@ -444,6 +444,7 @@ static uint64_t leon3_cache_control_ld(CPUSPARCState *env, target_ulong addr,
 uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
                        int sign)
 {
+    SPARCCPU *cpu = sparc_env_get_cpu(env);
     uint64_t ret = 0;
 #if defined(DEBUG_MXCC) || defined(DEBUG_ASI)
     uint32_t last_addr = addr;
@@ -456,7 +457,7 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
         case 0x00:          /* Leon3 Cache Control */
         case 0x08:          /* Leon3 Instruction Cache config */
         case 0x0C:          /* Leon3 Date Cache config */
-            if (env->def->features & CPU_FEATURE_CACHE_CTRL) {
+            if (cpu->features & CPU_FEATURE_CACHE_CTRL) {
                 ret = leon3_cache_control_ld(env, addr, size);
             }
             break;
@@ -703,6 +704,8 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
 void helper_st_asi(CPUSPARCState *env, target_ulong addr, uint64_t val, int asi,
                    int size)
 {
+    SPARCCPU *cpu = sparc_env_get_cpu(env);
+    SPARCCPUClass *klass = SPARC_CPU_GET_CLASS(cpu);
     helper_check_align(env, addr, size - 1);
     switch (asi) {
     case 2: /* SuperSparc MXCC registers and Leon3 cache control */
@@ -710,7 +713,7 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, uint64_t val, int asi,
         case 0x00:          /* Leon3 Cache Control */
         case 0x08:          /* Leon3 Instruction Cache config */
         case 0x0C:          /* Leon3 Date Cache config */
-            if (env->def->features & CPU_FEATURE_CACHE_CTRL) {
+            if (cpu->features & CPU_FEATURE_CACHE_CTRL) {
                 leon3_cache_control_st(env, addr, val, size);
             }
             break;
@@ -860,16 +863,16 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, uint64_t val, int asi,
                     (val & 0x00ffffff);
                 /* Mappings generated during no-fault mode or MMU
                    disabled mode are invalid in normal mode */
-                if ((oldreg & (MMU_E | MMU_NF | env->def->mmu_bm)) !=
-                    (env->mmuregs[reg] & (MMU_E | MMU_NF | env->def->mmu_bm))) {
+                if ((oldreg & (MMU_E | MMU_NF | klass->mmu_bm)) !=
+                    (env->mmuregs[reg] & (MMU_E | MMU_NF | klass->mmu_bm))) {
                     tlb_flush(env, 1);
                 }
                 break;
             case 1: /* Context Table Pointer Register */
-                env->mmuregs[reg] = val & env->def->mmu_ctpr_mask;
+                env->mmuregs[reg] = val & klass->mmu_ctpr_mask;
                 break;
             case 2: /* Context Register */
-                env->mmuregs[reg] = val & env->def->mmu_cxr_mask;
+                env->mmuregs[reg] = val & klass->mmu_cxr_mask;
                 if (oldreg != env->mmuregs[reg]) {
                     /* we flush when the MMU context changes because
                        QEMU has no MMU context support */
@@ -880,11 +883,11 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, uint64_t val, int asi,
             case 4: /* Synchronous Fault Address Register */
                 break;
             case 0x10: /* TLB Replacement Control Register */
-                env->mmuregs[reg] = val & env->def->mmu_trcr_mask;
+                env->mmuregs[reg] = val & klass->mmu_trcr_mask;
                 break;
             case 0x13: /* Synchronous Fault Status Register with Read
                           and Clear */
-                env->mmuregs[3] = val & env->def->mmu_sfsr_mask;
+                env->mmuregs[3] = val & klass->mmu_sfsr_mask;
                 break;
             case 0x14: /* Synchronous Fault Address Register */
                 env->mmuregs[4] = val;

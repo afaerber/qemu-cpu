@@ -300,10 +300,11 @@ static inline uint64_t *get_gregset(CPUSPARCState *env, uint32_t pstate)
 
 void cpu_change_pstate(CPUSPARCState *env, uint32_t new_pstate)
 {
+    SPARCCPU *cpu = sparc_env_get_cpu(env);
     uint32_t pstate_regs, new_pstate_regs;
     uint64_t *src, *dst;
 
-    if (env->def->features & CPU_FEATURE_GL) {
+    if (cpu->features & CPU_FEATURE_GL) {
         /* PS_AG is not implemented in this case */
         new_pstate &= ~PS_AG;
     }

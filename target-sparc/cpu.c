@@ -2,6 +2,7 @@
  * Sparc CPU init helpers
  *
  *  Copyright (c) 2003-2005 Fabrice Bellard
+ *  Copyright (c) 2012 SUSE LINUX Products GmbH
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,18 +18,27 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cpu.h"
+#include "cpu-qom.h"
 
 //#define DEBUG_FEATURES
 
-static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model);
-
 void cpu_state_reset(CPUSPARCState *env)
 {
+    cpu_reset(ENV_GET_CPU(env));
+}
+
+static void sparc_cpu_reset(CPUState *c)
+{
+    SPARCCPU *cpu = SPARC_CPU(c);
+    SPARCCPUClass *klass = SPARC_CPU_GET_CLASS(cpu);
+    CPUSPARCState *env = &cpu->env;
+
     if (qemu_loglevel_mask(CPU_LOG_RESET)) {
         qemu_log("CPU Reset (CPU %d)\n", env->cpu_index);
         log_cpu_state(env, 0);
     }
+
+    klass->parent_reset(c);
 
     memset(env, 0, offsetof(CPUSPARCState, breakpoints));
     tlb_flush(env, 1);
@@ -59,7 +69,7 @@ void cpu_state_reset(CPUSPARCState *env)
     env->lsu = 0;
 #else
     env->mmuregs[0] &= ~(MMU_E | MMU_NF);
-    env->mmuregs[0] |= env->def->mmu_bm;
+    env->mmuregs[0] |= klass->mmu_bm;
 #endif
     env->pc = 0;
     env->npc = env->pc + 4;
@@ -67,60 +77,33 @@ void cpu_state_reset(CPUSPARCState *env)
     env->cache_control = 0;
 }
 
-static int cpu_sparc_register(CPUSPARCState *env, const char *cpu_model)
+static void sparc_cpu_initfn(Object *obj)
 {
-    sparc_def_t def1, *def = &def1;
+    SPARCCPU *cpu = SPARC_CPU(obj);
+    SPARCCPUClass *klass = SPARC_CPU_GET_CLASS(cpu);
+    CPUSPARCState *env = &cpu->env;
 
-    if (cpu_sparc_find_by_name(def, cpu_model) < 0) {
-        return -1;
-    }
-
-    env->def = g_new0(sparc_def_t, 1);
-    memcpy(env->def, def, sizeof(*def));
-#if defined(CONFIG_USER_ONLY)
-    if ((env->def->features & CPU_FEATURE_FLOAT)) {
-        env->def->features |= CPU_FEATURE_FLOAT128;
-    }
-#endif
-    env->cpu_model_str = cpu_model;
-    env->version = def->iu_version;
-    env->fsr = def->fpu_version;
-    env->nwindows = def->nwindows;
-#if !defined(TARGET_SPARC64)
-    env->mmuregs[0] |= def->mmu_version;
-    cpu_sparc_set_id(env, 0);
-    env->mxccregs[7] |= def->mxcc_version;
-#else
-    env->mmu_version = def->mmu_version;
-    env->maxtl = def->maxtl;
-    env->version |= def->maxtl << 8;
-    env->version |= def->nwindows - 1;
-#endif
-    return 0;
-}
-
-static void cpu_sparc_close(CPUSPARCState *env)
-{
-    g_free(env->def);
-    g_free(env);
-}
-
-CPUSPARCState *cpu_sparc_init(const char *cpu_model)
-{
-    CPUSPARCState *env;
-
-    env = g_new0(CPUSPARCState, 1);
+    memset(env, 0, sizeof(*env));
     cpu_exec_init(env);
 
-    gen_intermediate_code_init(env);
-
-    if (cpu_sparc_register(env, cpu_model) < 0) {
-        cpu_sparc_close(env);
-        return NULL;
+#if defined(CONFIG_USER_ONLY)
+    if ((cpu->features & CPU_FEATURE_FLOAT)) {
+        cpu->features |= CPU_FEATURE_FLOAT128;
     }
-    qemu_init_vcpu(env);
-
-    return env;
+#endif
+    env->version = cpu->iu_version;
+    env->fsr = cpu->fpu_version;
+    env->nwindows = cpu->nwindows;
+#if !defined(TARGET_SPARC64)
+    env->mmuregs[0] |= cpu->mmu_version;
+    cpu_sparc_set_id(env, 0);
+    env->mxccregs[7] |= klass->mxcc_version;
+#else
+    env->mmu_version = cpu->mmu_version;
+    env->maxtl = klass->maxtl;
+    env->version |= klass->maxtl << 8;
+    env->version |= cpu->nwindows - 1;
+#endif
 }
 
 void cpu_sparc_set_id(CPUSPARCState *env, unsigned int cpu)
@@ -130,7 +113,48 @@ void cpu_sparc_set_id(CPUSPARCState *env, unsigned int cpu)
 #endif
 }
 
-static const sparc_def_t sparc_defs[] = {
+/* CPU models */
+
+typedef struct SPARCCPUInfo {
+    const char *name;
+    target_ulong iu_version;
+    uint32_t fpu_version;
+    uint32_t mmu_version;
+    uint32_t mmu_bm;
+    uint32_t mmu_ctpr_mask;
+    uint32_t mmu_cxr_mask;
+    uint32_t mmu_sfsr_mask;
+    uint32_t mmu_trcr_mask;
+    uint32_t mxcc_version;
+    uint32_t features;
+    uint32_t nwindows;
+    uint32_t maxtl;
+} SPARCCPUInfo;
+
+static void sparc_cpu_class_init(ObjectClass *klass, void *data)
+{
+    CPUClass *cpu_class = CPU_CLASS(klass);
+    SPARCCPUClass *k = SPARC_CPU_CLASS(klass);
+    const SPARCCPUInfo *info = data;
+
+    k->parent_reset = cpu_class->reset;
+    cpu_class->reset = sparc_cpu_reset;
+
+    k->iu_version = info->iu_version;
+    k->fpu_version = info->fpu_version;
+    k->mmu_version = info->mmu_version;
+    k->mmu_bm = info->mmu_bm;
+    k->mmu_ctpr_mask = info->mmu_ctpr_mask;
+    k->mmu_cxr_mask = info->mmu_cxr_mask;
+    k->mmu_sfsr_mask = info->mmu_sfsr_mask;
+    k->mmu_trcr_mask = info->mmu_trcr_mask;
+    k->mxcc_version = info->mxcc_version;
+    k->features = info->features;
+    k->nwindows = info->nwindows;
+    k->maxtl = info->maxtl;
+}
+
+static const SPARCCPUInfo sparc_cpus[] = {
 #ifdef TARGET_SPARC64
     {
         .name = "Fujitsu Sparc64",
@@ -635,10 +659,9 @@ static void add_flagname_to_bitmaps(const char *flagname, uint32_t *features)
     fprintf(stderr, "CPU feature %s not found\n", flagname);
 }
 
-static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
+static SPARCCPU *cpu_sparc_find_by_name(const char *cpu_model)
 {
-    unsigned int i;
-    const sparc_def_t *def = NULL;
+    SPARCCPU *cpu;
     char *s = strdup(cpu_model);
     char *featurestr, *name = strtok(s, ",");
     uint32_t plus_features = 0;
@@ -646,15 +669,10 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
     uint64_t iu_version;
     uint32_t fpu_version, mmu_version, nwindows;
 
-    for (i = 0; i < ARRAY_SIZE(sparc_defs); i++) {
-        if (strcasecmp(name, sparc_defs[i].name) == 0) {
-            def = &sparc_defs[i];
-        }
-    }
-    if (!def) {
+    if (object_class_by_name(name) == NULL) {
         goto error;
     }
-    memcpy(cpu_def, def, sizeof(*def));
+    cpu = SPARC_CPU(object_new(name));
 
     featurestr = strtok(NULL, ",");
     while (featurestr) {
@@ -674,7 +692,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                     fprintf(stderr, "bad numerical value %s\n", val);
                     goto error;
                 }
-                cpu_def->iu_version = iu_version;
+                cpu->iu_version = iu_version;
 #ifdef DEBUG_FEATURES
                 fprintf(stderr, "iu_version %" PRIx64 "\n", iu_version);
 #endif
@@ -686,7 +704,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                     fprintf(stderr, "bad numerical value %s\n", val);
                     goto error;
                 }
-                cpu_def->fpu_version = fpu_version;
+                cpu->fpu_version = fpu_version;
 #ifdef DEBUG_FEATURES
                 fprintf(stderr, "fpu_version %x\n", fpu_version);
 #endif
@@ -698,7 +716,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                     fprintf(stderr, "bad numerical value %s\n", val);
                     goto error;
                 }
-                cpu_def->mmu_version = mmu_version;
+                cpu->mmu_version = mmu_version;
 #ifdef DEBUG_FEATURES
                 fprintf(stderr, "mmu_version %x\n", mmu_version);
 #endif
@@ -711,7 +729,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                     fprintf(stderr, "bad numerical value %s\n", val);
                     goto error;
                 }
-                cpu_def->nwindows = nwindows;
+                cpu->nwindows = nwindows;
 #ifdef DEBUG_FEATURES
                 fprintf(stderr, "nwindows %d\n", nwindows);
 #endif
@@ -726,37 +744,85 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
         }
         featurestr = strtok(NULL, ",");
     }
-    cpu_def->features |= plus_features;
-    cpu_def->features &= ~minus_features;
+    cpu->features |= plus_features;
+    cpu->features &= ~minus_features;
 #ifdef DEBUG_FEATURES
-    print_features(stderr, fprintf, cpu_def->features, NULL);
+    print_features(stderr, fprintf, cpu->features, NULL);
 #endif
     free(s);
-    return 0;
+    return cpu;
 
  error:
     free(s);
-    return -1;
+    return NULL;
+}
+
+CPUSPARCState *cpu_sparc_init(const char *cpu_model)
+{
+    SPARCCPU *cpu;
+    CPUSPARCState *env;
+
+    cpu = cpu_sparc_find_by_name(cpu_model);
+    if (cpu == NULL) {
+        return NULL;
+    }
+    env = &cpu->env;
+    env->cpu_model_str = cpu_model;
+
+    gen_intermediate_code_init(env);
+
+    qemu_init_vcpu(env);
+
+    return env;
+}
+
+typedef struct SPARCCPUListState {
+    fprintf_function cpu_fprintf;
+    FILE *file;
+} SPARCCPUListState;
+
+/* Sort alphabetically. */
+static gint sparc_cpu_list_compare(gconstpointer a, gconstpointer b)
+{
+    ObjectClass *class_a = (ObjectClass *)a;
+    ObjectClass *class_b = (ObjectClass *)b;
+
+    return strcasecmp(object_class_get_name(class_a),
+                      object_class_get_name(class_b));
+}
+
+static void sparc_cpu_list_entry(gpointer data, gpointer user_data)
+{
+    ObjectClass *klass = data;
+    SPARCCPUClass *k = SPARC_CPU_CLASS(klass);
+    SPARCCPUListState *s = user_data;
+
+    (*s->cpu_fprintf)(s->file, "Sparc %16s IU " TARGET_FMT_lx
+                      " FPU %08x MMU %08x NWINS %d ",
+                      object_class_get_name(klass),
+                      k->iu_version,
+                      k->fpu_version,
+                      k->mmu_version,
+                      k->nwindows);
+    print_features(s->file, s->cpu_fprintf, CPU_DEFAULT_FEATURES &
+                   ~k->features, "-");
+    print_features(s->file, s->cpu_fprintf, ~CPU_DEFAULT_FEATURES &
+                   k->features, "+");
+    (*s->cpu_fprintf)(s->file, "\n");
 }
 
 void sparc_cpu_list(FILE *f, fprintf_function cpu_fprintf)
 {
-    unsigned int i;
+    SPARCCPUListState s = {
+        .file = f,
+        .cpu_fprintf = cpu_fprintf,
+    };
+    GSList *list;
 
-    for (i = 0; i < ARRAY_SIZE(sparc_defs); i++) {
-        (*cpu_fprintf)(f, "Sparc %16s IU " TARGET_FMT_lx
-                       " FPU %08x MMU %08x NWINS %d ",
-                       sparc_defs[i].name,
-                       sparc_defs[i].iu_version,
-                       sparc_defs[i].fpu_version,
-                       sparc_defs[i].mmu_version,
-                       sparc_defs[i].nwindows);
-        print_features(f, cpu_fprintf, CPU_DEFAULT_FEATURES &
-                       ~sparc_defs[i].features, "-");
-        print_features(f, cpu_fprintf, ~CPU_DEFAULT_FEATURES &
-                       sparc_defs[i].features, "+");
-        (*cpu_fprintf)(f, "\n");
-    }
+    list = object_class_get_list(TYPE_SPARC_CPU, false);
+    list = g_slist_sort(list, sparc_cpu_list_compare);
+    g_slist_foreach(list, sparc_cpu_list_entry, &s);
+    g_slist_free(list);
     (*cpu_fprintf)(f, "Default CPU feature flags (use '-' to remove): ");
     print_features(f, cpu_fprintf, CPU_DEFAULT_FEATURES, NULL);
     (*cpu_fprintf)(f, "\n");
@@ -847,3 +913,38 @@ void cpu_dump_state(CPUSPARCState *env, FILE *f, fprintf_function cpu_fprintf,
                 env->fsr, env->y);
 #endif
 }
+
+static void cpu_type_register(const SPARCCPUInfo *info)
+{
+    TypeInfo type = {
+        .name = info->name,
+        .parent = TYPE_SPARC_CPU,
+        .instance_size = sizeof(SPARCCPU),
+        .instance_init = sparc_cpu_initfn,
+        .class_size = sizeof(SPARCCPUClass),
+        .class_init = sparc_cpu_class_init,
+        .class_data = (void *)info,
+    };
+
+    type_register_static(&type);
+}
+
+static const TypeInfo sparc_cpu_info = {
+    .name = TYPE_SPARC_CPU,
+    .parent = TYPE_CPU,
+    .instance_size = sizeof(SPARCCPU),
+    .abstract = true,
+    .class_size = sizeof(SPARCCPUClass),
+};
+
+static void sparc_cpu_register_types(void)
+{
+    int i;
+
+    type_register_static(&sparc_cpu_info);
+    for (i = 0; i < ARRAY_SIZE(sparc_cpus); i++) {
+        cpu_type_register(&sparc_cpus[i]);
+    }
+}
+
+type_init(sparc_cpu_register_types)

@@ -60,6 +60,9 @@ static const char * const excp_names[0x80] = {
 
 void do_interrupt(CPUSPARCState *env)
 {
+#if !defined(CONFIG_USER_ONLY)
+    SPARCCPU *cpu = sparc_env_get_cpu(env);
+#endif
     int cwp, intno = env->exception_index;
 
 #ifdef DEBUG_PCALL
@@ -102,7 +105,7 @@ void do_interrupt(CPUSPARCState *env)
 #if !defined(CONFIG_USER_ONLY)
     if (env->psret == 0) {
         if (env->exception_index == 0x80 &&
-            env->def->features & CPU_FEATURE_TA0_SHUTDOWN) {
+            cpu->features & CPU_FEATURE_TA0_SHUTDOWN) {
             qemu_system_shutdown_request();
         } else {
             cpu_abort(env, "Trap 0x%02x while interrupts disabled, Error state",
