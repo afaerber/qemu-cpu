@@ -80,139 +80,57 @@ void do_interrupt(CPULM32State *env)
     }
 }
 
-typedef struct {
-    const char *name;
-    uint32_t revision;
-    uint8_t num_interrupts;
-    uint8_t num_breakpoints;
-    uint8_t num_watchpoints;
-    uint32_t features;
-} LM32Def;
+typedef struct LM32CPUListState {
+    fprintf_function cpu_fprintf;
+    FILE *file;
+} LM32CPUListState;
 
-static const LM32Def lm32_defs[] = {
-    {
-        .name = "lm32-basic",
-        .revision = 3,
-        .num_interrupts = 32,
-        .num_breakpoints = 4,
-        .num_watchpoints = 4,
-        .features = (LM32_FEATURE_SHIFT
-                     | LM32_FEATURE_SIGN_EXTEND
-                     | LM32_FEATURE_CYCLE_COUNT),
-    },
-    {
-        .name = "lm32-standard",
-        .revision = 3,
-        .num_interrupts = 32,
-        .num_breakpoints = 4,
-        .num_watchpoints = 4,
-        .features = (LM32_FEATURE_MULTIPLY
-                     | LM32_FEATURE_DIVIDE
-                     | LM32_FEATURE_SHIFT
-                     | LM32_FEATURE_SIGN_EXTEND
-                     | LM32_FEATURE_I_CACHE
-                     | LM32_FEATURE_CYCLE_COUNT),
-    },
-    {
-        .name = "lm32-full",
-        .revision = 3,
-        .num_interrupts = 32,
-        .num_breakpoints = 4,
-        .num_watchpoints = 4,
-        .features = (LM32_FEATURE_MULTIPLY
-                     | LM32_FEATURE_DIVIDE
-                     | LM32_FEATURE_SHIFT
-                     | LM32_FEATURE_SIGN_EXTEND
-                     | LM32_FEATURE_I_CACHE
-                     | LM32_FEATURE_D_CACHE
-                     | LM32_FEATURE_CYCLE_COUNT),
-    }
-};
+/* Sort alphabetically. */
+static gint lm32_cpu_list_compare(gconstpointer a, gconstpointer b)
+{
+    ObjectClass *class_a = OBJECT_CLASS(a);
+    ObjectClass *class_b = OBJECT_CLASS(b);
+
+    return strcasecmp(object_class_get_name(class_a),
+                      object_class_get_name(class_b));
+}
+
+static void lm32_cpu_list_entry(gpointer data, gpointer user_data)
+{
+    ObjectClass *klass = data;
+    LM32CPUListState *s = user_data;
+
+    (*s->cpu_fprintf)(s->file, "  %s\n",
+                      object_class_get_name(klass));
+}
 
 void cpu_lm32_list(FILE *f, fprintf_function cpu_fprintf)
 {
-    int i;
+    LM32CPUListState s = {
+        .file = f,
+        .cpu_fprintf = cpu_fprintf,
+    };
+    GSList *list;
 
+    list = object_class_get_list(TYPE_LM32_CPU, false);
+    list = g_slist_sort(list, lm32_cpu_list_compare);
     cpu_fprintf(f, "Available CPUs:\n");
-    for (i = 0; i < ARRAY_SIZE(lm32_defs); i++) {
-        cpu_fprintf(f, "  %s\n", lm32_defs[i].name);
-    }
-}
-
-static const LM32Def *cpu_lm32_find_by_name(const char *name)
-{
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(lm32_defs); i++) {
-        if (strcasecmp(name, lm32_defs[i].name) == 0) {
-            return &lm32_defs[i];
-        }
-    }
-
-    return NULL;
-}
-
-static uint32_t cfg_by_def(const LM32Def *def)
-{
-    uint32_t cfg = 0;
-
-    if (def->features & LM32_FEATURE_MULTIPLY) {
-        cfg |= CFG_M;
-    }
-
-    if (def->features & LM32_FEATURE_DIVIDE) {
-        cfg |= CFG_D;
-    }
-
-    if (def->features & LM32_FEATURE_SHIFT) {
-        cfg |= CFG_S;
-    }
-
-    if (def->features & LM32_FEATURE_SIGN_EXTEND) {
-        cfg |= CFG_X;
-    }
-
-    if (def->features & LM32_FEATURE_I_CACHE) {
-        cfg |= CFG_IC;
-    }
-
-    if (def->features & LM32_FEATURE_D_CACHE) {
-        cfg |= CFG_DC;
-    }
-
-    if (def->features & LM32_FEATURE_CYCLE_COUNT) {
-        cfg |= CFG_CC;
-    }
-
-    cfg |= (def->num_interrupts << CFG_INT_SHIFT);
-    cfg |= (def->num_breakpoints << CFG_BP_SHIFT);
-    cfg |= (def->num_watchpoints << CFG_WP_SHIFT);
-    cfg |= (def->revision << CFG_REV_SHIFT);
-
-    return cfg;
+    g_slist_foreach(list, lm32_cpu_list_entry, &s);
+    g_slist_free(list);
 }
 
 CPULM32State *cpu_lm32_init(const char *cpu_model)
 {
+    LM32CPU *cpu;
     CPULM32State *env;
-    const LM32Def *def;
     static int tcg_initialized;
 
-    def = cpu_lm32_find_by_name(cpu_model);
-    if (!def) {
+    if (object_class_by_name(cpu_model) == NULL) {
         return NULL;
     }
+    cpu = LM32_CPU(object_new(cpu_model));
+    env = &cpu->env;
 
-    env = g_malloc0(sizeof(CPULM32State));
-
-    env->features = def->features;
-    env->num_bps = def->num_breakpoints;
-    env->num_wps = def->num_watchpoints;
-    env->cfg = cfg_by_def(def);
-    env->flags = 0;
-
-    cpu_exec_init(env);
-    cpu_state_reset(env);
     qemu_init_vcpu(env);
 
     if (!tcg_initialized) {
