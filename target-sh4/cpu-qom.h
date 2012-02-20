@@ -77,5 +77,7 @@ static inline SuperHCPU *sh_env_get_cpu(CPUSH4State *env)
 
 #define ENV_GET_CPU(e) CPU(sh_env_get_cpu(e))
 
+#define ENV_OFFSET offsetof(SuperHCPU, env)
+
 
 #endif

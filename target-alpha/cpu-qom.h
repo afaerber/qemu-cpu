@@ -70,5 +70,7 @@ static inline AlphaCPU *alpha_env_get_cpu(CPUAlphaState *env)
 
 #define ENV_GET_CPU(e) CPU(alpha_env_get_cpu(e))
 
+#define ENV_OFFSET offsetof(AlphaCPU, env)
+
 
 #endif

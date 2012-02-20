@@ -80,5 +80,7 @@ static inline PowerPCCPU *ppc_env_get_cpu(CPUPPCState *env)
 
 #define ENV_GET_CPU(e) CPU(ppc_env_get_cpu(e))
 
+#define ENV_OFFSET offsetof(PowerPCCPU, env)
+
 
 #endif
