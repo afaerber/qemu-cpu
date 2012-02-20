@@ -570,15 +570,15 @@ int cpu_exec(CPUArchState *env)
                         /* Restore PC.  */
                         cpu_pc_from_tb(env, tb);
                         insns_left = cpu->icount_decr.u32;
-                        if (env->icount_extra && insns_left >= 0) {
+                        if (cpu->icount_extra && insns_left >= 0) {
                             /* Refill decrementer and continue execution.  */
-                            env->icount_extra += insns_left;
-                            if (env->icount_extra > 0xffff) {
+                            cpu->icount_extra += insns_left;
+                            if (cpu->icount_extra > 0xffff) {
                                 insns_left = 0xffff;
                             } else {
-                                insns_left = env->icount_extra;
+                                insns_left = cpu->icount_extra;
                             }
-                            env->icount_extra -= insns_left;
+                            cpu->icount_extra -= insns_left;
                             cpu->icount_decr.u16.low = insns_left;
                         } else {
                             if (insns_left > 0) {

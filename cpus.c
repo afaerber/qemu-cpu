@@ -97,7 +97,7 @@ int64_t cpu_get_icount(void)
         if (!can_do_io(env)) {
             fprintf(stderr, "Bad clock read\n");
         }
-        icount -= (cpu->icount_decr.u16.low + env->icount_extra);
+        icount -= (cpu->icount_decr.u16.low + cpu->icount_extra);
     }
     return qemu_icount_bias + (icount << icount_time_shift);
 }
@@ -1011,15 +1011,15 @@ static int tcg_cpu_exec(CPUArchState *env)
     if (use_icount) {
         int64_t count;
         int decr;
-        qemu_icount -= (cpu->icount_decr.u16.low + env->icount_extra);
+        qemu_icount -= (cpu->icount_decr.u16.low + cpu->icount_extra);
         cpu->icount_decr.u16.low = 0;
-        env->icount_extra = 0;
+        cpu->icount_extra = 0;
         count = qemu_icount_round(qemu_clock_deadline(vm_clock));
         qemu_icount += count;
         decr = (count > 0xffff) ? 0xffff : count;
         count -= decr;
         cpu->icount_decr.u16.low = decr;
-        env->icount_extra = count;
+        cpu->icount_extra = count;
     }
     ret = cpu_exec(env);
 #ifdef CONFIG_PROFILER
@@ -1029,9 +1029,9 @@ static int tcg_cpu_exec(CPUArchState *env)
         /* Fold pending instructions back into the
            instruction counter, and clear the interrupt flag.  */
         qemu_icount -= (cpu->icount_decr.u16.low
-                        + env->icount_extra);
+                        + cpu->icount_extra);
         cpu->icount_decr.u32 = 0;
-        env->icount_extra = 0;
+        cpu->icount_extra = 0;
     }
     return ret;
 }

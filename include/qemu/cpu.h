@@ -65,6 +65,7 @@ typedef struct icount_decr_u16 {
 
 /**
  * CPUState:
+ * @icount_extra: Instructions until next timer event.
  * @icount_decr: Number of cycles left, with interrupt flag in high bit.
  * This allows a single read-compare-cbranch-write sequence to test
  * for both decrementer underflow and exceptions.
@@ -76,6 +77,7 @@ struct CPUState {
     Object parent_obj;
     /*< public >*/
 
+    int64_t icount_extra;
     union {
         uint32_t u32;
         icount_decr_u16 u16;

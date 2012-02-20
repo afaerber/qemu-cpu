@@ -166,7 +166,6 @@ typedef struct CPUWatchpoint {
     /* buffer for temporaries in the code generator */                  \
     long temp_buf[CPU_TEMP_BUF_NLONGS];                                 \
                                                                         \
-    int64_t icount_extra; /* Instructions until next timer event.  */   \
     uint32_t can_do_io; /* nonzero if memory mapped IO is safe.  */     \
                                                                         \
     /* from this point: preserved by CPU reset */                       \
