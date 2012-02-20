@@ -122,18 +122,6 @@ extern int CPUTLBEntry_wrong_size[sizeof(CPUTLBEntry) == (1 << CPU_TLB_ENTRY_BIT
 #endif
 
 
-#ifdef HOST_WORDS_BIGENDIAN
-typedef struct icount_decr_u16 {
-    uint16_t high;
-    uint16_t low;
-} icount_decr_u16;
-#else
-typedef struct icount_decr_u16 {
-    uint16_t low;
-    uint16_t high;
-} icount_decr_u16;
-#endif
-
 struct kvm_run;
 struct KVMState;
 struct qemu_work_item;
@@ -179,13 +167,6 @@ typedef struct CPUWatchpoint {
     long temp_buf[CPU_TEMP_BUF_NLONGS];                                 \
                                                                         \
     int64_t icount_extra; /* Instructions until next timer event.  */   \
-    /* Number of cycles left, with interrupt flag in high bit.          \
-       This allows a single read-compare-cbranch-write sequence to test \
-       for both decrementer underflow and exceptions.  */               \
-    union {                                                             \
-        uint32_t u32;                                                   \
-        icount_decr_u16 u16;                                            \
-    } icount_decr;                                                      \
     uint32_t can_do_io; /* nonzero if memory mapped IO is safe.  */     \
                                                                         \
     /* from this point: preserved by CPU reset */                       \

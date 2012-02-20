@@ -183,6 +183,7 @@ volatile sig_atomic_t exit_request;
 
 int cpu_exec(CPUArchState *env)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     int ret, interrupt_request;
     TranslationBlock *tb;
     uint8_t *tc_ptr;
@@ -568,7 +569,7 @@ int cpu_exec(CPUArchState *env)
                         tb = (TranslationBlock *)(next_tb & ~3);
                         /* Restore PC.  */
                         cpu_pc_from_tb(env, tb);
-                        insns_left = env->icount_decr.u32;
+                        insns_left = cpu->icount_decr.u32;
                         if (env->icount_extra && insns_left >= 0) {
                             /* Refill decrementer and continue execution.  */
                             env->icount_extra += insns_left;
@@ -578,7 +579,7 @@ int cpu_exec(CPUArchState *env)
                                 insns_left = env->icount_extra;
                             }
                             env->icount_extra -= insns_left;
-                            env->icount_decr.u16.low = insns_left;
+                            cpu->icount_decr.u16.low = insns_left;
                         } else {
                             if (insns_left > 0) {
                                 /* Execute remaining instructions.  */

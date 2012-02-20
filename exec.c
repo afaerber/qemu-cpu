@@ -1718,6 +1718,7 @@ static void cpu_unlink_tb(CPUArchState *env)
 /* mask must never be zero, except for A20 change call */
 static void tcg_handle_interrupt(CPUArchState *env, int mask)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     int old_mask;
 
     old_mask = env->interrupt_request;
@@ -1733,7 +1734,7 @@ static void tcg_handle_interrupt(CPUArchState *env, int mask)
     }
 
     if (use_icount) {
-        env->icount_decr.u16.high = 0xffff;
+        cpu->icount_decr.u16.high = 0xffff;
         if (!can_do_io(env)
             && (mask & ~old_mask) != 0) {
             cpu_abort(env, "Raised interrupt while not in I/O function");
@@ -4478,6 +4479,7 @@ int cpu_memory_rw_debug(CPUArchState *env, target_ulong addr,
    must be at the end of the TB */
 void cpu_io_recompile(CPUArchState *env, void *retaddr)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     TranslationBlock *tb;
     uint32_t n, cflags;
     target_ulong pc, cs_base;
@@ -4488,11 +4490,11 @@ void cpu_io_recompile(CPUArchState *env, void *retaddr)
         cpu_abort(env, "cpu_io_recompile: could not find TB for pc=%p", 
                   retaddr);
     }
-    n = env->icount_decr.u16.low + tb->icount;
+    n = cpu->icount_decr.u16.low + tb->icount;
     cpu_restore_state(tb, env, (unsigned long)retaddr);
     /* Calculate how many instructions had been executed before the fault
        occurred.  */
-    n = n - env->icount_decr.u16.low;
+    n = n - cpu->icount_decr.u16.low;
     /* Generate a new TB ending on the I/O insn.  */
     n++;
     /* On MIPS and SH, delay slot instructions can only be restarted if
@@ -4502,14 +4504,14 @@ void cpu_io_recompile(CPUArchState *env, void *retaddr)
 #if defined(TARGET_MIPS)
     if ((env->hflags & MIPS_HFLAG_BMASK) != 0 && n > 1) {
         env->active_tc.PC -= 4;
-        env->icount_decr.u16.low++;
+        cpu->icount_decr.u16.low++;
         env->hflags &= ~MIPS_HFLAG_BMASK;
     }
 #elif defined(TARGET_SH4)
     if ((env->flags & ((DELAY_SLOT | DELAY_SLOT_CONDITIONAL))) != 0
             && n > 1) {
         env->pc -= 2;
-        env->icount_decr.u16.low++;
+        cpu->icount_decr.u16.low++;
         env->flags &= ~(DELAY_SLOT | DELAY_SLOT_CONDITIONAL);
     }
 #endif

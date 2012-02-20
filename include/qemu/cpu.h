@@ -51,8 +51,23 @@ typedef struct CPUClass {
     void (*reset)(CPUState *cpu);
 } CPUClass;
 
+#ifdef HOST_WORDS_BIGENDIAN
+typedef struct icount_decr_u16 {
+    uint16_t high;
+    uint16_t low;
+} icount_decr_u16;
+#else
+typedef struct icount_decr_u16 {
+    uint16_t low;
+    uint16_t high;
+} icount_decr_u16;
+#endif
+
 /**
  * CPUState:
+ * @icount_decr: Number of cycles left, with interrupt flag in high bit.
+ * This allows a single read-compare-cbranch-write sequence to test
+ * for both decrementer underflow and exceptions.
  *
  * State of one CPU core or thread.
  */
@@ -61,6 +76,10 @@ struct CPUState {
     Object parent_obj;
     /*< public >*/
 
+    union {
+        uint32_t u32;
+        icount_decr_u16 u16;
+    } icount_decr;
     /* TODO Move common fields from CPUState here. */
 };
 

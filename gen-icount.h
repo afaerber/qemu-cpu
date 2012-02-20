@@ -14,13 +14,15 @@ static inline void gen_icount_start(void)
 
     icount_label = gen_new_label();
     count = tcg_temp_local_new_i32();
-    tcg_gen_ld_i32(count, cpu_env, offsetof(CPUArchState, icount_decr.u32));
+    tcg_gen_ld_i32(count, cpu_env,
+                   offsetof(CPUState, icount_decr.u32) - ENV_OFFSET);
     /* This is a horrid hack to allow fixing up the value later.  */
     icount_arg = gen_opparam_ptr + 1;
     tcg_gen_subi_i32(count, count, 0xdeadbeef);
 
     tcg_gen_brcondi_i32(TCG_COND_LT, count, 0, icount_label);
-    tcg_gen_st16_i32(count, cpu_env, offsetof(CPUArchState, icount_decr.u16.low));
+    tcg_gen_st16_i32(count, cpu_env,
+                     offsetof(CPUState, icount_decr.u16.low) - ENV_OFFSET);
     tcg_temp_free_i32(count);
 }
 

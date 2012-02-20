@@ -111,6 +111,7 @@ int cpu_gen_code(CPUArchState *env, TranslationBlock *tb, int *gen_code_size_ptr
 int cpu_restore_state(TranslationBlock *tb,
                       CPUArchState *env, unsigned long searched_pc)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     TCGContext *s = &tcg_ctx;
     int j;
     unsigned long tc_ptr;
@@ -127,7 +128,7 @@ int cpu_restore_state(TranslationBlock *tb,
 
     if (use_icount) {
         /* Reset the cycle counter to the start of the block.  */
-        env->icount_decr.u16.low += tb->icount;
+        cpu->icount_decr.u16.low += tb->icount;
         /* Clear the IO flag.  */
         env->can_do_io = 0;
     }
@@ -151,7 +152,7 @@ int cpu_restore_state(TranslationBlock *tb,
     /* now find start of instruction before */
     while (gen_opc_instr_start[j] == 0)
         j--;
-    env->icount_decr.u16.low -= gen_opc_icount[j];
+    cpu->icount_decr.u16.low -= gen_opc_icount[j];
 
     restore_state_to_opc(env, tb, j);
 
