@@ -6,8 +6,7 @@
 #include "core-fsf/core-isa.h"
 #include "overlay_tool.h"
 
-static const XtensaConfig fsf = {
-    .name = "fsf",
+static const XtensaCPUClass fsf = {
     .options = XTENSA_OPTIONS,
     /* GDB for this core is not supported currently */
     .nareg = XCHAL_NUM_AREGS,
@@ -19,4 +18,4 @@ static const XtensaConfig fsf = {
     .clock_freq_khz = 10000,
 };
 
-REGISTER_CORE(fsf)
+REGISTER_CORE("fsf", fsf)

@@ -42,7 +42,7 @@
 #include "helpers.h"
 
 typedef struct DisasContext {
-    const XtensaConfig *config;
+    XtensaCPUClass *config;
     TranslationBlock *tb;
     uint32_t pc;
     uint32_t next_pc;
@@ -2524,6 +2524,7 @@ static void gen_ibreak_check(CPUXtensaState *env, DisasContext *dc)
 static void gen_intermediate_code_internal(
         CPUXtensaState *env, TranslationBlock *tb, int search_pc)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
     DisasContext dc;
     int insn_count = 0;
     int j, lj = -1;
@@ -2537,7 +2538,7 @@ static void gen_intermediate_code_internal(
         max_insns = CF_COUNT_MASK;
     }
 
-    dc.config = env->config;
+    dc.config = XTENSA_CPU_GET_CLASS(cpu);
     dc.singlestep_enabled = env->singlestep_enabled;
     dc.tb = tb;
     dc.pc = pc_start;
@@ -2657,6 +2658,8 @@ void gen_intermediate_code_pc(CPUXtensaState *env, TranslationBlock *tb)
 void cpu_dump_state(CPUXtensaState *env, FILE *f, fprintf_function cpu_fprintf,
         int flags)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *klass = XTENSA_CPU_GET_CLASS(cpu);
     int i, j;
 
     cpu_fprintf(f, "PC=%08x\n\n", env->pc);
@@ -2686,7 +2689,7 @@ void cpu_dump_state(CPUXtensaState *env, FILE *f, fprintf_function cpu_fprintf,
 
     cpu_fprintf(f, "\n");
 
-    for (i = 0; i < env->config->nareg; ++i) {
+    for (i = 0; i < klass->nareg; ++i) {
         cpu_fprintf(f, "AR%02d=%08x%c", i, env->phys_regs[i],
                 (i % 4) == 3 ? '\n' : ' ');
     }
