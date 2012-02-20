@@ -31,13 +31,15 @@
 
 void xtensa_advance_ccount(CPUXtensaState *env, uint32_t d)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *klass = XTENSA_CPU_GET_CLASS(cpu);
     uint32_t old_ccount = env->sregs[CCOUNT];
 
     env->sregs[CCOUNT] += d;
 
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_TIMER_INTERRUPT)) {
+    if (xtensa_option_enabled(klass, XTENSA_OPTION_TIMER_INTERRUPT)) {
         int i;
-        for (i = 0; i < env->config->nccompare; ++i) {
+        for (i = 0; i < klass->nccompare; ++i) {
             if (env->sregs[CCOMPARE + i] - old_ccount <= d) {
                 xtensa_timer_irq(env, i, 1);
             }
@@ -47,7 +49,9 @@ void xtensa_advance_ccount(CPUXtensaState *env, uint32_t d)
 
 void check_interrupts(CPUXtensaState *env)
 {
-    int minlevel = xtensa_get_cintlevel(env);
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *klass = XTENSA_CPU_GET_CLASS(cpu);
+    int minlevel = xtensa_get_cintlevel(cpu);
     uint32_t int_set_enabled = env->sregs[INTSET] & env->sregs[INTENABLE];
     int level;
 
@@ -59,11 +63,11 @@ void check_interrupts(CPUXtensaState *env)
 
         xtensa_advance_ccount(env,
                 muldiv64(now - env->halt_clock,
-                    env->config->clock_freq_khz, 1000000));
+                    klass->clock_freq_khz, 1000000));
         env->halt_clock = now;
     }
-    for (level = env->config->nlevel; level > minlevel; --level) {
-        if (env->config->level_mask[level] & int_set_enabled) {
+    for (level = klass->nlevel; level > minlevel; --level) {
+        if (klass->level_mask[level] & int_set_enabled) {
             env->pending_irq_level = level;
             cpu_interrupt(env, CPU_INTERRUPT_HARD);
             qemu_log_mask(CPU_LOG_INT,
@@ -71,7 +75,7 @@ void check_interrupts(CPUXtensaState *env)
                     "pc = %08x, a0 = %08x, ps = %08x, "
                     "intset = %08x, intenable = %08x, "
                     "ccount = %08x\n",
-                    __func__, level, xtensa_get_cintlevel(env),
+                    __func__, level, xtensa_get_cintlevel(cpu),
                     env->pc, env->regs[0], env->sregs[PS],
                     env->sregs[INTSET], env->sregs[INTENABLE],
                     env->sregs[CCOUNT]);
@@ -85,15 +89,17 @@ void check_interrupts(CPUXtensaState *env)
 static void xtensa_set_irq(void *opaque, int irq, int active)
 {
     CPUXtensaState *env = opaque;
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *klass = XTENSA_CPU_GET_CLASS(cpu);
 
-    if (irq >= env->config->ninterrupt) {
+    if (irq >= klass->ninterrupt) {
         qemu_log("%s: bad IRQ %d\n", __func__, irq);
     } else {
         uint32_t irq_bit = 1 << irq;
 
         if (active) {
             env->sregs[INTSET] |= irq_bit;
-        } else if (env->config->interrupt[irq].inttype == INTTYPE_LEVEL) {
+        } else if (klass->interrupt[irq].inttype == INTTYPE_LEVEL) {
             env->sregs[INTSET] &= ~irq_bit;
         }
 
@@ -103,15 +109,20 @@ static void xtensa_set_irq(void *opaque, int irq, int active)
 
 void xtensa_timer_irq(CPUXtensaState *env, uint32_t id, uint32_t active)
 {
-    qemu_set_irq(env->irq_inputs[env->config->timerint[id]], active);
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *klass = XTENSA_CPU_GET_CLASS(cpu);
+
+    qemu_set_irq(env->irq_inputs[klass->timerint[id]], active);
 }
 
 void xtensa_rearm_ccompare_timer(CPUXtensaState *env)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *klass = XTENSA_CPU_GET_CLASS(cpu);
     int i;
     uint32_t wake_ccount = env->sregs[CCOUNT] - 1;
 
-    for (i = 0; i < env->config->nccompare; ++i) {
+    for (i = 0; i < klass->nccompare; ++i) {
         if (env->sregs[CCOMPARE + i] - env->sregs[CCOUNT] <
                 wake_ccount - env->sregs[CCOUNT]) {
             wake_ccount = env->sregs[CCOMPARE + i];
@@ -120,7 +131,7 @@ void xtensa_rearm_ccompare_timer(CPUXtensaState *env)
     env->wake_ccount = wake_ccount;
     qemu_mod_timer(env->ccompare_timer, env->halt_clock +
             muldiv64(wake_ccount - env->sregs[CCOUNT],
-                1000000, env->config->clock_freq_khz));
+                1000000, klass->clock_freq_khz));
 }
 
 static void xtensa_ccompare_cb(void *opaque)
@@ -139,10 +150,13 @@ static void xtensa_ccompare_cb(void *opaque)
 
 void xtensa_irq_init(CPUXtensaState *env)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *klass = XTENSA_CPU_GET_CLASS(cpu);
+
     env->irq_inputs = (void **)qemu_allocate_irqs(
-            xtensa_set_irq, env, env->config->ninterrupt);
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_TIMER_INTERRUPT) &&
-            env->config->nccompare > 0) {
+            xtensa_set_irq, env, klass->ninterrupt);
+    if (xtensa_option_enabled(klass, XTENSA_OPTION_TIMER_INTERRUPT) &&
+            klass->nccompare > 0) {
         env->ccompare_timer =
             qemu_new_timer_ns(vm_clock, &xtensa_ccompare_cb, env);
     }
@@ -150,8 +164,11 @@ void xtensa_irq_init(CPUXtensaState *env)
 
 void *xtensa_get_extint(CPUXtensaState *env, unsigned extint)
 {
-    if (extint < env->config->nextint) {
-        unsigned irq = env->config->extint[extint];
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *klass = XTENSA_CPU_GET_CLASS(cpu);
+
+    if (extint < klass->nextint) {
+        unsigned irq = klass->extint[extint];
         return env->irq_inputs[irq];
     } else {
         qemu_log("%s: trying to acquire invalid external interrupt %d\n",

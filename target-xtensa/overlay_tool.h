@@ -291,16 +291,28 @@
 #endif
 
 #if (defined(TARGET_WORDS_BIGENDIAN) != 0) == (XCHAL_HAVE_BE != 0)
-#define REGISTER_CORE(core) \
-    static void __attribute__((constructor)) register_core(void) \
+#define REGISTER_CORE(typename, class) \
+    static void core_class_init(ObjectClass *klass, void *data) \
     { \
-        static XtensaConfigList node = { \
-            .config = &core, \
-        }; \
-        xtensa_register_core(&node); \
-    }
+        /* XXX This is a really ugly but easy way to init the class... */ \
+        memcpy((void *)klass + offsetof(XtensaCPUClass, options), \
+               (void *)&(class) + offsetof(XtensaCPUClass, options), \
+               sizeof(XtensaCPUClass) - offsetof(XtensaCPUClass, options)); \
+    } \
+    static const TypeInfo core_info = { \
+        .name = (typename), \
+        .parent = TYPE_XTENSA_CPU, \
+        .instance_size = sizeof(XtensaCPU), \
+        .class_size = sizeof(XtensaCPUClass), \
+        .class_init = core_class_init, \
+    }; \
+    static void register_core_type(void) \
+    { \
+        type_register_static(&core_info); \
+    } \
+    type_init(register_core_type)
 #else
-#define REGISTER_CORE(core)
+#define REGISTER_CORE(name, core)
 #endif
 
 #define DEBUG_SECTION \

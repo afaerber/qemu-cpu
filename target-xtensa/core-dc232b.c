@@ -6,8 +6,7 @@
 #include "core-dc232b/core-isa.h"
 #include "overlay_tool.h"
 
-static const XtensaConfig dc232b = {
-    .name = "dc232b",
+static const XtensaCPUClass dc232b = {
     .options = XTENSA_OPTIONS,
     .gdb_regmap = {
         .num_regs = 120,
@@ -25,4 +24,4 @@ static const XtensaConfig dc232b = {
     .clock_freq_khz = 10000,
 };
 
-REGISTER_CORE(dc232b)
+REGISTER_CORE("dc232b", dc232b)
