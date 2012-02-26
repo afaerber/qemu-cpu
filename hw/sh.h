@@ -8,10 +8,10 @@
 #define P4ADDR(x) ((x) | 0xe0000000)
 
 /* sh7750.c */
-struct SH7750State;
+#define TYPE_SH7750 "sh7750-soc"
+#define SH7750(obj) OBJECT_CHECK(SH7750State, (obj), TYPE_SH7750)
+typedef struct SH7750State SH7750State;
 struct MemoryRegion;
-
-struct SH7750State *sh7750_init(CPUSH4State * cpu, struct MemoryRegion *sysmem);
 
 typedef struct {
     /* The callback will be triggered if any of the designated lines change */

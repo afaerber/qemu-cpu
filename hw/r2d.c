@@ -224,6 +224,7 @@ static void r2d_init(ram_addr_t ram_size,
 	      const char *kernel_filename, const char *kernel_cmdline,
 	      const char *initrd_filename, const char *cpu_model)
 {
+    SuperHCPU *cpu;
     CPUSH4State *env;
     ResetData *reset_info;
     struct SH7750State *s;
@@ -235,25 +236,28 @@ static void r2d_init(ram_addr_t ram_size,
     SysBusDevice *busdev;
     MemoryRegion *address_space_mem = get_system_memory();
 
-    if (!cpu_model)
-        cpu_model = "SH7751R";
+    /* Allocate memory space */
+    memory_region_init_ram(sdram, "r2d.sdram", SDRAM_SIZE);
+    vmstate_register_ram_global(sdram);
+    memory_region_add_subregion(address_space_mem, SDRAM_BASE, sdram);
 
-    env = cpu_init(cpu_model);
-    if (!env) {
-        fprintf(stderr, "Unable to find CPU definition\n");
-        exit(1);
+    /* SoC */
+    s = SH7750(object_new(TYPE_SH7750));
+    object_property_add_child(object_get_root(), "sh7750", OBJECT(s), NULL);
+    if (cpu_model == NULL) {
+        cpu_model = "SH7751R";
     }
+    object_property_set_str(OBJECT(s), cpu_model, "cpu-model", NULL);
+    object_realize(OBJECT(s));
+    cpu = SUPERH_CPU(object_property_get_link(OBJECT(s), "cpu", NULL));
+    env = &cpu->env;
+
     reset_info = g_malloc0(sizeof(ResetData));
     reset_info->env = env;
     reset_info->vector = env->pc;
     qemu_register_reset(main_cpu_reset, reset_info);
 
-    /* Allocate memory space */
-    memory_region_init_ram(sdram, "r2d.sdram", SDRAM_SIZE);
-    vmstate_register_ram_global(sdram);
-    memory_region_add_subregion(address_space_mem, SDRAM_BASE, sdram);
     /* Register peripherals */
-    s = sh7750_init(env, address_space_mem);
     irq = r2d_fpga_init(address_space_mem, 0x04000000, sh7750_irl(s));
 
     dev = qdev_create(NULL, "sh_pci");

@@ -35,6 +35,13 @@
 #define NB_DEVICES 4
 
 typedef struct SH7750State {
+    /*< private >*/
+    Object parent_obj;
+    /*< public >*/
+
+    /* Properties */
+    const char *cpu_model;
+
     MemoryRegion iomem;
     MemoryRegion iomem_1f0;
     MemoryRegion iomem_ff0;
@@ -720,13 +727,32 @@ static const MemoryRegionOps sh7750_mmct_ops = {
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
 
-SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
+static char *sh7750_get_cpu_model(Object *obj, Error **errp)
 {
-    SH7750State *s;
+    SH7750State *s = SH7750(obj);
 
-    s = g_malloc0(sizeof(SH7750State));
-    s->cpu = sh_env_get_cpu(cpu);
-    s->periph_freq = 60000000;	/* 60MHz */
+    return g_strdup(s->cpu_model);
+}
+
+static void sh7750_set_cpu_model(Object *obj, const char *value, Error **errp)
+{
+    SH7750State *s = SH7750(obj);
+
+    g_free((gpointer)s->cpu_model);
+    s->cpu_model = g_strdup(value);
+}
+
+static void sh7750_initfn(Object *obj)
+{
+    SH7750State *s = SH7750(obj);
+    MemoryRegion *sysmem = get_system_memory();
+
+    object_property_add_str(obj, "cpu-model",
+                            sh7750_get_cpu_model, sh7750_set_cpu_model,
+                            NULL);
+
+    s->periph_freq = 60000000; /* 60MHz */
+
     memory_region_init_io(&s->iomem, &sh7750_mem_ops, s,
                           "memory", 0x1fc01000);
 
@@ -766,8 +792,6 @@ SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
 			     _INTC_ARRAY(vectors),
 			     _INTC_ARRAY(groups));
 
-    cpu->intc_handle = &s->intc;
-
     sh_serial_init(sysmem, 0x1fe00000,
                    0, s->periph_freq, serial_hds[0],
                    s->intc.irqs[SCI1_ERI],
@@ -791,6 +815,20 @@ SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
 		s->intc.irqs[TMU1],
 		s->intc.irqs[TMU2_TUNI],
 		s->intc.irqs[TMU2_TICPI]);
+}
+
+static int sh7750_realize(Object *obj)
+{
+    SH7750State *s = SH7750(obj);
+    MemoryRegion *sysmem = get_system_memory();
+    CPUSH4State *cpu;
+
+    cpu = cpu_sh4_init(s->cpu_model);
+    if (cpu == NULL) {
+        return -1;
+    }
+
+    cpu->intc_handle = &s->intc;
 
     if (cpu->id & (SH_CPU_SH7750 | SH_CPU_SH7750S | SH_CPU_SH7751)) {
         sh_intc_register_sources(&s->intc,
@@ -829,7 +867,8 @@ SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
     sh_intc_register_sources(&s->intc,
 				_INTC_ARRAY(vectors_irl),
 				_INTC_ARRAY(groups_irl));
-    return s;
+
+    return 0;
 }
 
 qemu_irq sh7750_irl(SH7750State *s)
@@ -838,3 +877,24 @@ qemu_irq sh7750_irl(SH7750State *s)
     return qemu_allocate_irqs(sh_intc_set_irl, sh_intc_source(&s->intc, IRL),
                                1)[0];
 }
+
+static void sh7750_class_init(ObjectClass *class, void *data)
+{
+    class->realize = sh7750_realize;
+}
+
+static const TypeInfo sh7750_info = {
+    .name = TYPE_SH7750,
+    .parent = TYPE_OBJECT,
+    .instance_size = sizeof(SH7750State),
+    .instance_init = sh7750_initfn,
+    .class_size = sizeof(ObjectClass),
+    .class_init = sh7750_class_init,
+};
+
+static void sh7750_register_types(void)
+{
+    type_register_static(&sh7750_info);
+}
+
+type_init(sh7750_register_types)
