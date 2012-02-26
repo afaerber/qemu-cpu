@@ -338,30 +338,32 @@ static int find_utlb_entry(SuperHCPU *cpu, target_ulong address, int use_asid)
    MMU_ITLB_MULTIPLE, MMU_ITLB_VIOLATION,
    MMU_IADDR_ERROR, MMU_DADDR_ERROR_READ, MMU_DADDR_ERROR_WRITE.
 */
-static int get_mmu_address(CPUSH4State * env, target_ulong * physical,
-			   int *prot, target_ulong address,
-			   int rw, int access_type)
+static int get_mmu_address(SuperHCPU *cpu, target_ulong *physical,
+                           int *prot, target_ulong address,
+                           int rw, int access_type)
 {
     int use_asid, n;
     tlb_t *matching = NULL;
 
-    use_asid = (env->mmucr & MMUCR_SV) == 0 || (env->sr & SR_MD) == 0;
+    use_asid = (cpu->env.mmucr & MMUCR_SV) == 0 ||
+               (cpu->env.sr & SR_MD) == 0;
 
     if (rw == 2) {
-        n = find_itlb_entry(sh_env_get_cpu(env), address, use_asid);
+        n = find_itlb_entry(cpu, address, use_asid);
 	if (n >= 0) {
-	    matching = &env->itlb[n];
-	    if (!(env->sr & SR_MD) && !(matching->pr & 2))
+            matching = &cpu->env.itlb[n];
+            if (!(cpu->env.sr & SR_MD) && !(matching->pr & 2)) {
 		n = MMU_ITLB_VIOLATION;
-	    else
+            } else {
 		*prot = PAGE_EXEC;
+            }
         } else {
-            n = find_utlb_entry(sh_env_get_cpu(env), address, use_asid);
+            n = find_utlb_entry(cpu, address, use_asid);
             if (n >= 0) {
-                n = copy_utlb_entry_itlb(env, n);
-                matching = &env->itlb[n];
-                if (!(env->sr & SR_MD) && !(matching->pr & 2)) {
-                      n = MMU_ITLB_VIOLATION;
+                n = copy_utlb_entry_itlb(&cpu->env, n);
+                matching = &cpu->env.itlb[n];
+                if (!(cpu->env.sr & SR_MD) && !(matching->pr & 2)) {
+                    n = MMU_ITLB_VIOLATION;
                 } else {
                     *prot = PAGE_READ | PAGE_EXEC;
                     if ((matching->pr & 1) && matching->d) {
@@ -375,10 +377,10 @@ static int get_mmu_address(CPUSH4State * env, target_ulong * physical,
             }
 	}
     } else {
-        n = find_utlb_entry(sh_env_get_cpu(env), address, use_asid);
+        n = find_utlb_entry(cpu, address, use_asid);
 	if (n >= 0) {
-	    matching = &env->utlb[n];
-            if (!(env->sr & SR_MD) && !(matching->pr & 2)) {
+            matching = &cpu->env.utlb[n];
+            if (!(cpu->env.sr & SR_MD) && !(matching->pr & 2)) {
                 n = (rw == 1) ? MMU_DTLB_VIOLATION_WRITE :
                     MMU_DTLB_VIOLATION_READ;
             } else if ((rw == 1) && !(matching->pr & 1)) {
@@ -404,14 +406,14 @@ static int get_mmu_address(CPUSH4State * env, target_ulong * physical,
     return n;
 }
 
-static int get_physical_address(CPUSH4State * env, target_ulong * physical,
+static int get_physical_address(SuperHCPU *cpu, target_ulong *physical,
                                 int *prot, target_ulong address,
                                 int rw, int access_type)
 {
     /* P1, P2 and P4 areas do not use translation */
     if ((address >= 0x80000000 && address < 0xc0000000) ||
 	address >= 0xe0000000) {
-	if (!(env->sr & SR_MD)
+        if (!(cpu->env.sr & SR_MD)
 	    && (address < 0xe0000000 || address >= 0xe4000000)) {
 	    /* Unauthorized access in user mode (only store queues are available) */
 	    fprintf(stderr, "Unauthorized access\n");
@@ -433,14 +435,14 @@ static int get_physical_address(CPUSH4State * env, target_ulong * physical,
     }
 
     /* If MMU is disabled, return the corresponding physical page */
-    if (!(env->mmucr & MMUCR_AT)) {
+    if (!(cpu->env.mmucr & MMUCR_AT)) {
 	*physical = address & 0x1FFFFFFF;
 	*prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
 	return MMU_OK;
     }
 
     /* We need to resort to the MMU */
-    return get_mmu_address(env, physical, prot, address, rw, access_type);
+    return get_mmu_address(cpu, physical, prot, address, rw, access_type);
 }
 
 int cpu_sh4_handle_mmu_fault(CPUSH4State * env, target_ulong address, int rw,
@@ -450,9 +452,8 @@ int cpu_sh4_handle_mmu_fault(CPUSH4State * env, target_ulong address, int rw,
     int prot, ret, access_type;
 
     access_type = ACCESS_INT;
-    ret =
-	get_physical_address(env, &physical, &prot, address, rw,
-			     access_type);
+    ret = get_physical_address(sh_env_get_cpu(env), &physical, &prot, address,
+                               rw, access_type);
 
     if (ret != MMU_OK) {
 	env->tea = address;
@@ -509,7 +510,7 @@ target_phys_addr_t cpu_get_phys_page_debug(CPUSH4State * env, target_ulong addr)
     target_ulong physical;
     int prot;
 
-    get_physical_address(env, &physical, &prot, addr, 0, 0);
+    get_physical_address(sh_env_get_cpu(env), &physical, &prot, addr, 0, 0);
     return physical;
 }
 
