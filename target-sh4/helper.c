@@ -227,17 +227,21 @@ static void update_itlb_use(SuperHCPU *cpu, int itlbnb)
     cpu->env.mmucr |= (or_mask << 24);
 }
 
-static int itlb_replacement(CPUSH4State * env)
+static int itlb_replacement(SuperHCPU *cpu)
 {
-    if ((env->mmucr & 0xe0000000) == 0xe0000000)
+    if ((cpu->env.mmucr & 0xe0000000) == 0xe0000000) {
 	return 0;
-    if ((env->mmucr & 0x98000000) == 0x18000000)
+    }
+    if ((cpu->env.mmucr & 0x98000000) == 0x18000000) {
 	return 1;
-    if ((env->mmucr & 0x54000000) == 0x04000000)
+    }
+    if ((cpu->env.mmucr & 0x54000000) == 0x04000000) {
 	return 2;
-    if ((env->mmucr & 0x2c000000) == 0x00000000)
+    }
+    if ((cpu->env.mmucr & 0x2c000000) == 0x00000000) {
 	return 3;
-    cpu_abort(env, "Unhandled itlb_replacement");
+    }
+    cpu_abort(&cpu->env, "Unhandled itlb_replacement");
 }
 
 /* Find the corresponding entry in the right TLB
@@ -291,7 +295,7 @@ static int copy_utlb_entry_itlb(SuperHCPU *cpu, int utlb)
     int itlb;
 
     tlb_t * ientry;
-    itlb = itlb_replacement(&cpu->env);
+    itlb = itlb_replacement(cpu);
     ientry = &cpu->env.itlb[itlb];
     if (ientry->v) {
         tlb_flush_page(&cpu->env, ientry->vpn << 10);
