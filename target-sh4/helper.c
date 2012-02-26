@@ -286,18 +286,18 @@ static void increment_urc(SuperHCPU *cpu)
 /* Copy and utlb entry into itlb
    Return entry
 */
-static int copy_utlb_entry_itlb(CPUSH4State *env, int utlb)
+static int copy_utlb_entry_itlb(SuperHCPU *cpu, int utlb)
 {
     int itlb;
 
     tlb_t * ientry;
-    itlb = itlb_replacement(env);
-    ientry = &env->itlb[itlb];
+    itlb = itlb_replacement(&cpu->env);
+    ientry = &cpu->env.itlb[itlb];
     if (ientry->v) {
-        tlb_flush_page(env, ientry->vpn << 10);
+        tlb_flush_page(&cpu->env, ientry->vpn << 10);
     }
-    *ientry = env->utlb[utlb];
-    update_itlb_use(env, itlb);
+    *ientry = cpu->env.utlb[utlb];
+    update_itlb_use(&cpu->env, itlb);
     return itlb;
 }
 
@@ -360,7 +360,7 @@ static int get_mmu_address(SuperHCPU *cpu, target_ulong *physical,
         } else {
             n = find_utlb_entry(cpu, address, use_asid);
             if (n >= 0) {
-                n = copy_utlb_entry_itlb(&cpu->env, n);
+                n = copy_utlb_entry_itlb(cpu, n);
                 matching = &cpu->env.itlb[n];
                 if (!(cpu->env.sr & SR_MD) && !(matching->pr & 2)) {
                     n = MMU_ITLB_VIOLATION;
