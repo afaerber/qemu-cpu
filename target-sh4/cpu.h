@@ -199,7 +199,7 @@ void do_interrupt(CPUSH4State * env);
 
 void sh4_cpu_list(FILE *f, fprintf_function cpu_fprintf);
 #if !defined(CONFIG_USER_ONLY)
-void cpu_sh4_invalidate_tlb(CPUSH4State *s);
+void cpu_sh4_invalidate_tlb(SuperHCPU *cpu);
 uint32_t cpu_sh4_read_mmaped_itlb_addr(CPUSH4State *s,
                                        target_phys_addr_t addr);
 void cpu_sh4_write_mmaped_itlb_addr(CPUSH4State *s, target_phys_addr_t addr,

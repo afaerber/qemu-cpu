@@ -406,7 +406,7 @@ static void sh7750_mem_writel(void *opaque, target_phys_addr_t addr,
 	return;
     case SH7750_MMUCR_A7:
         if (mem_value & MMUCR_TI) {
-            cpu_sh4_invalidate_tlb(&s->cpu->env);
+            cpu_sh4_invalidate_tlb(s->cpu);
         }
         s->cpu->env.mmucr = mem_value & ~MMUCR_TI;
         return;

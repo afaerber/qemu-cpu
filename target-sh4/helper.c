@@ -555,22 +555,22 @@ void cpu_load_tlb(CPUSH4State * env)
     entry->tc   = (uint8_t)cpu_ptea_tc(env->ptea);
 }
 
- void cpu_sh4_invalidate_tlb(CPUSH4State *s)
+void cpu_sh4_invalidate_tlb(SuperHCPU *cpu)
 {
     int i;
 
     /* UTLB */
     for (i = 0; i < UTLB_SIZE; i++) {
-        tlb_t * entry = &s->utlb[i];
+        tlb_t *entry = &cpu->env.utlb[i];
         entry->v = 0;
     }
     /* ITLB */
     for (i = 0; i < ITLB_SIZE; i++) {
-        tlb_t * entry = &s->itlb[i];
+        tlb_t *entry = &cpu->env.itlb[i];
         entry->v = 0;
     }
 
-    tlb_flush(s, 1);
+    tlb_flush(&cpu->env, 1);
 }
 
 uint32_t cpu_sh4_read_mmaped_itlb_addr(CPUSH4State *s,
