@@ -35,6 +35,10 @@
 #define NB_DEVICES 4
 
 typedef struct SH7750State {
+    /*< private >*/
+    Object parent_obj;
+    /*< public >*/
+
     MemoryRegion iomem;
     MemoryRegion iomem_1f0;
     MemoryRegion iomem_ff0;
@@ -720,13 +724,16 @@ static const MemoryRegionOps sh7750_mmct_ops = {
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
 
-SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
+static void sh7750_initfn(Object *obj)
 {
-    SH7750State *s;
+    SH7750State *s = SH7750(obj);
+    MemoryRegion *sysmem = get_system_memory();
 
-    s = g_malloc0(sizeof(SH7750State));
-    s->cpu = sh_env_get_cpu(cpu);
-    s->periph_freq = 60000000;	/* 60MHz */
+    object_property_add_link(obj, "cpu", TYPE_SUPERH_CPU,
+                             (Object **)&s->cpu, NULL);
+
+    s->periph_freq = 60000000; /* 60MHz */
+
     memory_region_init_io(&s->iomem, &sh7750_mem_ops, s,
                           "memory", 0x1fc01000);
 
@@ -766,8 +773,6 @@ SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
 			     _INTC_ARRAY(vectors),
 			     _INTC_ARRAY(groups));
 
-    cpu->intc_handle = &s->intc;
-
     sh_serial_init(sysmem, 0x1fe00000,
                    0, s->periph_freq, serial_hds[0],
                    s->intc.irqs[SCI1_ERI],
@@ -791,6 +796,14 @@ SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
 		s->intc.irqs[TMU1],
 		s->intc.irqs[TMU2_TUNI],
 		s->intc.irqs[TMU2_TICPI]);
+}
+
+void sh7750_realize(SH7750State *s)
+{
+    MemoryRegion *sysmem = get_system_memory();
+    CPUSH4State *cpu = &s->cpu->env;
+
+    cpu->intc_handle = &s->intc;
 
     if (cpu->id & (SH_CPU_SH7750 | SH_CPU_SH7750S | SH_CPU_SH7751)) {
         sh_intc_register_sources(&s->intc,
@@ -829,7 +842,6 @@ SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
     sh_intc_register_sources(&s->intc,
 				_INTC_ARRAY(vectors_irl),
 				_INTC_ARRAY(groups_irl));
-    return s;
 }
 
 qemu_irq sh7750_irl(SH7750State *s)
@@ -838,3 +850,18 @@ qemu_irq sh7750_irl(SH7750State *s)
     return qemu_allocate_irqs(sh_intc_set_irl, sh_intc_source(&s->intc, IRL),
                                1)[0];
 }
+
+static const TypeInfo sh7750_info = {
+    .name = TYPE_SH7750,
+    .parent = TYPE_OBJECT,
+    .instance_size = sizeof(SH7750State),
+    .instance_init = sh7750_initfn,
+    .class_size = sizeof(ObjectClass),
+};
+
+static void sh7750_register_types(void)
+{
+    type_register_static(&sh7750_info);
+}
+
+type_init(sh7750_register_types)

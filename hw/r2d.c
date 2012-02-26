@@ -224,6 +224,7 @@ static void r2d_init(ram_addr_t ram_size,
 	      const char *kernel_filename, const char *kernel_cmdline,
 	      const char *initrd_filename, const char *cpu_model)
 {
+    SuperHCPU *cpu;
     CPUSH4State *env;
     ResetData *reset_info;
     struct SH7750State *s;
@@ -243,6 +244,9 @@ static void r2d_init(ram_addr_t ram_size,
         fprintf(stderr, "Unable to find CPU definition\n");
         exit(1);
     }
+    cpu = sh_env_get_cpu(env);
+    object_property_add_child(object_get_root(), "cpu", OBJECT(cpu), NULL);
+
     reset_info = g_malloc0(sizeof(ResetData));
     reset_info->env = env;
     reset_info->vector = env->pc;
@@ -253,7 +257,10 @@ static void r2d_init(ram_addr_t ram_size,
     vmstate_register_ram_global(sdram);
     memory_region_add_subregion(address_space_mem, SDRAM_BASE, sdram);
     /* Register peripherals */
-    s = sh7750_init(env, address_space_mem);
+    s = SH7750(object_new(TYPE_SH7750));
+    object_property_add_child(object_get_root(), "sh7750", OBJECT(s), NULL);
+    object_property_set_link(OBJECT(s), OBJECT(cpu), "cpu", NULL);
+    sh7750_realize(s);
     irq = r2d_fpga_init(address_space_mem, 0x04000000, sh7750_irl(s));
 
     dev = qdev_create(NULL, "sh_pci");

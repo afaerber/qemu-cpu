@@ -43,6 +43,7 @@ static void shix_init(ram_addr_t ram_size,
 	       const char *initrd_filename, const char *cpu_model)
 {
     int ret;
+    SuperHCPU *cpu;
     CPUSH4State *env;
     struct SH7750State *s;
     MemoryRegion *sysmem = get_system_memory();
@@ -54,6 +55,8 @@ static void shix_init(ram_addr_t ram_size,
 
     printf("Initializing CPU\n");
     env = cpu_init(cpu_model);
+    cpu = sh_env_get_cpu(env);
+    object_property_add_child(object_get_root(), "cpu", OBJECT(cpu), NULL);
 
     /* Allocate memory space */
     printf("Allocating ROM\n");
@@ -83,7 +86,10 @@ static void shix_init(ram_addr_t ram_size,
     }
 
     /* Register peripherals */
-    s = sh7750_init(env, sysmem);
+    s = SH7750(object_new(TYPE_SH7750));
+    object_property_add_child(object_get_root(), "sh7750", OBJECT(s), NULL);
+    object_property_set_link(OBJECT(s), OBJECT(cpu), "cpu", NULL);
+    sh7750_realize(s);
     /* XXXXX Check success */
     tc58128_init(s, "shix_linux_nand.bin", NULL);
     fprintf(stderr, "initialization terminated\n");
