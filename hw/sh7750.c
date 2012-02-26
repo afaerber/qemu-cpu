@@ -44,7 +44,7 @@ typedef struct SH7750State {
     MemoryRegion iomem_ffc;
     MemoryRegion mmct_iomem;
     /* CPU */
-    CPUSH4State *cpu;
+    SuperHCPU *cpu;
     /* Peripheral frequency in Hz */
     uint32_t periph_freq;
     /* SDRAM controller */
@@ -79,7 +79,7 @@ typedef struct SH7750State {
 
 static inline int has_bcr3_and_bcr4(SH7750State *s)
 {
-    return sh_env_get_cpu(s->cpu)->features & SH_FEATURE_BCR3_AND_BCR4;
+    return s->cpu->features & SH_FEATURE_BCR3_AND_BCR4;
 }
 
 /**********************************************************************
@@ -271,29 +271,29 @@ static uint32_t sh7750_mem_readl(void *opaque, target_phys_addr_t addr)
         ignore_access("long read", addr);
         return 0;
     case SH7750_MMUCR_A7:
-	return s->cpu->mmucr;
+        return s->cpu->env.mmucr;
     case SH7750_PTEH_A7:
-	return s->cpu->pteh;
+        return s->cpu->env.pteh;
     case SH7750_PTEL_A7:
-	return s->cpu->ptel;
+        return s->cpu->env.ptel;
     case SH7750_TTB_A7:
-	return s->cpu->ttb;
+        return s->cpu->env.ttb;
     case SH7750_TEA_A7:
-	return s->cpu->tea;
+        return s->cpu->env.tea;
     case SH7750_TRA_A7:
-	return s->cpu->tra;
+        return s->cpu->env.tra;
     case SH7750_EXPEVT_A7:
-	return s->cpu->expevt;
+        return s->cpu->env.expevt;
     case SH7750_INTEVT_A7:
-	return s->cpu->intevt;
+        return s->cpu->env.intevt;
     case SH7750_CCR_A7:
 	return s->ccr;
     case 0x1f000030:		/* Processor version */
-	return s->cpu->pvr;
+        return s->cpu->env.pvr;
     case 0x1f000040:		/* Cache version */
-	return s->cpu->cvr;
+        return s->cpu->env.cvr;
     case 0x1f000044:		/* Processor revision */
-	return s->cpu->prr;
+        return s->cpu->env.prr;
     default:
 	error_access("long read", addr);
         abort();
@@ -406,36 +406,37 @@ static void sh7750_mem_writel(void *opaque, target_phys_addr_t addr,
 	return;
     case SH7750_MMUCR_A7:
         if (mem_value & MMUCR_TI) {
-            cpu_sh4_invalidate_tlb(s->cpu);
+            cpu_sh4_invalidate_tlb(&s->cpu->env);
         }
-        s->cpu->mmucr = mem_value & ~MMUCR_TI;
+        s->cpu->env.mmucr = mem_value & ~MMUCR_TI;
         return;
     case SH7750_PTEH_A7:
         /* If asid changes, clear all registered tlb entries. */
-	if ((s->cpu->pteh & 0xff) != (mem_value & 0xff))
-	    tlb_flush(s->cpu, 1);
-	s->cpu->pteh = mem_value;
+        if ((s->cpu->env.pteh & 0xff) != (mem_value & 0xff)) {
+            tlb_flush(&s->cpu->env, 1);
+        }
+        s->cpu->env.pteh = mem_value;
 	return;
     case SH7750_PTEL_A7:
-	s->cpu->ptel = mem_value;
+        s->cpu->env.ptel = mem_value;
 	return;
     case SH7750_PTEA_A7:
-	s->cpu->ptea = mem_value & 0x0000000f;
+        s->cpu->env.ptea = mem_value & 0x0000000f;
 	return;
     case SH7750_TTB_A7:
-	s->cpu->ttb = mem_value;
+        s->cpu->env.ttb = mem_value;
 	return;
     case SH7750_TEA_A7:
-	s->cpu->tea = mem_value;
+        s->cpu->env.tea = mem_value;
 	return;
     case SH7750_TRA_A7:
-	s->cpu->tra = mem_value & 0x000007ff;
+        s->cpu->env.tra = mem_value & 0x000007ff;
 	return;
     case SH7750_EXPEVT_A7:
-	s->cpu->expevt = mem_value & 0x000007ff;
+        s->cpu->env.expevt = mem_value & 0x000007ff;
 	return;
     case SH7750_INTEVT_A7:
-	s->cpu->intevt = mem_value & 0x000007ff;
+        s->cpu->env.intevt = mem_value & 0x000007ff;
 	return;
     case SH7750_CCR_A7:
 	s->ccr = mem_value;
@@ -648,20 +649,20 @@ static uint64_t sh7750_mmct_read(void *opaque, target_phys_addr_t addr,
         /* do nothing */
 	break;
     case MM_ITLB_ADDR:
-        ret = cpu_sh4_read_mmaped_itlb_addr(s->cpu, addr);
+        ret = cpu_sh4_read_mmaped_itlb_addr(&s->cpu->env, addr);
         break;
     case MM_ITLB_DATA:
-        ret = cpu_sh4_read_mmaped_itlb_data(s->cpu, addr);
+        ret = cpu_sh4_read_mmaped_itlb_data(&s->cpu->env, addr);
         break;
     case MM_OCACHE_ADDR:
     case MM_OCACHE_DATA:
         /* do nothing */
 	break;
     case MM_UTLB_ADDR:
-        ret = cpu_sh4_read_mmaped_utlb_addr(s->cpu, addr);
+        ret = cpu_sh4_read_mmaped_utlb_addr(&s->cpu->env, addr);
         break;
     case MM_UTLB_DATA:
-        ret = cpu_sh4_read_mmaped_utlb_data(s->cpu, addr);
+        ret = cpu_sh4_read_mmaped_utlb_data(&s->cpu->env, addr);
         break;
     default:
         abort();
@@ -691,10 +692,10 @@ static void sh7750_mmct_write(void *opaque, target_phys_addr_t addr,
         /* do nothing */
 	break;
     case MM_ITLB_ADDR:
-        cpu_sh4_write_mmaped_itlb_addr(s->cpu, addr, mem_value);
+        cpu_sh4_write_mmaped_itlb_addr(&s->cpu->env, addr, mem_value);
         break;
     case MM_ITLB_DATA:
-        cpu_sh4_write_mmaped_itlb_data(s->cpu, addr, mem_value);
+        cpu_sh4_write_mmaped_itlb_data(&s->cpu->env, addr, mem_value);
         abort();
 	break;
     case MM_OCACHE_ADDR:
@@ -702,10 +703,10 @@ static void sh7750_mmct_write(void *opaque, target_phys_addr_t addr,
         /* do nothing */
 	break;
     case MM_UTLB_ADDR:
-        cpu_sh4_write_mmaped_utlb_addr(s->cpu, addr, mem_value);
+        cpu_sh4_write_mmaped_utlb_addr(&s->cpu->env, addr, mem_value);
 	break;
     case MM_UTLB_DATA:
-        cpu_sh4_write_mmaped_utlb_data(s->cpu, addr, mem_value);
+        cpu_sh4_write_mmaped_utlb_data(&s->cpu->env, addr, mem_value);
 	break;
     default:
         abort();
@@ -724,7 +725,7 @@ SH7750State *sh7750_init(CPUSH4State * cpu, MemoryRegion *sysmem)
     SH7750State *s;
 
     s = g_malloc0(sizeof(SH7750State));
-    s->cpu = cpu;
+    s->cpu = sh_env_get_cpu(cpu);
     s->periph_freq = 60000000;	/* 60MHz */
     memory_region_init_io(&s->iomem, &sh7750_mem_ops, s,
                           "memory", 0x1fc01000);
