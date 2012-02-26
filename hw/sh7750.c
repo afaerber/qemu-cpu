@@ -649,20 +649,20 @@ static uint64_t sh7750_mmct_read(void *opaque, target_phys_addr_t addr,
         /* do nothing */
 	break;
     case MM_ITLB_ADDR:
-        ret = cpu_sh4_read_mmaped_itlb_addr(&s->cpu->env, addr);
+        ret = cpu_sh4_read_mmaped_itlb_addr(s->cpu, addr);
         break;
     case MM_ITLB_DATA:
-        ret = cpu_sh4_read_mmaped_itlb_data(&s->cpu->env, addr);
+        ret = cpu_sh4_read_mmaped_itlb_data(s->cpu, addr);
         break;
     case MM_OCACHE_ADDR:
     case MM_OCACHE_DATA:
         /* do nothing */
 	break;
     case MM_UTLB_ADDR:
-        ret = cpu_sh4_read_mmaped_utlb_addr(&s->cpu->env, addr);
+        ret = cpu_sh4_read_mmaped_utlb_addr(s->cpu, addr);
         break;
     case MM_UTLB_DATA:
-        ret = cpu_sh4_read_mmaped_utlb_data(&s->cpu->env, addr);
+        ret = cpu_sh4_read_mmaped_utlb_data(s->cpu, addr);
         break;
     default:
         abort();
@@ -692,10 +692,10 @@ static void sh7750_mmct_write(void *opaque, target_phys_addr_t addr,
         /* do nothing */
 	break;
     case MM_ITLB_ADDR:
-        cpu_sh4_write_mmaped_itlb_addr(&s->cpu->env, addr, mem_value);
+        cpu_sh4_write_mmaped_itlb_addr(s->cpu, addr, mem_value);
         break;
     case MM_ITLB_DATA:
-        cpu_sh4_write_mmaped_itlb_data(&s->cpu->env, addr, mem_value);
+        cpu_sh4_write_mmaped_itlb_data(s->cpu, addr, mem_value);
         abort();
 	break;
     case MM_OCACHE_ADDR:
@@ -703,10 +703,10 @@ static void sh7750_mmct_write(void *opaque, target_phys_addr_t addr,
         /* do nothing */
 	break;
     case MM_UTLB_ADDR:
-        cpu_sh4_write_mmaped_utlb_addr(&s->cpu->env, addr, mem_value);
+        cpu_sh4_write_mmaped_utlb_addr(s->cpu, addr, mem_value);
 	break;
     case MM_UTLB_DATA:
-        cpu_sh4_write_mmaped_utlb_data(&s->cpu->env, addr, mem_value);
+        cpu_sh4_write_mmaped_utlb_data(s->cpu, addr, mem_value);
 	break;
     default:
         abort();
