@@ -269,17 +269,18 @@ static int find_tlb_entry(CPUSH4State * env, target_ulong address,
     return match;
 }
 
-static void increment_urc(CPUSH4State * env)
+static void increment_urc(SuperHCPU *cpu)
 {
     uint8_t urb, urc;
 
     /* Increment URC */
-    urb = ((env->mmucr) >> 18) & 0x3f;
-    urc = ((env->mmucr) >> 10) & 0x3f;
+    urb = ((cpu->env.mmucr) >> 18) & 0x3f;
+    urc = ((cpu->env.mmucr) >> 10) & 0x3f;
     urc++;
-    if ((urb > 0 && urc > urb) || urc > (UTLB_SIZE - 1))
+    if ((urb > 0 && urc > urb) || urc > (UTLB_SIZE - 1)) {
 	urc = 0;
-    env->mmucr = (env->mmucr & 0xffff03ff) | (urc << 10);
+    }
+    cpu->env.mmucr = (cpu->env.mmucr & 0xffff03ff) | (urc << 10);
 }
 
 /* Copy and utlb entry into itlb
@@ -324,7 +325,7 @@ static int find_itlb_entry(CPUSH4State * env, target_ulong address,
 static int find_utlb_entry(CPUSH4State * env, target_ulong address, int use_asid)
 {
     /* per utlb access */
-    increment_urc(env);
+    increment_urc(sh_env_get_cpu(env));
 
     /* Return entry */
     return find_tlb_entry(env, address, env->utlb, UTLB_SIZE, use_asid);
@@ -660,7 +661,7 @@ uint32_t cpu_sh4_read_mmaped_utlb_addr(CPUSH4State *s,
     int index = (addr & 0x00003f00) >> 8;
     tlb_t * entry = &s->utlb[index];
 
-    increment_urc(s); /* per utlb access */
+    increment_urc(sh_env_get_cpu(s)); /* per utlb access */
 
     return (entry->vpn  << 10) |
            (entry->v    <<  8) |
@@ -702,7 +703,7 @@ void cpu_sh4_write_mmaped_utlb_addr(CPUSH4State *s, target_phys_addr_t addr,
 		entry->d = d;
 	        utlb_match_entry = entry;
 	    }
-	    increment_urc(s); /* per utlb access */
+            increment_urc(sh_env_get_cpu(s)); /* per utlb access */
 	}
 
 	/* search ITLB */
@@ -735,7 +736,7 @@ void cpu_sh4_write_mmaped_utlb_addr(CPUSH4State *s, target_phys_addr_t addr,
 	entry->vpn = vpn;
 	entry->d = d;
 	entry->v = v;
-	increment_urc(s);
+        increment_urc(sh_env_get_cpu(s));
     }
 }
 
@@ -746,7 +747,7 @@ uint32_t cpu_sh4_read_mmaped_utlb_data(CPUSH4State *s,
     int index = (addr & 0x00003f00) >> 8;
     tlb_t * entry = &s->utlb[index];
 
-    increment_urc(s); /* per utlb access */
+    increment_urc(sh_env_get_cpu(s)); /* per utlb access */
 
     if (array == 0) {
         /* ITLB Data Array 1 */
@@ -773,7 +774,7 @@ void cpu_sh4_write_mmaped_utlb_data(CPUSH4State *s, target_phys_addr_t addr,
     int index = (addr & 0x00003f00) >> 8;
     tlb_t * entry = &s->utlb[index];
 
-    increment_urc(s); /* per utlb access */
+    increment_urc(sh_env_get_cpu(s)); /* per utlb access */
 
     if (array == 0) {
         /* UTLB Data Array 1 */
