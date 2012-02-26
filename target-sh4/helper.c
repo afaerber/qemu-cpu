@@ -202,7 +202,7 @@ void do_interrupt(CPUSH4State * env)
     }
 }
 
-static void update_itlb_use(CPUSH4State * env, int itlbnb)
+static void update_itlb_use(SuperHCPU *cpu, int itlbnb)
 {
     uint8_t or_mask = 0, and_mask = (uint8_t) - 1;
 
@@ -223,8 +223,8 @@ static void update_itlb_use(CPUSH4State * env, int itlbnb)
 	break;
     }
 
-    env->mmucr &= (and_mask << 24) | 0x00ffffff;
-    env->mmucr |= (or_mask << 24);
+    cpu->env.mmucr &= (and_mask << 24) | 0x00ffffff;
+    cpu->env.mmucr |= (or_mask << 24);
 }
 
 static int itlb_replacement(CPUSH4State * env)
@@ -297,7 +297,7 @@ static int copy_utlb_entry_itlb(SuperHCPU *cpu, int utlb)
         tlb_flush_page(&cpu->env, ientry->vpn << 10);
     }
     *ientry = cpu->env.utlb[utlb];
-    update_itlb_use(&cpu->env, itlb);
+    update_itlb_use(cpu, itlb);
     return itlb;
 }
 
@@ -315,7 +315,7 @@ static int find_itlb_entry(SuperHCPU *cpu, target_ulong address,
     } else if (e == MMU_DTLB_MISS) {
 	e = MMU_ITLB_MISS;
     } else if (e >= 0) {
-        update_itlb_use(&cpu->env, e);
+        update_itlb_use(cpu, e);
     }
     return e;
 }
