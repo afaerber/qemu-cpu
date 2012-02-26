@@ -243,15 +243,15 @@ static int itlb_replacement(CPUSH4State * env)
 /* Find the corresponding entry in the right TLB
    Return entry, MMU_DTLB_MISS or MMU_DTLB_MULTIPLE
 */
-static int find_tlb_entry(CPUSH4State * env, target_ulong address,
-			  tlb_t * entries, uint8_t nbtlb, int use_asid)
+static int find_tlb_entry(SuperHCPU *cpu, target_ulong address,
+                          tlb_t *entries, uint8_t nbtlb, int use_asid)
 {
     int match = MMU_DTLB_MISS;
     uint32_t start, end;
     uint8_t asid;
     int i;
 
-    asid = env->pteh & 0xff;
+    asid = cpu->env.pteh & 0xff;
 
     for (i = 0; i < nbtlb; i++) {
 	if (!entries[i].v)
@@ -304,31 +304,31 @@ static int copy_utlb_entry_itlb(CPUSH4State *env, int utlb)
 /* Find itlb entry
    Return entry, MMU_ITLB_MISS, MMU_ITLB_MULTIPLE or MMU_DTLB_MULTIPLE
 */
-static int find_itlb_entry(CPUSH4State * env, target_ulong address,
+static int find_itlb_entry(SuperHCPU *cpu, target_ulong address,
                            int use_asid)
 {
     int e;
 
-    e = find_tlb_entry(env, address, env->itlb, ITLB_SIZE, use_asid);
+    e = find_tlb_entry(cpu, address, cpu->env.itlb, ITLB_SIZE, use_asid);
     if (e == MMU_DTLB_MULTIPLE) {
 	e = MMU_ITLB_MULTIPLE;
     } else if (e == MMU_DTLB_MISS) {
 	e = MMU_ITLB_MISS;
     } else if (e >= 0) {
-	update_itlb_use(env, e);
+        update_itlb_use(&cpu->env, e);
     }
     return e;
 }
 
 /* Find utlb entry
    Return entry, MMU_DTLB_MISS, MMU_DTLB_MULTIPLE */
-static int find_utlb_entry(CPUSH4State * env, target_ulong address, int use_asid)
+static int find_utlb_entry(SuperHCPU *cpu, target_ulong address, int use_asid)
 {
     /* per utlb access */
-    increment_urc(sh_env_get_cpu(env));
+    increment_urc(cpu);
 
     /* Return entry */
-    return find_tlb_entry(env, address, env->utlb, UTLB_SIZE, use_asid);
+    return find_tlb_entry(cpu, address, cpu->env.utlb, UTLB_SIZE, use_asid);
 }
 
 /* Match address against MMU
@@ -348,7 +348,7 @@ static int get_mmu_address(CPUSH4State * env, target_ulong * physical,
     use_asid = (env->mmucr & MMUCR_SV) == 0 || (env->sr & SR_MD) == 0;
 
     if (rw == 2) {
-        n = find_itlb_entry(env, address, use_asid);
+        n = find_itlb_entry(sh_env_get_cpu(env), address, use_asid);
 	if (n >= 0) {
 	    matching = &env->itlb[n];
 	    if (!(env->sr & SR_MD) && !(matching->pr & 2))
@@ -356,7 +356,7 @@ static int get_mmu_address(CPUSH4State * env, target_ulong * physical,
 	    else
 		*prot = PAGE_EXEC;
         } else {
-            n = find_utlb_entry(env, address, use_asid);
+            n = find_utlb_entry(sh_env_get_cpu(env), address, use_asid);
             if (n >= 0) {
                 n = copy_utlb_entry_itlb(env, n);
                 matching = &env->itlb[n];
@@ -375,7 +375,7 @@ static int get_mmu_address(CPUSH4State * env, target_ulong * physical,
             }
 	}
     } else {
-	n = find_utlb_entry(env, address, use_asid);
+        n = find_utlb_entry(sh_env_get_cpu(env), address, use_asid);
 	if (n >= 0) {
 	    matching = &env->utlb[n];
             if (!(env->sr & SR_MD) && !(matching->pr & 2)) {
@@ -801,6 +801,7 @@ void cpu_sh4_write_mmaped_utlb_data(CPUSH4State *s, target_phys_addr_t addr,
 
 int cpu_sh4_is_cached(CPUSH4State * env, target_ulong addr)
 {
+    SuperHCPU *cpu = sh_env_get_cpu(env);
     int n;
     int use_asid = (env->mmucr & MMUCR_SV) == 0 || (env->sr & SR_MD) == 0;
 
@@ -832,11 +833,11 @@ int cpu_sh4_is_cached(CPUSH4State * env, target_ulong addr)
         return 1;
 
     /* check TLB */
-    n = find_tlb_entry(env, addr, env->itlb, ITLB_SIZE, use_asid);
+    n = find_tlb_entry(cpu, addr, env->itlb, ITLB_SIZE, use_asid);
     if (n >= 0)
         return env->itlb[n].c;
 
-    n = find_tlb_entry(env, addr, env->utlb, UTLB_SIZE, use_asid);
+    n = find_tlb_entry(cpu, addr, env->utlb, UTLB_SIZE, use_asid);
     if (n >= 0)
         return env->utlb[n].c;
 
