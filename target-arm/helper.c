@@ -400,6 +400,7 @@ static int vfp_gdb_set_reg(CPUARMState *env, uint8_t *buf, int reg)
 
 CPUARMState *cpu_arm_init(const char *cpu_model)
 {
+    ARMCPU *cpu;
     CPUARMState *env;
     uint32_t id;
     static int inited = 0;
@@ -407,7 +408,8 @@ CPUARMState *cpu_arm_init(const char *cpu_model)
     id = cpu_arm_find_by_name(cpu_model);
     if (id == 0)
         return NULL;
-    env = g_malloc0(sizeof(CPUARMState));
+    cpu = ARM_CPU(object_new(TYPE_ARM_CPU));
+    env = &cpu->env;
     cpu_exec_init(env);
     if (tcg_enabled() && !inited) {
         inited = 1;
