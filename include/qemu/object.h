@@ -467,6 +467,15 @@ void object_initialize_with_type(void *data, Type type);
 void object_initialize(void *obj, const char *typename);
 
 /**
+ * object_realize:
+ * @obj: The object to realize.
+ *
+ * This function will complete the initialization of an object based on
+ * properties set by setting the "realized" property to true.
+ */
+void object_realize(Object *obj);
+
+/**
  * object_finalize:
  * @obj: The object to finalize.
  *

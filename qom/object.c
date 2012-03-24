@@ -327,6 +327,17 @@ void object_initialize(void *data, const char *typename)
     object_initialize_with_type(data, type);
 }
 
+void object_realize(Object *obj)
+{
+    Error *err = NULL;
+
+    object_property_set_bool(obj, true, "realized", &err);
+    if (error_is_set(&err)) {
+        qerror_report_err(err);
+        exit(1);
+    }
+}
+
 static void object_property_del_all(Object *obj)
 {
     while (!QTAILQ_EMPTY(&obj->properties)) {
