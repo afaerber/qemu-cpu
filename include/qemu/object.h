@@ -239,6 +239,7 @@ struct ObjectClass
 {
     /*< private >*/
     Type type;
+    int (*realize)(Object *obj);
 };
 
 /**
@@ -264,6 +265,7 @@ struct Object
     QTAILQ_HEAD(, ObjectProperty) properties;
     uint32_t ref;
     Object *parent;
+    bool realized;
 };
 
 /**

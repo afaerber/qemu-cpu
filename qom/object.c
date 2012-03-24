@@ -273,6 +273,34 @@ static void object_init_with_type(Object *obj, TypeImpl *ti)
     }
 }
 
+static void object_get_realized(Object *obj, Visitor *v, void *opaque,
+                                const char *name, Error **errp)
+{
+    visit_type_bool(v, &obj->realized, name, errp);
+}
+
+static void object_set_realized(Object *obj, Visitor *v, void *opaque,
+                                const char *name, Error **errp)
+{
+    bool value;
+
+    if (obj->realized) {
+        error_set(errp, QERR_PERMISSION_DENIED);
+        return;
+    }
+
+    visit_type_bool(v, &value, name, errp);
+    if (error_is_set(errp) || !value) {
+        return;
+    }
+
+    if (obj->class->realize != NULL && obj->class->realize(obj) != 0) {
+        error_set(errp, QERR_DEVICE_INIT_FAILED, object_get_typename(obj));
+        return;
+    }
+    obj->realized = true;
+}
+
 void object_initialize_with_type(void *data, TypeImpl *type)
 {
     Object *obj = data;
@@ -287,6 +315,9 @@ void object_initialize_with_type(void *data, TypeImpl *type)
     obj->class = type->class;
     QTAILQ_INIT(&obj->properties);
     object_init_with_type(obj, type);
+    object_property_add(obj, "realized", "boolean",
+                        object_get_realized, object_set_realized,
+                        NULL, NULL, NULL);
 }
 
 void object_initialize(void *data, const char *typename)
