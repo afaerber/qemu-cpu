@@ -184,6 +184,9 @@ QError *qobject_to_qerror(const QObject *obj);
 #define QERR_NOT_SUPPORTED \
     "{ 'class': 'NotSupported', 'data': {} }"
 
+#define QERR_OBJECT_REALIZE_FAILED \
+    "{ 'class': 'ObjectRealizeFailed', 'data': { 'type': %s } }"
+
 #define QERR_OPEN_FILE_FAILED \
     "{ 'class': 'OpenFileFailed', 'data': { 'filename': %s } }"
 

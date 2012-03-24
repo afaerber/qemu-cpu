@@ -217,6 +217,10 @@ static const QErrorStringTable qerror_table[] = {
         .desc      = "Not supported",
     },
     {
+        .error_fmt = QERR_OBJECT_REALIZE_FAILED,
+        .desc      = "Object of type '%(type)' could not be realized",
+    },
+    {
         .error_fmt = QERR_OPEN_FILE_FAILED,
         .desc      = "Could not open '%(filename)'",
     },
