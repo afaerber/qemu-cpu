@@ -649,6 +649,13 @@ static void device_finalize(Object *obj)
     QTAILQ_REMOVE(&dev->parent_bus->children, dev, sibling);
 }
 
+static int device_realize(Object *obj)
+{
+    DeviceState *dev = DEVICE(obj);
+
+    return qdev_init(dev);
+}
+
 void device_reset(DeviceState *dev)
 {
     DeviceClass *klass = DEVICE_GET_CLASS(dev);
@@ -656,6 +663,11 @@ void device_reset(DeviceState *dev)
     if (klass->reset) {
         klass->reset(dev);
     }
+}
+
+static void device_class_init(ObjectClass *class, void *data)
+{
+    class->realize = device_realize;
 }
 
 static TypeInfo device_type_info = {
@@ -666,6 +678,7 @@ static TypeInfo device_type_info = {
     .instance_finalize = device_finalize,
     .abstract = true,
     .class_size = sizeof(DeviceClass),
+    .class_init = device_class_init,
 };
 
 static void qdev_register_types(void)
