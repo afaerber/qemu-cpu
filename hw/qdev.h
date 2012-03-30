@@ -9,10 +9,6 @@
 #include "qemu/object.h"
 #include "error.h"
 
-typedef struct Property Property;
-
-typedef struct PropertyInfo PropertyInfo;
-
 typedef struct CompatProperty CompatProperty;
 
 typedef struct BusState BusState;
@@ -117,26 +113,6 @@ struct BusState {
     QLIST_ENTRY(BusState) sibling;
 };
 
-struct Property {
-    const char   *name;
-    PropertyInfo *info;
-    int          offset;
-    uint8_t      bitnr;
-    uint8_t      qtype;
-    int64_t      defval;
-};
-
-struct PropertyInfo {
-    const char *name;
-    const char *legacy_name;
-    const char **enum_table;
-    int (*parse)(Object *obj, Property *prop, const char *str);
-    int (*print)(Object *obj, Property *prop, char *dest, size_t len);
-    ObjectPropertyAccessor *get;
-    ObjectPropertyAccessor *set;
-    ObjectPropertyRelease *release;
-};
-
 typedef struct GlobalProperty {
     const char *driver;
     const char *property;
@@ -212,16 +188,6 @@ int do_device_del(Monitor *mon, const QDict *qdict, QObject **ret_data);
 
 /*** qdev-properties.c ***/
 
-extern PropertyInfo qdev_prop_bit;
-extern PropertyInfo qdev_prop_uint8;
-extern PropertyInfo qdev_prop_uint16;
-extern PropertyInfo qdev_prop_uint32;
-extern PropertyInfo qdev_prop_int32;
-extern PropertyInfo qdev_prop_uint64;
-extern PropertyInfo qdev_prop_hex8;
-extern PropertyInfo qdev_prop_hex32;
-extern PropertyInfo qdev_prop_hex64;
-extern PropertyInfo qdev_prop_string;
 extern PropertyInfo qdev_prop_chr;
 extern PropertyInfo qdev_prop_ptr;
 extern PropertyInfo qdev_prop_macaddr;
@@ -232,55 +198,12 @@ extern PropertyInfo qdev_prop_vlan;
 extern PropertyInfo qdev_prop_pci_devfn;
 extern PropertyInfo qdev_prop_blocksize;
 
-#define DEFINE_PROP(_name, _state, _field, _prop, _type) { \
-        .name      = (_name),                                    \
-        .info      = &(_prop),                                   \
-        .offset    = offsetof(_state, _field)                    \
-            + type_check(_type,typeof_field(_state, _field)),    \
-        }
-#define DEFINE_PROP_DEFAULT(_name, _state, _field, _defval, _prop, _type) { \
-        .name      = (_name),                                           \
-        .info      = &(_prop),                                          \
-        .offset    = offsetof(_state, _field)                           \
-            + type_check(_type,typeof_field(_state, _field)),           \
-        .qtype     = QTYPE_QINT,                                        \
-        .defval    = (_type)_defval,                                    \
-        }
-#define DEFINE_PROP_BIT(_name, _state, _field, _bit, _defval) {  \
-        .name      = (_name),                                    \
-        .info      = &(qdev_prop_bit),                           \
-        .bitnr    = (_bit),                                      \
-        .offset    = offsetof(_state, _field)                    \
-            + type_check(uint32_t,typeof_field(_state, _field)), \
-        .qtype     = QTYPE_QBOOL,                                \
-        .defval    = (bool)_defval,                              \
-        }
-
-#define DEFINE_PROP_UINT8(_n, _s, _f, _d)                       \
-    DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_uint8, uint8_t)
-#define DEFINE_PROP_UINT16(_n, _s, _f, _d)                      \
-    DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_uint16, uint16_t)
-#define DEFINE_PROP_UINT32(_n, _s, _f, _d)                      \
-    DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_uint32, uint32_t)
-#define DEFINE_PROP_INT32(_n, _s, _f, _d)                      \
-    DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_int32, int32_t)
-#define DEFINE_PROP_UINT64(_n, _s, _f, _d)                      \
-    DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_uint64, uint64_t)
-#define DEFINE_PROP_HEX8(_n, _s, _f, _d)                       \
-    DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_hex8, uint8_t)
-#define DEFINE_PROP_HEX32(_n, _s, _f, _d)                       \
-    DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_hex32, uint32_t)
-#define DEFINE_PROP_HEX64(_n, _s, _f, _d)                       \
-    DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_hex64, uint64_t)
 #define DEFINE_PROP_PCI_DEVFN(_n, _s, _f, _d)                   \
     DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_pci_devfn, int32_t)
-
 #define DEFINE_PROP_PTR(_n, _s, _f)             \
     DEFINE_PROP(_n, _s, _f, qdev_prop_ptr, void*)
 #define DEFINE_PROP_CHR(_n, _s, _f)             \
     DEFINE_PROP(_n, _s, _f, qdev_prop_chr, CharDriverState*)
-#define DEFINE_PROP_STRING(_n, _s, _f)             \
-    DEFINE_PROP(_n, _s, _f, qdev_prop_string, char*)
 #define DEFINE_PROP_NETDEV(_n, _s, _f)             \
     DEFINE_PROP(_n, _s, _f, qdev_prop_netdev, VLANClientState*)
 #define DEFINE_PROP_VLAN(_n, _s, _f)             \
@@ -295,11 +218,7 @@ extern PropertyInfo qdev_prop_blocksize;
 #define DEFINE_PROP_BLOCKSIZE(_n, _s, _f, _d) \
     DEFINE_PROP_DEFAULT(_n, _s, _f, _d, qdev_prop_blocksize, uint16_t)
 
-#define DEFINE_PROP_END_OF_LIST()               \
-    {}
-
 /* Set properties between creation and init.  */
-void *object_get_prop_ptr(Object *obj, Property *prop);
 int qdev_prop_parse(DeviceState *dev, const char *name, const char *value);
 void qdev_prop_set_bit(DeviceState *dev, const char *name, bool value);
 void qdev_prop_set_uint8(DeviceState *dev, const char *name, uint8_t value);
@@ -324,12 +243,6 @@ void error_set_from_prop_error(Error **errp, int ret, Object *obj,
                                Property *prop, const char *value);
 
 char *qdev_get_fw_dev_path(DeviceState *dev);
-
-/**
- * @qdev_property_add_static - add a @Property to a device referencing a
- * field in a struct.
- */
-void qdev_property_add_static(DeviceState *dev, Property *prop, Error **errp);
 
 /**
  * @qdev_machine_init

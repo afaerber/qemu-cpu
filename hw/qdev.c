@@ -615,51 +615,6 @@ void qdev_property_add_legacy(DeviceState *dev, Property *prop,
     g_free(name);
 }
 
-/**
- * @qdev_property_add_static - add a @Property to a device.
- *
- * Static properties access data in a struct.  The actual type of the
- * property and the field depends on the property type.
- */
-void qdev_property_add_static(DeviceState *dev, Property *prop,
-                              Error **errp)
-{
-    Error *local_err = NULL;
-    Object *obj = OBJECT(dev);
-
-    /*
-     * TODO qdev_prop_ptr does not have getters or setters.  It must
-     * go now that it can be replaced with links.  The test should be
-     * removed along with it: all static properties are read/write.
-     */
-    if (!prop->info->get && !prop->info->set) {
-        return;
-    }
-
-    object_property_add(obj, prop->name, prop->info->name,
-                        prop->info->get, prop->info->set,
-                        prop->info->release,
-                        prop, &local_err);
-
-    if (local_err) {
-        error_propagate(errp, local_err);
-        return;
-    }
-    if (prop->qtype == QTYPE_NONE) {
-        return;
-    }
-
-    if (prop->qtype == QTYPE_QBOOL) {
-        object_property_set_bool(obj, prop->defval, prop->name, &local_err);
-    } else if (prop->info->enum_table) {
-        object_property_set_str(obj, prop->info->enum_table[prop->defval],
-                                prop->name, &local_err);
-    } else if (prop->qtype == QTYPE_QINT) {
-        object_property_set_int(obj, prop->defval, prop->name, &local_err);
-    }
-    assert_no_error(local_err);
-}
-
 static void device_initfn(Object *obj)
 {
     DeviceState *dev = DEVICE(obj);
@@ -677,7 +632,7 @@ static void device_initfn(Object *obj)
     do {
         for (prop = DEVICE_CLASS(class)->props; prop && prop->name; prop++) {
             qdev_property_add_legacy(dev, prop, NULL);
-            qdev_property_add_static(dev, prop, NULL);
+            object_property_add_static(OBJECT(dev), prop, NULL);
         }
         class = object_class_get_parent(class);
     } while (class != object_class_by_name(TYPE_DEVICE));
