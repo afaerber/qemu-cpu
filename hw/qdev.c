@@ -548,20 +548,18 @@ char *qdev_get_dev_path(DeviceState *dev)
 static void qdev_get_legacy_property(Object *obj, Visitor *v, void *opaque,
                                      const char *name, Error **errp)
 {
-    DeviceState *dev = DEVICE(obj);
     Property *prop = opaque;
 
     char buffer[1024];
     char *ptr = buffer;
 
-    prop->info->print(dev, prop, buffer, sizeof(buffer));
+    prop->info->print(obj, prop, buffer, sizeof(buffer));
     visit_type_str(v, &ptr, name, errp);
 }
 
 static void qdev_set_legacy_property(Object *obj, Visitor *v, void *opaque,
                                      const char *name, Error **errp)
 {
-    DeviceState *dev = DEVICE(obj);
     Property *prop = opaque;
     Error *local_err = NULL;
     char *ptr = NULL;
@@ -578,8 +576,8 @@ static void qdev_set_legacy_property(Object *obj, Visitor *v, void *opaque,
         return;
     }
 
-    ret = prop->info->parse(dev, prop, ptr);
-    error_set_from_qdev_prop_error(errp, ret, dev, prop, ptr);
+    ret = prop->info->parse(obj, prop, ptr);
+    error_set_from_prop_error(errp, ret, obj, prop, ptr);
     g_free(ptr);
 }
 

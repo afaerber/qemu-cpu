@@ -5,26 +5,25 @@
 
 /* --- target physical address --- */
 
-static int parse_taddr(DeviceState *dev, Property *prop, const char *str)
+static int parse_taddr(Object *obj, Property *prop, const char *str)
 {
-    target_phys_addr_t *ptr = qdev_get_prop_ptr(dev, prop);
+    target_phys_addr_t *ptr = object_get_prop_ptr(obj, prop);
 
     *ptr = strtoull(str, NULL, 16);
     return 0;
 }
 
-static int print_taddr(DeviceState *dev, Property *prop, char *dest, size_t len)
+static int print_taddr(Object *obj, Property *prop, char *dest, size_t len)
 {
-    target_phys_addr_t *ptr = qdev_get_prop_ptr(dev, prop);
+    target_phys_addr_t *ptr = object_get_prop_ptr(obj, prop);
     return snprintf(dest, len, "0x" TARGET_FMT_plx, *ptr);
 }
 
 static void get_taddr(Object *obj, Visitor *v, void *opaque,
                       const char *name, Error **errp)
 {
-    DeviceState *dev = DEVICE(obj);
     Property *prop = opaque;
-    target_phys_addr_t *ptr = qdev_get_prop_ptr(dev, prop);
+    target_phys_addr_t *ptr = object_get_prop_ptr(obj, prop);
     int64_t value;
 
     value = *ptr;
@@ -34,9 +33,8 @@ static void get_taddr(Object *obj, Visitor *v, void *opaque,
 static void set_taddr(Object *obj, Visitor *v, void *opaque,
                       const char *name, Error **errp)
 {
-    DeviceState *dev = DEVICE(obj);
     Property *prop = opaque;
-    target_phys_addr_t *ptr = qdev_get_prop_ptr(dev, prop);
+    target_phys_addr_t *ptr = object_get_prop_ptr(obj, prop);
     Error *local_err = NULL;
     int64_t value;
 
@@ -53,9 +51,8 @@ static void set_taddr(Object *obj, Visitor *v, void *opaque,
     if ((uint64_t)value <= (uint64_t) ~(target_phys_addr_t)0) {
         *ptr = value;
     } else {
-        error_set(errp, QERR_PROPERTY_VALUE_OUT_OF_RANGE,
-                  dev->id?:"", name, value, (uint64_t) 0,
-                  (uint64_t) ~(target_phys_addr_t)0);
+        error_set(errp, QERR_INVALID_PARAMETER_VALUE,
+                  name, "target_phys_addr_t");
     }
 }
 

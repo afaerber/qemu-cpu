@@ -130,8 +130,8 @@ struct PropertyInfo {
     const char *name;
     const char *legacy_name;
     const char **enum_table;
-    int (*parse)(DeviceState *dev, Property *prop, const char *str);
-    int (*print)(DeviceState *dev, Property *prop, char *dest, size_t len);
+    int (*parse)(Object *obj, Property *prop, const char *str);
+    int (*print)(Object *obj, Property *prop, char *dest, size_t len);
     ObjectPropertyAccessor *get;
     ObjectPropertyAccessor *set;
     ObjectPropertyRelease *release;
@@ -299,7 +299,7 @@ extern PropertyInfo qdev_prop_blocksize;
     {}
 
 /* Set properties between creation and init.  */
-void *qdev_get_prop_ptr(DeviceState *dev, Property *prop);
+void *object_get_prop_ptr(Object *obj, Property *prop);
 int qdev_prop_parse(DeviceState *dev, const char *name, const char *value);
 void qdev_prop_set_bit(DeviceState *dev, const char *name, bool value);
 void qdev_prop_set_uint8(DeviceState *dev, const char *name, uint8_t value);
@@ -320,8 +320,8 @@ void qdev_prop_set_ptr(DeviceState *dev, const char *name, void *value);
 
 void qdev_prop_register_global_list(GlobalProperty *props);
 void qdev_prop_set_globals(DeviceState *dev);
-void error_set_from_qdev_prop_error(Error **errp, int ret, DeviceState *dev,
-                                    Property *prop, const char *value);
+void error_set_from_prop_error(Error **errp, int ret, Object *obj,
+                               Property *prop, const char *value);
 
 char *qdev_get_fw_dev_path(DeviceState *dev);
 
