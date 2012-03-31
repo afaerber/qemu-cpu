@@ -522,7 +522,7 @@ static Property *qdev_prop_find(Object *obj, const char *name)
     /* device properties */
     class = object_get_class(obj);
     do {
-        prop = qdev_prop_walk(DEVICE_CLASS(class)->props, name);
+        prop = qdev_prop_walk(OBJECT_CLASS(class)->props, name);
         if (prop) {
             return prop;
         }

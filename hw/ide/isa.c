@@ -108,7 +108,7 @@ static void isa_ide_class_initfn(ObjectClass *klass, void *data)
     ic->init = isa_ide_initfn;
     dc->fw_name = "ide";
     dc->reset = isa_ide_reset;
-    dc->props = isa_ide_properties;
+    klass->props = isa_ide_properties;
 }
 
 static TypeInfo isa_ide_info = {

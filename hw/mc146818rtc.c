@@ -697,7 +697,7 @@ static void rtc_class_initfn(ObjectClass *klass, void *data)
     ic->init = rtc_initfn;
     dc->no_user = 1;
     dc->vmsd = &vmstate_rtc;
-    dc->props = mc146818rtc_properties;
+    klass->props = mc146818rtc_properties;
 }
 
 static TypeInfo mc146818rtc_info = {

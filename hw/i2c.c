@@ -225,7 +225,7 @@ static void i2c_slave_class_init(ObjectClass *klass, void *data)
     DeviceClass *k = DEVICE_CLASS(klass);
     k->init = i2c_slave_qdev_init;
     k->bus_type = TYPE_I2C_BUS;
-    k->props = i2c_props;
+    klass->props = i2c_props;
 }
 
 static TypeInfo i2c_slave_type_info = {

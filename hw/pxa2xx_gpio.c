@@ -331,7 +331,7 @@ static void pxa2xx_gpio_class_init(ObjectClass *klass, void *data)
 
     k->init = pxa2xx_gpio_initfn;
     dc->desc = "PXA2xx GPIO controller";
-    dc->props = pxa2xx_gpio_properties;
+    klass->props = pxa2xx_gpio_properties;
 }
 
 static TypeInfo pxa2xx_gpio_info = {

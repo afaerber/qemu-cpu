@@ -526,11 +526,10 @@ static Property core_properties[] = {
 
 static void core_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = integratorcm_init;
-    dc->props = core_properties;
+    klass->props = core_properties;
 }
 
 static TypeInfo core_info = {

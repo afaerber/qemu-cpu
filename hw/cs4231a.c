@@ -679,7 +679,7 @@ static void cs4231a_class_initfn (ObjectClass *klass, void *data)
     ic->init = cs4231a_initfn;
     dc->desc = "Crystal Semiconductor CS4231A";
     dc->vmsd = &vmstate_cs4231a;
-    dc->props = cs4231a_properties;
+    klass->props = cs4231a_properties;
 }
 
 static TypeInfo cs4231a_info = {

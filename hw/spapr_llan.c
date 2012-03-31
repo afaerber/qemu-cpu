@@ -486,7 +486,6 @@ static Property spapr_vlan_properties[] = {
 
 static void spapr_vlan_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     VIOsPAPRDeviceClass *k = VIO_SPAPR_DEVICE_CLASS(klass);
 
     k->init = spapr_vlan_init;
@@ -496,7 +495,7 @@ static void spapr_vlan_class_init(ObjectClass *klass, void *data)
     k->dt_type = "network";
     k->dt_compatible = "IBM,l-lan";
     k->signal_mask = 0x1;
-    dc->props = spapr_vlan_properties;
+    klass->props = spapr_vlan_properties;
 }
 
 static TypeInfo spapr_vlan_info = {

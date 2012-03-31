@@ -403,7 +403,7 @@ static void arm_sysctl_class_init(ObjectClass *klass, void *data)
     k->init = arm_sysctl_init;
     dc->reset = arm_sysctl_reset;
     dc->vmsd = &vmstate_arm_sysctl;
-    dc->props = arm_sysctl_properties;
+    klass->props = arm_sysctl_properties;
 }
 
 static TypeInfo arm_sysctl_info = {

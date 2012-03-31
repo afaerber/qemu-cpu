@@ -1352,7 +1352,7 @@ static void ac97_class_init (ObjectClass *klass, void *data)
     k->class_id = PCI_CLASS_MULTIMEDIA_AUDIO;
     dc->desc = "Intel 82801AA AC97 Audio";
     dc->vmsd = &vmstate_ac97;
-    dc->props = ac97_properties;
+    klass->props = ac97_properties;
 }
 
 static TypeInfo ac97_info = {

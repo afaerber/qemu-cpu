@@ -1479,7 +1479,7 @@ static void usbredir_class_initfn(ObjectClass *klass, void *data)
     uc->handle_reset   = usbredir_handle_reset;
     uc->handle_data    = usbredir_handle_data;
     uc->handle_control = usbredir_handle_control;
-    dc->props          = usbredir_properties;
+    klass->props          = usbredir_properties;
 }
 
 static TypeInfo usbredir_dev_info = {

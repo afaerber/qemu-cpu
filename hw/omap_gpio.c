@@ -744,7 +744,7 @@ static void omap_gpio_class_init(ObjectClass *klass, void *data)
 
     k->init = omap_gpio_init;
     dc->reset = omap_gpif_reset;
-    dc->props = omap_gpio_properties;
+    klass->props = omap_gpio_properties;
 }
 
 static TypeInfo omap_gpio_info = {
@@ -773,7 +773,7 @@ static void omap2_gpio_class_init(ObjectClass *klass, void *data)
 
     k->init = omap2_gpio_init;
     dc->reset = omap2_gpif_reset;
-    dc->props = omap2_gpio_properties;
+    klass->props = omap2_gpio_properties;
 }
 
 static TypeInfo omap2_gpio_info = {

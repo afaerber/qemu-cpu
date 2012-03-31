@@ -283,7 +283,7 @@ static void kvm_pit_class_init(ObjectClass *klass, void *data)
     k->pre_save = kvm_pit_get;
     k->post_load = kvm_pit_put;
     dc->reset = kvm_pit_reset;
-    dc->props = kvm_pit_properties;
+    klass->props = kvm_pit_properties;
 }
 
 static TypeInfo kvm_pit_info = {

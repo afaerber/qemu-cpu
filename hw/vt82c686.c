@@ -471,7 +471,7 @@ static void via_pm_class_init(ObjectClass *klass, void *data)
     k->revision = 0x40;
     dc->desc = "PM";
     dc->vmsd = &vmstate_acpi;
-    dc->props = via_pm_properties;
+    klass->props = via_pm_properties;
 }
 
 static TypeInfo via_pm_info = {

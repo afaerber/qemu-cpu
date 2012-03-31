@@ -33,6 +33,9 @@ typedef struct TypeInfo TypeInfo;
 typedef struct InterfaceClass InterfaceClass;
 typedef struct InterfaceInfo InterfaceInfo;
 
+typedef struct Property Property;
+typedef struct PropertyInfo PropertyInfo;
+
 #define TYPE_OBJECT "object"
 
 /**
@@ -241,6 +244,7 @@ struct ObjectClass
     Type type;
 
     /*< public >*/
+    Property *props;
     void (*realize)(Object *obj, struct Error **errp);
     void (*realize_children)(Object *obj, struct Error **errp);
     void (*unrealize)(Object *obj);
@@ -988,9 +992,6 @@ int object_child_foreach(Object *obj, int (*fn)(Object *child, void *opaque),
  * Returns: the container object.
  */
 Object *container_get(Object *root, const char *path);
-
-typedef struct Property Property;
-typedef struct PropertyInfo PropertyInfo;
 
 struct Property {
     const char   *name;

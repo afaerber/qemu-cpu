@@ -284,7 +284,7 @@ static void vmmouse_class_initfn(ObjectClass *klass, void *data)
     dc->no_user = 1;
     dc->reset = vmmouse_reset;
     dc->vmsd = &vmstate_vmmouse;
-    dc->props = vmmouse_properties;
+    klass->props = vmmouse_properties;
 }
 
 static TypeInfo vmmouse_info = {

@@ -2051,7 +2051,7 @@ static void qxl_primary_class_init(ObjectClass *klass, void *data)
     dc->desc = "Spice QXL GPU (primary, vga compatible)";
     dc->reset = qxl_reset_handler;
     dc->vmsd = &qxl_vmstate;
-    dc->props = qxl_properties;
+    klass->props = qxl_properties;
 }
 
 static TypeInfo qxl_primary_info = {
@@ -2073,7 +2073,7 @@ static void qxl_secondary_class_init(ObjectClass *klass, void *data)
     dc->desc = "Spice QXL GPU (secondary)";
     dc->reset = qxl_reset_handler;
     dc->vmsd = &qxl_vmstate;
-    dc->props = qxl_properties;
+    klass->props = qxl_properties;
 }
 
 static TypeInfo qxl_secondary_info = {

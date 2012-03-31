@@ -236,11 +236,10 @@ static Property xilinx_ethlite_properties[] = {
 
 static void xilinx_ethlite_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = xilinx_ethlite_init;
-    dc->props = xilinx_ethlite_properties;
+    klass->props = xilinx_ethlite_properties;
 }
 
 static TypeInfo xilinx_ethlite_info = {

@@ -2075,7 +2075,7 @@ static void eepro100_class_init(ObjectClass *klass, void *data)
 
     info = eepro100_get_class_by_name(object_class_get_name(klass));
 
-    dc->props = e100_properties;
+    klass->props = e100_properties;
     dc->desc = info->desc;
     k->vendor_id = PCI_VENDOR_ID_INTEL;
     k->class_id = PCI_CLASS_NETWORK_ETHERNET;

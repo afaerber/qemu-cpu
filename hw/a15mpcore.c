@@ -85,10 +85,9 @@ static Property a15mp_priv_properties[] = {
 
 static void a15mp_priv_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
     k->init = a15mp_priv_init;
-    dc->props = a15mp_priv_properties;
+    klass->props = a15mp_priv_properties;
     /* We currently have no savable state */
 }
 

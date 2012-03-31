@@ -432,7 +432,7 @@ static void nand_class_init(ObjectClass *klass, void *data)
     k->init = nand_device_init;
     dc->reset = nand_reset;
     dc->vmsd = &vmstate_nand;
-    dc->props = nand_properties;
+    klass->props = nand_properties;
 }
 
 static TypeInfo nand_info = {

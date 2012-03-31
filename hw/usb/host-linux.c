@@ -1472,7 +1472,7 @@ static void usb_host_class_initfn(ObjectClass *klass, void *data)
     uc->handle_reset   = usb_host_handle_reset;
     uc->handle_destroy = usb_host_handle_destroy;
     dc->vmsd = &vmstate_usb_host;
-    dc->props = usb_host_dev_properties;
+    klass->props = usb_host_dev_properties;
 }
 
 static TypeInfo usb_host_dev_info = {

@@ -1362,7 +1362,7 @@ static void lan9118_class_init(ObjectClass *klass, void *data)
 
     k->init = lan9118_init1;
     dc->reset = lan9118_reset;
-    dc->props = lan9118_properties;
+    klass->props = lan9118_properties;
     dc->vmsd = &vmstate_lan9118;
 }
 

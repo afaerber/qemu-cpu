@@ -467,7 +467,7 @@ static void omap_i2c_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
     k->init = omap_i2c_init;
-    dc->props = omap_i2c_properties;
+    klass->props = omap_i2c_properties;
     dc->reset = omap_i2c_reset;
 }
 

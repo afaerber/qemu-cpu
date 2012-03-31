@@ -1863,7 +1863,7 @@ static void ohci_pci_class_init(ObjectClass *klass, void *data)
     k->device_id = PCI_DEVICE_ID_APPLE_IPID_USB;
     k->class_id = PCI_CLASS_SERIAL_USB;
     dc->desc = "Apple USB Controller";
-    dc->props = ohci_pci_properties;
+    klass->props = ohci_pci_properties;
 }
 
 static TypeInfo ohci_pci_info = {
@@ -1886,7 +1886,7 @@ static void ohci_sysbus_class_init(ObjectClass *klass, void *data)
 
     sbc->init = ohci_init_pxa;
     dc->desc = "OHCI USB Controller";
-    dc->props = ohci_sysbus_properties;
+    klass->props = ohci_sysbus_properties;
 }
 
 static TypeInfo ohci_sysbus_info = {

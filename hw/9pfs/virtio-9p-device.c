@@ -173,7 +173,7 @@ static void virtio_9p_class_init(ObjectClass *klass, void *data)
     k->device_id = 0x1009;
     k->revision = VIRTIO_PCI_ABI_VERSION;
     k->class_id = 0x2;
-    dc->props = virtio_9p_properties;
+    klass->props = virtio_9p_properties;
     dc->reset = virtio_pci_reset;
 }
 

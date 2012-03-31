@@ -818,7 +818,7 @@ static void onenand_class_init(ObjectClass *klass, void *data)
 
     k->init = onenand_initfn;
     dc->reset = onenand_system_reset;
-    dc->props = onenand_properties;
+    klass->props = onenand_properties;
 }
 
 static TypeInfo onenand_info = {

@@ -168,11 +168,10 @@ static Property xilinx_intc_properties[] = {
 
 static void xilinx_intc_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = xilinx_intc_init;
-    dc->props = xilinx_intc_properties;
+    klass->props = xilinx_intc_properties;
 }
 
 static TypeInfo xilinx_intc_info = {

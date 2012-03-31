@@ -233,7 +233,7 @@ static void qdev_applesmc_class_init(ObjectClass *klass, void *data)
     ISADeviceClass *ic = ISA_DEVICE_CLASS(klass);
     ic->init = applesmc_isa_init;
     dc->reset = qdev_applesmc_isa_reset;
-    dc->props = applesmc_isa_properties;
+    klass->props = applesmc_isa_properties;
 }
 
 static TypeInfo applesmc_isa_info = {

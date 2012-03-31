@@ -332,7 +332,6 @@ static Property cmd646_ide_properties[] = {
 
 static void cmd646_ide_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     PCIDeviceClass *k = PCI_DEVICE_CLASS(klass);
 
     k->init = pci_cmd646_ide_initfn;
@@ -341,7 +340,7 @@ static void cmd646_ide_class_init(ObjectClass *klass, void *data)
     k->device_id = PCI_DEVICE_ID_CMD_646;
     k->revision = 0x07;
     k->class_id = PCI_CLASS_STORAGE_IDE;
-    dc->props = cmd646_ide_properties;
+    klass->props = cmd646_ide_properties;
 }
 
 static TypeInfo cmd646_ide_info = {

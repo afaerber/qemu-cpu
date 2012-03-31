@@ -1407,7 +1407,7 @@ static void sb16_class_initfn (ObjectClass *klass, void *data)
     ic->init = sb16_initfn;
     dc->desc = "Creative Sound Blaster 16";
     dc->vmsd = &vmstate_sb16;
-    dc->props = sb16_properties;
+    klass->props = sb16_properties;
 }
 
 static TypeInfo sb16_info = {

@@ -494,11 +494,10 @@ static Property axidma_properties[] = {
 
 static void axidma_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = xilinx_axidma_init;
-    dc->props = axidma_properties;
+    klass->props = axidma_properties;
 }
 
 static TypeInfo axidma_info = {

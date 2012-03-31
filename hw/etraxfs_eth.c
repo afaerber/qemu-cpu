@@ -623,11 +623,10 @@ static Property etraxfs_eth_properties[] = {
 
 static void etraxfs_eth_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = fs_eth_init;
-    dc->props = etraxfs_eth_properties;
+    klass->props = etraxfs_eth_properties;
 }
 
 static TypeInfo etraxfs_eth_info = {

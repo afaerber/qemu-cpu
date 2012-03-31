@@ -564,7 +564,7 @@ static void g364fb_sysbus_class_init(ObjectClass *klass, void *data)
     dc->desc = "G364 framebuffer";
     dc->reset = g364fb_sysbus_reset;
     dc->vmsd = &vmstate_g364fb;
-    dc->props = g364fb_sysbus_properties;
+    klass->props = g364fb_sysbus_properties;
 }
 
 static TypeInfo g364fb_sysbus_info = {

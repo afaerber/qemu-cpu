@@ -654,7 +654,7 @@ static void tcx_class_init(ObjectClass *klass, void *data)
     k->init = tcx_init1;
     dc->reset = tcx_reset;
     dc->vmsd = &vmstate_tcx;
-    dc->props = tcx_properties;
+    klass->props = tcx_properties;
 }
 
 static TypeInfo tcx_info = {

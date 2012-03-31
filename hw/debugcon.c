@@ -96,10 +96,9 @@ static Property debugcon_isa_properties[] = {
 
 static void debugcon_isa_class_initfn(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     ISADeviceClass *ic = ISA_DEVICE_CLASS(klass);
     ic->init = debugcon_isa_initfn;
-    dc->props = debugcon_isa_properties;
+    klass->props = debugcon_isa_properties;
 }
 
 static TypeInfo debugcon_isa_info = {

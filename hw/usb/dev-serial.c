@@ -589,7 +589,7 @@ static void usb_serial_class_initfn(ObjectClass *klass, void *data)
     uc->handle_data    = usb_serial_handle_data;
     uc->handle_destroy = usb_serial_handle_destroy;
     dc->vmsd = &vmstate_usb_serial;
-    dc->props = serial_properties;
+    klass->props = serial_properties;
 }
 
 static TypeInfo serial_info = {
@@ -617,7 +617,7 @@ static void usb_braille_class_initfn(ObjectClass *klass, void *data)
     uc->handle_data    = usb_serial_handle_data;
     uc->handle_destroy = usb_serial_handle_destroy;
     dc->vmsd = &vmstate_usb_serial;
-    dc->props = braille_properties;
+    klass->props = braille_properties;
 }
 
 static TypeInfo braille_info = {

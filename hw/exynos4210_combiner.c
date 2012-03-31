@@ -440,7 +440,7 @@ static void exynos4210_combiner_class_init(ObjectClass *klass, void *data)
 
     k->init = exynos4210_combiner_init;
     dc->reset = exynos4210_combiner_reset;
-    dc->props = exynos4210_combiner_properties;
+    klass->props = exynos4210_combiner_properties;
     dc->vmsd = &vmstate_exynos4210_combiner;
 }
 

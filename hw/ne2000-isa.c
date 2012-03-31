@@ -91,10 +91,9 @@ static Property ne2000_isa_properties[] = {
 
 static void isa_ne2000_class_initfn(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     ISADeviceClass *ic = ISA_DEVICE_CLASS(klass);
     ic->init = isa_ne2000_initfn;
-    dc->props = ne2000_isa_properties;
+    klass->props = ne2000_isa_properties;
 }
 
 static TypeInfo ne2000_isa_info = {

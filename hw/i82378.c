@@ -260,7 +260,7 @@ static void pci_i82378_class_init(ObjectClass *klass, void *data)
     k->subsystem_vendor_id = 0x0;
     k->subsystem_id = 0x0;
     dc->vmsd = &vmstate_pci_i82378;
-    dc->props = i82378_properties;
+    klass->props = i82378_properties;
 }
 
 static TypeInfo pci_i82378_info = {

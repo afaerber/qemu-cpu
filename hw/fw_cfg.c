@@ -546,7 +546,7 @@ static void fw_cfg_class_init(ObjectClass *klass, void *data)
     dc->no_user = 1;
     dc->reset = fw_cfg_reset;
     dc->vmsd = &vmstate_fw_cfg;
-    dc->props = fw_cfg_properties;
+    klass->props = fw_cfg_properties;
 }
 
 static TypeInfo fw_cfg_info = {

@@ -154,7 +154,7 @@ static void lm32_sys_class_init(ObjectClass *klass, void *data)
     k->init = lm32_sys_init;
     dc->reset = sys_reset;
     dc->vmsd = &vmstate_lm32_sys;
-    dc->props = lm32_sys_properties;
+    klass->props = lm32_sys_properties;
 }
 
 static TypeInfo lm32_sys_info = {

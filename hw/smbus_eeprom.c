@@ -111,7 +111,6 @@ static Property smbus_eeprom_properties[] = {
 
 static void smbus_eeprom_class_initfn(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SMBusDeviceClass *sc = SMBUS_DEVICE_CLASS(klass);
 
     sc->init = smbus_eeprom_initfn;
@@ -120,7 +119,7 @@ static void smbus_eeprom_class_initfn(ObjectClass *klass, void *data)
     sc->receive_byte = eeprom_receive_byte;
     sc->write_data = eeprom_write_data;
     sc->read_data = eeprom_read_data;
-    dc->props = smbus_eeprom_properties;
+    klass->props = smbus_eeprom_properties;
 }
 
 static TypeInfo smbus_eeprom_info = {

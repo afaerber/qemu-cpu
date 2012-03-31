@@ -150,7 +150,7 @@ static void i82374_class_init(ObjectClass *klass, void *data)
     
     k->init  = i82374_isa_init;
     dc->vmsd = &vmstate_isa_i82374;
-    dc->props = i82374_properties;
+    klass->props = i82374_properties;
 }
 
 static TypeInfo i82374_isa_info = {

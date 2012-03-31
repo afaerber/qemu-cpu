@@ -147,7 +147,7 @@ static void nvram_sysbus_class_init(ObjectClass *klass, void *data)
 
     k->init = nvram_sysbus_initfn;
     dc->vmsd = &vmstate_nvram;
-    dc->props = nvram_sysbus_properties;
+    klass->props = nvram_sysbus_properties;
 }
 
 static TypeInfo nvram_sysbus_info = {

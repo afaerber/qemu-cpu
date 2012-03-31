@@ -233,7 +233,7 @@ static void scoop_sysbus_class_init(ObjectClass *klass, void *data)
     k->init = scoop_init;
     dc->desc = "Scoop2 Sharp custom ASIC";
     dc->vmsd = &vmstate_scoop_regs;
-    dc->props = scoop_sysbus_properties;
+    klass->props = scoop_sysbus_properties;
 }
 
 static TypeInfo scoop_sysbus_info = {

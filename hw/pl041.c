@@ -628,7 +628,7 @@ static void pl041_device_class_init(ObjectClass *klass, void *data)
     dc->no_user = 1;
     dc->reset = pl041_device_reset;
     dc->vmsd = &vmstate_pl041;
-    dc->props = pl041_device_properties;
+    klass->props = pl041_device_properties;
 }
 
 static TypeInfo pl041_device_info = {

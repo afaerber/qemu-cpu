@@ -657,7 +657,7 @@ static void exynos4210_uart_class_init(ObjectClass *klass, void *data)
 
     k->init = exynos4210_uart_init;
     dc->reset = exynos4210_uart_reset;
-    dc->props = exynos4210_uart_properties;
+    klass->props = exynos4210_uart_properties;
     dc->vmsd = &vmstate_exynos4210_uart;
 }
 

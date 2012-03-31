@@ -370,7 +370,7 @@ static void iommu_class_init(ObjectClass *klass, void *data)
     k->init = iommu_init1;
     dc->reset = iommu_reset;
     dc->vmsd = &vmstate_iommu;
-    dc->props = iommu_properties;
+    klass->props = iommu_properties;
 }
 
 static TypeInfo iommu_info = {

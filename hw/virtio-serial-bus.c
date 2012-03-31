@@ -995,7 +995,7 @@ static void virtio_serial_port_class_init(ObjectClass *klass, void *data)
     k->bus_type = TYPE_VIRTIO_SERIAL_BUS;
     k->exit = virtser_port_qdev_exit;
     k->unplug = qdev_simple_unplug_cb;
-    k->props = virtser_props;
+    klass->props = virtser_props;
 }
 
 static TypeInfo virtio_serial_port_type_info = {

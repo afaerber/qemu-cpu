@@ -766,7 +766,7 @@ static void esp_class_init(ObjectClass *klass, void *data)
     k->init = esp_init1;
     dc->reset = esp_hard_reset;
     dc->vmsd = &vmstate_esp;
-    dc->props = esp_properties;
+    klass->props = esp_properties;
 }
 
 static TypeInfo esp_info = {

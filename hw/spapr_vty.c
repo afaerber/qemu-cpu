@@ -140,14 +140,13 @@ static Property spapr_vty_properties[] = {
 
 static void spapr_vty_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     VIOsPAPRDeviceClass *k = VIO_SPAPR_DEVICE_CLASS(klass);
 
     k->init = spapr_vty_init;
     k->dt_name = "vty";
     k->dt_type = "serial";
     k->dt_compatible = "hvterm1";
-    dc->props = spapr_vty_properties;
+    klass->props = spapr_vty_properties;
 }
 
 static TypeInfo spapr_vty_info = {

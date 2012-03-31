@@ -1609,7 +1609,7 @@ static void scsi_device_class_init(ObjectClass *klass, void *data)
     k->init     = scsi_qdev_init;
     k->unplug   = qdev_simple_unplug_cb;
     k->exit     = scsi_qdev_exit;
-    k->props    = scsi_props;
+    klass->props    = scsi_props;
 }
 
 static TypeInfo scsi_device_type_info = {

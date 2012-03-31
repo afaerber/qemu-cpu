@@ -715,7 +715,7 @@ static void open_eth_class_init(ObjectClass *klass, void *data)
     k->init = sysbus_open_eth_init;
     dc->desc = "Opencores 10/100 Mbit Ethernet";
     dc->reset = qdev_open_eth_reset;
-    dc->props = open_eth_properties;
+    klass->props = open_eth_properties;
 }
 
 static TypeInfo open_eth_info = {

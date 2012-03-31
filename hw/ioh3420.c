@@ -227,7 +227,7 @@ static void ioh3420_class_init(ObjectClass *klass, void *data)
     dc->desc = "Intel IOH device id 3420 PCIE Root Port";
     dc->reset = ioh3420_reset;
     dc->vmsd = &vmstate_ioh3420;
-    dc->props = ioh3420_properties;
+    klass->props = ioh3420_properties;
 }
 
 static TypeInfo ioh3420_info = {

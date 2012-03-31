@@ -463,7 +463,7 @@ static void piix4_pm_class_init(ObjectClass *klass, void *data)
     dc->desc = "PM";
     dc->no_user = 1;
     dc->vmsd = &vmstate_acpi;
-    dc->props = piix4_pm_properties;
+    klass->props = piix4_pm_properties;
 }
 
 static TypeInfo piix4_pm_info = {

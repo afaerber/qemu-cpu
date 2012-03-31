@@ -333,7 +333,7 @@ static void passthru_class_initfn(ObjectClass *klass, void *data)
     cc->apdu_from_guest = passthru_apdu_from_guest;
     dc->desc = "passthrough smartcard";
     dc->vmsd = &passthru_vmstate;
-    dc->props = passthru_card_properties;
+    klass->props = passthru_card_properties;
 }
 
 static TypeInfo passthru_card_info = {

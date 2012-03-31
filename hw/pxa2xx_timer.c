@@ -492,7 +492,7 @@ static void pxa25x_timer_dev_class_init(ObjectClass *klass, void *data)
     k->init = pxa2xx_timer_init;
     dc->desc = "PXA25x timer";
     dc->vmsd = &vmstate_pxa2xx_timer_regs;
-    dc->props = pxa25x_timer_dev_properties;
+    klass->props = pxa25x_timer_dev_properties;
 }
 
 static TypeInfo pxa25x_timer_dev_info = {
@@ -517,7 +517,7 @@ static void pxa27x_timer_dev_class_init(ObjectClass *klass, void *data)
     k->init = pxa2xx_timer_init;
     dc->desc = "PXA27x timer";
     dc->vmsd = &vmstate_pxa2xx_timer_regs;
-    dc->props = pxa27x_timer_dev_properties;
+    klass->props = pxa27x_timer_dev_properties;
 }
 
 static TypeInfo pxa27x_timer_dev_info = {

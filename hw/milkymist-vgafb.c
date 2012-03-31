@@ -316,7 +316,7 @@ static void milkymist_vgafb_class_init(ObjectClass *klass, void *data)
     k->init = milkymist_vgafb_init;
     dc->reset = milkymist_vgafb_reset;
     dc->vmsd = &vmstate_milkymist_vgafb;
-    dc->props = milkymist_vgafb_properties;
+    klass->props = milkymist_vgafb_properties;
 }
 
 static TypeInfo milkymist_vgafb_info = {

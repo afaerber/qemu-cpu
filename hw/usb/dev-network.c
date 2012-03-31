@@ -1408,7 +1408,7 @@ static void usb_net_class_initfn(ObjectClass *klass, void *data)
     uc->handle_destroy = usb_net_handle_destroy;
     dc->fw_name = "network";
     dc->vmsd = &vmstate_usb_net;
-    dc->props = net_properties;
+    klass->props = net_properties;
 }
 
 static TypeInfo net_info = {

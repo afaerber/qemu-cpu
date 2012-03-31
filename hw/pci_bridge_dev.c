@@ -155,8 +155,8 @@ static void pci_bridge_dev_class_init(ObjectClass *klass, void *data)
     k->is_bridge = 1,
     dc->desc = "Standard PCI Bridge";
     dc->reset = qdev_pci_bridge_dev_reset;
-    dc->props = pci_bridge_dev_properties;
     dc->vmsd = &pci_bridge_dev_vmstate;
+    klass->props = pci_bridge_dev_properties;
 }
 
 static TypeInfo pci_bridge_dev_info = {

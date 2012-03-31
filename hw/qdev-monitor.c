@@ -149,7 +149,7 @@ int qdev_device_help(QemuOpts *opts)
         return 0;
     }
     do {
-        for (prop = DEVICE_CLASS(klass)->props; prop && prop->name; prop++) {
+        for (prop = OBJECT_CLASS(klass)->props; prop && prop->name; prop++) {
             /*
              * TODO Properties without a parser are just for dirty hacks.
              * qdev_prop_ptr is the only such PropertyInfo.  It's marked
@@ -527,7 +527,7 @@ static void qdev_print(Monitor *mon, DeviceState *dev, int indent)
     }
     class = object_get_class(OBJECT(dev));
     do {
-        qdev_print_props(mon, dev, DEVICE_CLASS(class)->props, indent);
+        qdev_print_props(mon, dev, OBJECT_CLASS(class)->props, indent);
         class = object_class_get_parent(class);
     } while (class != object_class_by_name(TYPE_DEVICE));
     bus_print_dev(dev->parent_bus, mon, dev, indent + 2);

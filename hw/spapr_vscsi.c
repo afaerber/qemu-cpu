@@ -951,7 +951,6 @@ static Property spapr_vscsi_properties[] = {
 
 static void spapr_vscsi_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     VIOsPAPRDeviceClass *k = VIO_SPAPR_DEVICE_CLASS(klass);
 
     k->init = spapr_vscsi_init;
@@ -961,7 +960,7 @@ static void spapr_vscsi_class_init(ObjectClass *klass, void *data)
     k->dt_type = "vscsi";
     k->dt_compatible = "IBM,v-scsi";
     k->signal_mask = 0x00000001;
-    dc->props = spapr_vscsi_properties;
+    klass->props = spapr_vscsi_properties;
 }
 
 static TypeInfo spapr_vscsi_info = {

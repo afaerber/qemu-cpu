@@ -321,7 +321,7 @@ static void ecc_class_init(ObjectClass *klass, void *data)
     k->init = ecc_init1;
     dc->reset = ecc_reset;
     dc->vmsd = &vmstate_ecc;
-    dc->props = ecc_properties;
+    klass->props = ecc_properties;
 }
 
 static TypeInfo ecc_info = {

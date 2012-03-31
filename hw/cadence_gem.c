@@ -1213,7 +1213,7 @@ static void gem_class_init(ObjectClass *klass, void *data)
     SysBusDeviceClass *sdc = SYS_BUS_DEVICE_CLASS(klass);
 
     sdc->init = gem_init;
-    dc->props = gem_properties;
+    klass->props = gem_properties;
     dc->vmsd = &vmstate_cadence_gem;
     dc->reset = gem_reset;
 }

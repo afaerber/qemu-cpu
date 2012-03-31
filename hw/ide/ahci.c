@@ -1202,7 +1202,7 @@ static void sysbus_ahci_class_init(ObjectClass *klass, void *data)
 
     sbc->init = sysbus_ahci_init;
     dc->vmsd = &vmstate_sysbus_ahci;
-    dc->props = sysbus_ahci_properties;
+    klass->props = sysbus_ahci_properties;
 }
 
 static TypeInfo sysbus_ahci_info = {

@@ -589,7 +589,7 @@ static void usb_device_class_init(ObjectClass *klass, void *data)
     k->init     = usb_qdev_init;
     k->unplug   = qdev_simple_unplug_cb;
     k->exit     = usb_qdev_exit;
-    k->props    = usb_props;
+    klass->props    = usb_props;
 }
 
 static TypeInfo usb_device_type_info = {

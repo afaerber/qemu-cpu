@@ -199,7 +199,7 @@ static void ide_hd_class_init(ObjectClass *klass, void *data)
     k->init = ide_hd_initfn;
     dc->fw_name = "drive";
     dc->desc = "virtual IDE disk";
-    dc->props = ide_hd_properties;
+    klass->props = ide_hd_properties;
 }
 
 static TypeInfo ide_hd_info = {
@@ -221,7 +221,7 @@ static void ide_cd_class_init(ObjectClass *klass, void *data)
     k->init = ide_cd_initfn;
     dc->fw_name = "drive";
     dc->desc = "virtual IDE CD-ROM";
-    dc->props = ide_cd_properties;
+    klass->props = ide_cd_properties;
 }
 
 static TypeInfo ide_cd_info = {
@@ -243,7 +243,7 @@ static void ide_drive_class_init(ObjectClass *klass, void *data)
     k->init = ide_drive_initfn;
     dc->fw_name = "drive";
     dc->desc = "virtual IDE disk or CD-ROM (legacy)";
-    dc->props = ide_drive_properties;
+    klass->props = ide_drive_properties;
 }
 
 static TypeInfo ide_drive_info = {
@@ -258,7 +258,7 @@ static void ide_device_class_init(ObjectClass *klass, void *data)
     DeviceClass *k = DEVICE_CLASS(klass);
     k->init = ide_qdev_init;
     k->bus_type = TYPE_IDE_BUS;
-    k->props = ide_props;
+    klass->props = ide_props;
 }
 
 static TypeInfo ide_device_type_info = {

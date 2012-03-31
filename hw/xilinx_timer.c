@@ -232,11 +232,10 @@ static Property xilinx_timer_properties[] = {
 
 static void xilinx_timer_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = xilinx_timer_init;
-    dc->props = xilinx_timer_properties;
+    klass->props = xilinx_timer_properties;
 }
 
 static TypeInfo xilinx_timer_info = {

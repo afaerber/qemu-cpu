@@ -771,7 +771,7 @@ static void ne2000_class_init(ObjectClass *klass, void *data)
     k->device_id = PCI_DEVICE_ID_REALTEK_8029;
     k->class_id = PCI_CLASS_NETWORK_ETHERNET;
     dc->vmsd = &vmstate_pci_ne2000;
-    dc->props = ne2000_properties;
+    klass->props = ne2000_properties;
 }
 
 static TypeInfo ne2000_info = {

@@ -921,7 +921,7 @@ static void escc_class_init(ObjectClass *klass, void *data)
     k->init = escc_init1;
     dc->reset = escc_reset;
     dc->vmsd = &vmstate_escc;
-    dc->props = escc_properties;
+    klass->props = escc_properties;
 }
 
 static TypeInfo escc_info = {

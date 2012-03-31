@@ -249,11 +249,10 @@ static Property grlib_gptimer_properties[] = {
 
 static void grlib_gptimer_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = grlib_apbuart_init;
-    dc->props = grlib_gptimer_properties;
+    klass->props = grlib_gptimer_properties;
 }
 
 static TypeInfo grlib_gptimer_info = {

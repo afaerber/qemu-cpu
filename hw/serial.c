@@ -902,7 +902,7 @@ static void serial_isa_class_initfn(ObjectClass *klass, void *data)
     ISADeviceClass *ic = ISA_DEVICE_CLASS(klass);
     ic->init = serial_isa_initfn;
     dc->vmsd = &vmstate_isa_serial;
-    dc->props = serial_isa_properties;
+    klass->props = serial_isa_properties;
 }
 
 static TypeInfo serial_isa_info = {

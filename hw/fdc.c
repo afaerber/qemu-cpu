@@ -2062,7 +2062,7 @@ static void isabus_fdc_class_init1(ObjectClass *klass, void *data)
     dc->no_user = 1;
     dc->reset = fdctrl_external_reset_isa;
     dc->vmsd = &vmstate_isa_fdc;
-    dc->props = isa_fdc_properties;
+    klass->props = isa_fdc_properties;
 }
 
 static TypeInfo isa_fdc_info = {
@@ -2096,7 +2096,7 @@ static void sysbus_fdc_class_init(ObjectClass *klass, void *data)
     k->init = sysbus_fdc_init1;
     dc->reset = fdctrl_external_reset_sysbus;
     dc->vmsd = &vmstate_sysbus_fdc;
-    dc->props = sysbus_fdc_properties;
+    klass->props = sysbus_fdc_properties;
 }
 
 static TypeInfo sysbus_fdc_info = {
@@ -2119,7 +2119,7 @@ static void sun4m_fdc_class_init(ObjectClass *klass, void *data)
     k->init = sun4m_fdc_init1;
     dc->reset = fdctrl_external_reset_sysbus;
     dc->vmsd = &vmstate_sysbus_fdc;
-    dc->props = sun4m_fdc_properties;
+    klass->props = sun4m_fdc_properties;
 }
 
 static TypeInfo sun4m_fdc_info = {

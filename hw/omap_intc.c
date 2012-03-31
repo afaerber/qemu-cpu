@@ -386,7 +386,7 @@ static void omap_intc_class_init(ObjectClass *klass, void *data)
 
     k->init = omap_intc_init;
     dc->reset = omap_inth_reset;
-    dc->props = omap_intc_properties;
+    klass->props = omap_intc_properties;
 }
 
 static TypeInfo omap_intc_info = {
@@ -630,7 +630,7 @@ static void omap2_intc_class_init(ObjectClass *klass, void *data)
 
     k->init = omap2_intc_init;
     dc->reset = omap_inth_reset;
-    dc->props = omap2_intc_properties;
+    klass->props = omap2_intc_properties;
 }
 
 static TypeInfo omap2_intc_info = {

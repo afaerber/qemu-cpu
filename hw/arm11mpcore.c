@@ -210,11 +210,10 @@ static Property mpcore_rirq_properties[] = {
 
 static void mpcore_rirq_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = realview_mpcore_init;
-    dc->props = mpcore_rirq_properties;
+    klass->props = mpcore_rirq_properties;
 }
 
 static TypeInfo mpcore_rirq_info = {
@@ -240,11 +239,10 @@ static Property mpcore_priv_properties[] = {
 
 static void mpcore_priv_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = mpcore_priv_init;
-    dc->props = mpcore_priv_properties;
+    klass->props = mpcore_priv_properties;
 }
 
 static TypeInfo mpcore_priv_info = {

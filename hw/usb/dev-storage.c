@@ -683,7 +683,7 @@ static void usb_msd_class_initfn(ObjectClass *klass, void *data)
     uc->handle_data    = usb_msd_handle_data;
     dc->fw_name = "storage";
     dc->vmsd = &vmstate_usb_msd;
-    dc->props = msd_properties;
+    klass->props = msd_properties;
 }
 
 static TypeInfo msd_info = {

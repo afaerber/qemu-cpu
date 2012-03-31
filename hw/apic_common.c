@@ -370,7 +370,7 @@ static void apic_common_class_init(ObjectClass *klass, void *data)
     dc->vmsd = &vmstate_apic_common;
     dc->reset = apic_reset_common;
     dc->no_user = 1;
-    dc->props = apic_properties_common;
+    klass->props = apic_properties_common;
     sc->init = apic_init_common;
 }
 

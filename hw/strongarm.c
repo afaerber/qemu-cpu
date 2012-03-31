@@ -1295,7 +1295,7 @@ static void strongarm_uart_class_init(ObjectClass *klass, void *data)
     dc->desc = "StrongARM UART controller";
     dc->reset = strongarm_uart_reset;
     dc->vmsd = &vmstate_strongarm_uart_regs;
-    dc->props = strongarm_uart_properties;
+    klass->props = strongarm_uart_properties;
 }
 
 static TypeInfo strongarm_uart_info = {

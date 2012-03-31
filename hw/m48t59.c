@@ -738,7 +738,7 @@ static void m48t59_init_class_isa1(ObjectClass *klass, void *data)
     ic->init = m48t59_init_isa1;
     dc->no_user = 1;
     dc->reset = m48t59_reset_isa;
-    dc->props = m48t59_isa_properties;
+    klass->props = m48t59_isa_properties;
 }
 
 static TypeInfo m48t59_isa_info = {
@@ -762,7 +762,7 @@ static void m48t59_class_init(ObjectClass *klass, void *data)
 
     k->init = m48t59_init1;
     dc->reset = m48t59_reset_sysbus;
-    dc->props = m48t59_properties;
+    klass->props = m48t59_properties;
 }
 
 static TypeInfo m48t59_info = {

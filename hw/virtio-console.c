@@ -131,7 +131,6 @@ static Property virtconsole_properties[] = {
 
 static void virtconsole_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_CLASS(klass);
 
     k->is_console = true;
@@ -139,7 +138,7 @@ static void virtconsole_class_init(ObjectClass *klass, void *data)
     k->have_data = flush_buf;
     k->guest_open = guest_open;
     k->guest_close = guest_close;
-    dc->props = virtconsole_properties;
+    klass->props = virtconsole_properties;
 }
 
 static TypeInfo virtconsole_info = {
@@ -156,14 +155,13 @@ static Property virtserialport_properties[] = {
 
 static void virtserialport_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_CLASS(klass);
 
     k->init = virtconsole_initfn;
     k->have_data = flush_buf;
     k->guest_open = guest_open;
     k->guest_close = guest_close;
-    dc->props = virtserialport_properties;
+    klass->props = virtserialport_properties;
 }
 
 static TypeInfo virtserialport_info = {

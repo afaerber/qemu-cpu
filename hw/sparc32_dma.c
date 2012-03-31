@@ -297,7 +297,7 @@ static void sparc32_dma_class_init(ObjectClass *klass, void *data)
     k->init = sparc32_dma_init1;
     dc->reset = dma_reset;
     dc->vmsd = &vmstate_dma;
-    dc->props = sparc32_dma_properties;
+    klass->props = sparc32_dma_properties;
 }
 
 static TypeInfo sparc32_dma_info = {

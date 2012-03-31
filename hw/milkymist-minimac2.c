@@ -532,7 +532,7 @@ static void milkymist_minimac2_class_init(ObjectClass *klass, void *data)
     k->init = milkymist_minimac2_init;
     dc->reset = milkymist_minimac2_reset;
     dc->vmsd = &vmstate_milkymist_minimac2;
-    dc->props = milkymist_minimac2_properties;
+    klass->props = milkymist_minimac2_properties;
 }
 
 static TypeInfo milkymist_minimac2_info = {

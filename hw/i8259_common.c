@@ -140,7 +140,7 @@ static void pic_common_class_init(ObjectClass *klass, void *data)
 
     dc->vmsd = &vmstate_pic_common;
     dc->no_user = 1;
-    dc->props = pic_properties_common;
+    klass->props = pic_properties_common;
     ic->init = pic_init_common;
 }
 

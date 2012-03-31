@@ -257,11 +257,10 @@ static Property bitband_properties[] = {
 
 static void bitband_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = bitband_init;
-    dc->props = bitband_properties;
+    klass->props = bitband_properties;
 }
 
 static TypeInfo bitband_info = {

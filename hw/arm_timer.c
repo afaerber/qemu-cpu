@@ -370,10 +370,9 @@ static Property sp804_properties[] = {
 static void sp804_class_init(ObjectClass *klass, void *data)
 {
     SysBusDeviceClass *sdc = SYS_BUS_DEVICE_CLASS(klass);
-    DeviceClass *k = DEVICE_CLASS(klass);
 
     sdc->init = sp804_init;
-    k->props = sp804_properties;
+    klass->props = sp804_properties;
 }
 
 static TypeInfo sp804_info = {

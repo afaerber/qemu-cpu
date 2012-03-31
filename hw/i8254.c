@@ -342,7 +342,7 @@ static void pit_class_initfn(ObjectClass *klass, void *data)
     k->get_channel_info = pit_get_channel_info_common;
     k->post_load = pit_post_load;
     dc->reset = pit_reset;
-    dc->props = pit_properties;
+    klass->props = pit_properties;
 }
 
 static TypeInfo pit_info = {

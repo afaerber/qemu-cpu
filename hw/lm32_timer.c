@@ -212,7 +212,7 @@ static void lm32_timer_class_init(ObjectClass *klass, void *data)
     k->init = lm32_timer_init;
     dc->reset = timer_reset;
     dc->vmsd = &vmstate_lm32_timer;
-    dc->props = lm32_timer_properties;
+    klass->props = lm32_timer_properties;
 }
 
 static TypeInfo lm32_timer_info = {

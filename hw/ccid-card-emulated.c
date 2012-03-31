@@ -584,7 +584,7 @@ static void emulated_class_initfn(ObjectClass *klass, void *data)
     cc->get_atr = emulated_get_atr;
     cc->apdu_from_guest = emulated_apdu_from_guest;
     dc->desc = "emulated smartcard";
-    dc->props = emulated_card_properties;
+    klass->props = emulated_card_properties;
 }
 
 static TypeInfo emulated_card_info = {

@@ -222,7 +222,7 @@ static void a9mp_priv_class_init(ObjectClass *klass, void *data)
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = a9mp_priv_init;
-    dc->props = a9mp_priv_properties;
+    klass->props = a9mp_priv_properties;
     dc->vmsd = &vmstate_a9mp_priv;
     dc->reset = a9mp_priv_reset;
 }

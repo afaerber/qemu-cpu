@@ -556,7 +556,7 @@ static void pxa2xx_dma_class_init(ObjectClass *klass, void *data)
     k->init = pxa2xx_dma_init;
     dc->desc = "PXA2xx DMA controller";
     dc->vmsd = &vmstate_pxa2xx_dma;
-    dc->props = pxa2xx_dma_properties;
+    klass->props = pxa2xx_dma_properties;
 }
 
 static TypeInfo pxa2xx_dma_info = {

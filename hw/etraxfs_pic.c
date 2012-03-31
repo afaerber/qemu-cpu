@@ -158,11 +158,10 @@ static Property etraxfs_pic_properties[] = {
 
 static void etraxfs_pic_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = etraxfs_pic_init;
-    dc->props = etraxfs_pic_properties;
+    klass->props = etraxfs_pic_properties;
 }
 
 static TypeInfo etraxfs_pic_info = {

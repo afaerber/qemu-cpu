@@ -285,7 +285,7 @@ static void mv88w8618_audio_class_init(ObjectClass *klass, void *data)
     k->init = mv88w8618_audio_init;
     dc->reset = mv88w8618_audio_reset;
     dc->vmsd = &mv88w8618_audio_vmsd;
-    dc->props = mv88w8618_audio_properties;
+    klass->props = mv88w8618_audio_properties;
 }
 
 static TypeInfo mv88w8618_audio_info = {

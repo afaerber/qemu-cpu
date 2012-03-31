@@ -320,7 +320,7 @@ static void milkymist_sysctl_class_init(ObjectClass *klass, void *data)
     k->init = milkymist_sysctl_init;
     dc->reset = milkymist_sysctl_reset;
     dc->vmsd = &vmstate_milkymist_sysctl;
-    dc->props = milkymist_sysctl_properties;
+    klass->props = milkymist_sysctl_properties;
 }
 
 static TypeInfo milkymist_sysctl_info = {

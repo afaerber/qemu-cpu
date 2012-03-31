@@ -167,7 +167,7 @@ static void xio3130_upstream_class_init(ObjectClass *klass, void *data)
     dc->desc = "TI X3130 Upstream Port of PCI Express Switch";
     dc->reset = xio3130_upstream_reset;
     dc->vmsd = &vmstate_xio3130_upstream;
-    dc->props = xio3130_upstream_properties;
+    klass->props = xio3130_upstream_properties;
 }
 
 static TypeInfo xio3130_upstream_info = {

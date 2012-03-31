@@ -152,7 +152,7 @@ static void lance_class_init(ObjectClass *klass, void *data)
     dc->fw_name = "ethernet";
     dc->reset = lance_reset;
     dc->vmsd = &vmstate_lance;
-    dc->props = lance_properties;
+    klass->props = lance_properties;
 }
 
 static TypeInfo lance_info = {

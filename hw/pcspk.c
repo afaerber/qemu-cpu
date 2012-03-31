@@ -184,7 +184,7 @@ static void pcspk_class_initfn(ObjectClass *klass, void *data)
 
     ic->init = pcspk_initfn;
     dc->no_user = 1;
-    dc->props = pcspk_properties;
+    klass->props = pcspk_properties;
 }
 
 static TypeInfo pcspk_info = {

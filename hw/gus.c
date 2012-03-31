@@ -314,7 +314,7 @@ static void gus_class_initfn (ObjectClass *klass, void *data)
     ic->init = gus_initfn;
     dc->desc = "Gravis Ultrasound GF1";
     dc->vmsd = &vmstate_gus;
-    dc->props = gus_properties;
+    klass->props = gus_properties;
 }
 
 static TypeInfo gus_info = {

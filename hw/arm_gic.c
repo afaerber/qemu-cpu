@@ -945,7 +945,7 @@ static void arm_gic_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *sbc = SYS_BUS_DEVICE_CLASS(klass);
     sbc->init = arm_gic_init;
-    dc->props = arm_gic_properties;
+    klass->props = arm_gic_properties;
     dc->reset = gic_reset;
     dc->no_user = 1;
 }

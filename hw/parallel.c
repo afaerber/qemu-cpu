@@ -593,10 +593,9 @@ static Property parallel_isa_properties[] = {
 
 static void parallel_isa_class_initfn(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     ISADeviceClass *ic = ISA_DEVICE_CLASS(klass);
     ic->init = parallel_isa_initfn;
-    dc->props = parallel_isa_properties;
+    klass->props = parallel_isa_properties;
 }
 
 static TypeInfo parallel_isa_info = {

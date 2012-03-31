@@ -742,7 +742,7 @@ static void hpet_device_class_init(ObjectClass *klass, void *data)
     dc->no_user = 1;
     dc->reset = hpet_reset;
     dc->vmsd = &vmstate_hpet;
-    dc->props = hpet_device_properties;
+    klass->props = hpet_device_properties;
 }
 
 static TypeInfo hpet_device_info = {

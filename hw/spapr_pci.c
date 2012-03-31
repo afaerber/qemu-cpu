@@ -344,10 +344,9 @@ static Property spapr_phb_properties[] = {
 static void spapr_phb_class_init(ObjectClass *klass, void *data)
 {
     SysBusDeviceClass *sdc = SYS_BUS_DEVICE_CLASS(klass);
-    DeviceClass *dc = DEVICE_CLASS(klass);
 
     sdc->init = spapr_phb_init;
-    dc->props = spapr_phb_properties;
+    klass->props = spapr_phb_properties;
 
     spapr_rtas_register("read-pci-config", rtas_read_pci_config);
     spapr_rtas_register("write-pci-config", rtas_write_pci_config);

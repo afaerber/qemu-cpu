@@ -163,7 +163,7 @@ static void cs4231_class_init(ObjectClass *klass, void *data)
     k->init = cs4231_init1;
     dc->reset = cs_reset;
     dc->vmsd = &vmstate_cs4231;
-    dc->props = cs4231_properties;
+    klass->props = cs4231_properties;
 }
 
 static TypeInfo cs4231_info = {

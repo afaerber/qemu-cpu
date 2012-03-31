@@ -630,9 +630,8 @@ static void device_initfn(Object *obj)
 
     class = object_get_class(OBJECT(dev));
     do {
-        for (prop = DEVICE_CLASS(class)->props; prop && prop->name; prop++) {
+        for (prop = OBJECT_CLASS(class)->props; prop && prop->name; prop++) {
             qdev_property_add_legacy(dev, prop, NULL);
-            object_property_add_static(OBJECT(dev), prop, NULL);
         }
         class = object_class_get_parent(class);
     } while (class != object_class_by_name(TYPE_DEVICE));
@@ -669,16 +668,6 @@ static void device_finalize(Object *obj)
     }
 }
 
-static void device_class_base_init(ObjectClass *class, void *data)
-{
-    DeviceClass *klass = DEVICE_CLASS(class);
-
-    /* We explicitly look up properties in the superclasses,
-     * so do not propagate them to the subclasses.
-     */
-    klass->props = NULL;
-}
-
 void device_reset(DeviceState *dev)
 {
     DeviceClass *klass = DEVICE_GET_CLASS(dev);
@@ -705,7 +694,6 @@ static TypeInfo device_type_info = {
     .instance_size = sizeof(DeviceState),
     .instance_init = device_initfn,
     .instance_finalize = device_finalize,
-    .class_base_init = device_class_base_init,
     .abstract = true,
     .class_size = sizeof(DeviceClass),
 };

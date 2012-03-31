@@ -2918,7 +2918,6 @@ static void xhci_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->vmsd    = &vmstate_xhci;
-    dc->props   = xhci_properties;
     dc->reset   = xhci_reset;
     k->init         = usb_xhci_initfn;
     k->vendor_id    = PCI_VENDOR_ID_NEC;
@@ -2927,6 +2926,7 @@ static void xhci_class_init(ObjectClass *klass, void *data)
     k->revision     = 0x03;
     k->is_express   = 1;
     k->config_write = xhci_write_config;
+    klass->props = xhci_properties;
 }
 
 static TypeInfo xhci_info = {

@@ -806,7 +806,7 @@ static void ivshmem_class_init(ObjectClass *klass, void *data)
     k->device_id = 0x1110;
     k->class_id = PCI_CLASS_MEMORY_RAM;
     dc->reset = ivshmem_reset;
-    dc->props = ivshmem_properties;
+    klass->props = ivshmem_properties;
 }
 
 static TypeInfo ivshmem_info = {

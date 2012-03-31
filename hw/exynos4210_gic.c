@@ -341,11 +341,10 @@ static Property exynos4210_gic_properties[] = {
 
 static void exynos4210_gic_class_init(ObjectClass *klass, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
     SysBusDeviceClass *k = SYS_BUS_DEVICE_CLASS(klass);
 
     k->init = exynos4210_gic_init;
-    dc->props = exynos4210_gic_properties;
+    klass->props = exynos4210_gic_properties;
 }
 
 static TypeInfo exynos4210_gic_info = {

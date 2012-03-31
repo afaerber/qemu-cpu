@@ -1036,7 +1036,7 @@ static void sl_nand_class_init(ObjectClass *klass, void *data)
 
     k->init = sl_nand_init;
     dc->vmsd = &vmstate_sl_nand_info;
-    dc->props = sl_nand_properties;
+    klass->props = sl_nand_properties;
 }
 
 static TypeInfo sl_nand_info = {
@@ -1071,7 +1071,7 @@ static void spitz_keyboard_class_init(ObjectClass *klass, void *data)
 
     k->init = spitz_keyboard_init;
     dc->vmsd = &vmstate_spitz_kbd;
-    dc->props = spitz_keyboard_properties;
+    klass->props = spitz_keyboard_properties;
 }
 
 static TypeInfo spitz_keyboard_info = {
