@@ -53,7 +53,7 @@ static void set_bit(Object *obj, Visitor *v, void *opaque,
     Error *local_err = NULL;
     bool value;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -93,7 +93,7 @@ static void set_uint8(Object *obj, Visitor *v, void *opaque,
     Property *prop = opaque;
     uint8_t *ptr = qdev_get_prop_ptr(dev, prop);
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -160,7 +160,7 @@ static void set_uint16(Object *obj, Visitor *v, void *opaque,
     Property *prop = opaque;
     uint16_t *ptr = qdev_get_prop_ptr(dev, prop);
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -193,7 +193,7 @@ static void set_uint32(Object *obj, Visitor *v, void *opaque,
     Property *prop = opaque;
     uint32_t *ptr = qdev_get_prop_ptr(dev, prop);
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -218,7 +218,7 @@ static void set_int32(Object *obj, Visitor *v, void *opaque,
     Property *prop = opaque;
     int32_t *ptr = qdev_get_prop_ptr(dev, prop);
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -291,7 +291,7 @@ static void set_uint64(Object *obj, Visitor *v, void *opaque,
     Property *prop = opaque;
     uint64_t *ptr = qdev_get_prop_ptr(dev, prop);
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -379,7 +379,7 @@ static void set_string(Object *obj, Visitor *v, void *opaque,
     Error *local_err = NULL;
     char *str;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -457,7 +457,7 @@ static void set_pointer(Object *obj, Visitor *v, Property *prop,
     char *str;
     int ret;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -626,7 +626,7 @@ static void set_vlan(Object *obj, Visitor *v, void *opaque,
     int64_t id;
     VLANState *vlan;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -696,7 +696,7 @@ static void set_mac(Object *obj, Visitor *v, void *opaque,
     int i, pos;
     char *str, *p;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -766,7 +766,7 @@ static void set_enum(Object *obj, Visitor *v, void *opaque,
     Property *prop = opaque;
     int *ptr = qdev_get_prop_ptr(dev, prop);
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -797,7 +797,7 @@ static void set_pci_devfn(Object *obj, Visitor *v, void *opaque,
     Error *local_err = NULL;
     char *str;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -867,7 +867,7 @@ static void set_blocksize(Object *obj, Visitor *v, void *opaque,
     const int64_t min = 512;
     const int64_t max = 32768;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }

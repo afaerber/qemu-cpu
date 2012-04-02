@@ -19,11 +19,6 @@ typedef struct BusState BusState;
 
 typedef struct BusClass BusClass;
 
-enum DevState {
-    DEV_STATE_CREATED = 1,
-    DEV_STATE_INITIALIZED,
-};
-
 enum {
     DEV_NVECTORS_UNSPECIFIED = -1,
 };
@@ -64,7 +59,6 @@ struct DeviceState {
     Object parent_obj;
 
     const char *id;
-    enum DevState state;
     QemuOpts *opts;
     int hotplugged;
     BusState *parent_bus;

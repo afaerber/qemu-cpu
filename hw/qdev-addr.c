@@ -1,3 +1,4 @@
+#include "qemu/object.h"
 #include "qdev.h"
 #include "qdev-addr.h"
 #include "targphys.h"
@@ -39,7 +40,7 @@ static void set_taddr(Object *obj, Visitor *v, void *opaque,
     Error *local_err = NULL;
     int64_t value;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }

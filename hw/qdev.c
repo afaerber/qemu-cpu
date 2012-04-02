@@ -155,7 +155,7 @@ int qdev_init(DeviceState *dev)
     DeviceClass *dc = DEVICE_GET_CLASS(dev);
     int rc;
 
-    assert(dev->state == DEV_STATE_CREATED);
+    assert(!object_is_realized(OBJECT(dev)));
 
     rc = dc->init(dev);
     if (rc < 0) {
@@ -178,7 +178,7 @@ int qdev_init(DeviceState *dev)
                                        dev->instance_id_alias,
                                        dev->alias_required_for_version);
     }
-    dev->state = DEV_STATE_INITIALIZED;
+    OBJECT(dev)->realized = true;
     if (dev->hotplugged) {
         device_reset(dev);
     }
@@ -188,7 +188,7 @@ int qdev_init(DeviceState *dev)
 void qdev_set_legacy_instance_id(DeviceState *dev, int alias_id,
                                  int required_for_version)
 {
-    assert(dev->state == DEV_STATE_CREATED);
+    assert(!object_is_realized(OBJECT(dev)));
     dev->instance_id_alias = alias_id;
     dev->alias_required_for_version = required_for_version;
 }
@@ -567,7 +567,7 @@ static void qdev_set_legacy_property(Object *obj, Visitor *v, void *opaque,
     char *ptr = NULL;
     int ret;
 
-    if (dev->state != DEV_STATE_CREATED) {
+    if (object_is_realized(obj)) {
         error_set(errp, QERR_PERMISSION_DENIED);
         return;
     }
@@ -674,7 +674,6 @@ static void device_initfn(Object *obj)
     }
 
     dev->instance_id_alias = -1;
-    dev->state = DEV_STATE_CREATED;
 
     class = object_get_class(OBJECT(dev));
     do {
@@ -697,7 +696,7 @@ static void device_finalize(Object *obj)
     BusState *bus;
     DeviceClass *dc = DEVICE_GET_CLASS(dev);
 
-    if (dev->state == DEV_STATE_INITIALIZED) {
+    if (object_is_realized(obj)) {
         while (dev->num_child_bus) {
             bus = QLIST_FIRST(&dev->child_bus);
             qbus_free(bus);

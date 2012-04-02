@@ -264,6 +264,7 @@ struct Object
     QTAILQ_HEAD(, ObjectProperty) properties;
     uint32_t ref;
     Object *parent;
+    bool realized;
 };
 
 /**
@@ -810,6 +811,14 @@ const char *object_property_get_type(Object *obj, const char *name,
  * Returns: the root object of the composition tree
  */
 Object *object_get_root(void);
+
+/**
+ * object_is_realized:
+ * @obj: the object
+ *
+ * Returns: Whether @obj has been realized (i.e., completely constructed).
+ */
+bool object_is_realized(Object *obj);
 
 /**
  * object_get_canonical_path:
