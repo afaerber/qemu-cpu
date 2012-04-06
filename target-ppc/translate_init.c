@@ -10261,6 +10261,19 @@ static void ppc_cpu_initfn(Object *obj)
 #endif /* !CONFIG_USER_ONLY */
 }
 
+static void ppc_cpu_uninitfn(Object *obj)
+{
+    PowerPCCPU *cpu = POWERPC_CPU(obj);
+    CPUPPCState *env = &cpu->env;
+    int i;
+
+    for (i = 0; i < 0x40; i++) {
+        if (env->opcodes[i] != &invalid_handler) {
+            free(env->opcodes[i]);
+        }
+    }
+}
+
 static void ppc_cpu_class_init(ObjectClass *oc, void *data)
 {
     PowerPCCPUClass *pcc = POWERPC_CPU_CLASS(oc);
@@ -10275,6 +10288,7 @@ static const TypeInfo ppc_cpu_type_info = {
     .parent = TYPE_CPU,
     .instance_size = sizeof(PowerPCCPU),
     .instance_init = ppc_cpu_initfn,
+    .instance_finalize = ppc_cpu_uninitfn,
     .abstract = false,
     .class_size = sizeof(PowerPCCPUClass),
     .class_init = ppc_cpu_class_init,
