@@ -25,6 +25,7 @@
 
 #include "dis-asm.h"
 #include "gdbstub.h"
+#include "cpus.h"
 #include <kvm.h>
 #include "kvm_ppc.h"
 
@@ -10198,6 +10199,24 @@ static void ppc_cpu_reset(CPUState *s)
     cpu_state_reset(env);
 }
 
+static void ppc_cpu_initfn(Object *obj)
+{
+    PowerPCCPU *cpu = POWERPC_CPU(obj);
+    CPUPPCState *env = &cpu->env;
+
+    cpu_exec_init(env);
+
+    /* Adjust cpu index for SMT */
+#if !defined(CONFIG_USER_ONLY)
+    if (kvm_enabled()) {
+        int smt = kvmppc_smt_threads();
+
+        env->cpu_index = (env->cpu_index / smp_threads) * smt
+            + (env->cpu_index % smp_threads);
+    }
+#endif /* !CONFIG_USER_ONLY */
+}
+
 static void ppc_cpu_class_init(ObjectClass *oc, void *data)
 {
     PowerPCCPUClass *pcc = POWERPC_CPU_CLASS(oc);
@@ -10211,6 +10230,7 @@ static const TypeInfo ppc_cpu_type_info = {
     .name = TYPE_POWERPC_CPU,
     .parent = TYPE_CPU,
     .instance_size = sizeof(PowerPCCPU),
+    .instance_init = ppc_cpu_initfn,
     .abstract = false,
     .class_size = sizeof(PowerPCCPUClass),
     .class_init = ppc_cpu_class_init,
