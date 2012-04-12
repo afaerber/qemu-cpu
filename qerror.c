@@ -233,6 +233,10 @@ static const QErrorStringTable qerror_table[] = {
         .desc      = "Property '%(device).%(property)' not found",
     },
     {
+        .error_fmt = QERR_PROPERTY_SET_AFTER_REALIZE,
+        .desc      = "Property '%(device).%(property)' cannot be set after realize",
+    },
+    {
         .error_fmt = QERR_PROPERTY_VALUE_BAD,
         .desc      = "Property '%(device).%(property)' doesn't take value '%(value)'",
     },
