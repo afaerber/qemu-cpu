@@ -259,11 +259,8 @@ CPUSH4State *cpu_sh4_init(const char *cpu_model)
     cpu = SUPERH_CPU(object_new(TYPE_SUPERH_CPU));
     env = &cpu->env;
     env->features = def->features;
-    cpu_exec_init(env);
-    env->movcal_backup_tail = &(env->movcal_backup);
     sh4_translate_init();
     env->cpu_model_str = cpu_model;
-    cpu_reset(CPU(cpu));
     cpu_register(env, def);
     qemu_init_vcpu(env);
     return env;
