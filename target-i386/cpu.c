@@ -627,6 +627,9 @@ static void x86_cpuid_set_model_id(CPUX86State *env, const char *model_id)
         model_id = "";
     }
     len = strlen(model_id);
+    for (i = 0; i < 12; i++) {
+        env->cpuid_model[i] = 0;
+    }
     for (i = 0; i < 48; i++) {
         if (i >= len) {
             c = '\0';
