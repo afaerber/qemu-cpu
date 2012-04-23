@@ -53,6 +53,14 @@ static void superh_cpu_reset(CPUState *s)
     set_default_nan_mode(1, &env->fp_status);
 }
 
+void superh_cpu_realize(Object *obj, Error **errp)
+{
+    SuperHCPU *cpu = SUPERH_CPU(obj);
+
+    cpu_reset(CPU(cpu));
+    qemu_init_vcpu(&cpu->env);
+}
+
 static void superh_cpu_initfn(Object *obj)
 {
     SuperHCPU *cpu = SUPERH_CPU(obj);

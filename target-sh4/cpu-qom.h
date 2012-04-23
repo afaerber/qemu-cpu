@@ -21,6 +21,7 @@
 #define QEMU_SUPERH_CPU_QOM_H
 
 #include "qemu/cpu.h"
+#include "error.h"
 
 #define TYPE_SUPERH_CPU "superh-cpu"
 
@@ -65,6 +66,8 @@ static inline SuperHCPU *sh_env_get_cpu(CPUSH4State *env)
 }
 
 #define ENV_GET_CPU(e) CPU(sh_env_get_cpu(e))
+
+void superh_cpu_realize(Object *obj, Error **errp);
 
 
 #endif
