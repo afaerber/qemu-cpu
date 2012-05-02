@@ -49,7 +49,7 @@ typedef struct spin_state {
 } SpinState;
 
 typedef struct spin_kick {
-    CPUPPCState *env;
+    PowerPCCPU *cpu;
     SpinInfo *spin;
 } SpinKick;
 
@@ -92,7 +92,7 @@ static void mmubooke_create_initial_mapping(CPUPPCState *env,
 static void spin_kick(void *data)
 {
     SpinKick *kick = data;
-    CPUPPCState *env = kick->env;
+    CPUPPCState *env = &kick->cpu->env;
     SpinInfo *curspin = kick->spin;
     target_phys_addr_t map_size = 64 * 1024 * 1024;
     target_phys_addr_t map_start;
@@ -158,7 +158,7 @@ static void spin_write(void *opaque, target_phys_addr_t addr, uint64_t value,
     if (!(ldq_p(&curspin->addr) & 1)) {
         /* run CPU */
         SpinKick kick = {
-            .env = env,
+            .cpu = ppc_env_get_cpu(env),
             .spin = curspin,
         };
 
