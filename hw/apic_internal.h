@@ -96,7 +96,7 @@ typedef struct APICCommonClass
 struct APICCommonState {
     SysBusDevice busdev;
     MemoryRegion io_memory;
-    void *cpu_env;
+    X86CPU *cpu;
     uint32_t apicbase;
     uint8_t id;
     uint8_t arb_id;

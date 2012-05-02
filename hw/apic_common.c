@@ -103,7 +103,7 @@ void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip,
 {
     APICCommonState *s = DO_UPCAST(APICCommonState, busdev.qdev, d);
 
-    vapic_report_tpr_access(s->vapic, s->cpu_env, ip, access);
+    vapic_report_tpr_access(s->vapic, &s->cpu->env, ip, access);
 }
 
 void apic_report_irq_delivered(int delivered)
@@ -207,7 +207,7 @@ static void apic_reset_common(DeviceState *d)
     APICCommonClass *info = APIC_COMMON_GET_CLASS(s);
     bool bsp;
 
-    bsp = cpu_is_bsp(s->cpu_env);
+    bsp = cpu_is_bsp(&s->cpu->env);
     s->apicbase = 0xfee00000 |
         (bsp ? MSR_IA32_APICBASE_BSP : 0) | MSR_IA32_APICBASE_ENABLE;
 
@@ -354,9 +354,16 @@ static const VMStateDescription vmstate_apic_common = {
     }
 };
 
+static void apic_common_initfn(Object *obj)
+{
+    APICCommonState *s = APIC_COMMON(obj);
+
+    object_property_add_link(obj, "cpu", TYPE_X86_CPU, (Object **)&s->cpu,
+                             NULL);
+}
+
 static Property apic_properties_common[] = {
     DEFINE_PROP_UINT8("id", APICCommonState, id, -1),
-    DEFINE_PROP_PTR("cpu_env", APICCommonState, cpu_env),
     DEFINE_PROP_BIT("vapic", APICCommonState, vapic_control, VAPIC_ENABLE_BIT,
                     true),
     DEFINE_PROP_END_OF_LIST(),
@@ -378,6 +385,7 @@ static TypeInfo apic_common_type = {
     .name = TYPE_APIC_COMMON,
     .parent = TYPE_SYS_BUS_DEVICE,
     .instance_size = sizeof(APICCommonState),
+    .instance_init = apic_common_initfn,
     .class_size = sizeof(APICCommonClass),
     .class_init = apic_common_class_init,
     .abstract = true,

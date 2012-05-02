@@ -114,7 +114,7 @@ static void apic_sync_vapic(APICCommonState *s, int sync_type)
         length = offsetof(VAPICState, enabled) - offsetof(VAPICState, isr);
 
         if (sync_type & SYNC_TO_VAPIC) {
-            assert(qemu_cpu_is_self(s->cpu_env));
+            assert(qemu_cpu_is_self(&s->cpu->env));
 
             vapic_state.tpr = s->tpr;
             vapic_state.enabled = 1;
@@ -158,15 +158,15 @@ static void apic_local_deliver(APICCommonState *s, int vector)
 
     switch ((lvt >> 8) & 7) {
     case APIC_DM_SMI:
-        cpu_interrupt(s->cpu_env, CPU_INTERRUPT_SMI);
+        cpu_interrupt(&s->cpu->env, CPU_INTERRUPT_SMI);
         break;
 
     case APIC_DM_NMI:
-        cpu_interrupt(s->cpu_env, CPU_INTERRUPT_NMI);
+        cpu_interrupt(&s->cpu->env, CPU_INTERRUPT_NMI);
         break;
 
     case APIC_DM_EXTINT:
-        cpu_interrupt(s->cpu_env, CPU_INTERRUPT_HARD);
+        cpu_interrupt(&s->cpu->env, CPU_INTERRUPT_HARD);
         break;
 
     case APIC_DM_FIXED:
@@ -194,7 +194,7 @@ void apic_deliver_pic_intr(DeviceState *d, int level)
             reset_bit(s->irr, lvt & 0xff);
             /* fall through */
         case APIC_DM_EXTINT:
-            cpu_reset_interrupt(s->cpu_env, CPU_INTERRUPT_HARD);
+            cpu_reset_interrupt(&s->cpu->env, CPU_INTERRUPT_HARD);
             break;
         }
     }
@@ -255,18 +255,22 @@ static void apic_bus_deliver(const uint32_t *deliver_bitmask,
 
         case APIC_DM_SMI:
             foreach_apic(apic_iter, deliver_bitmask,
-                cpu_interrupt(apic_iter->cpu_env, CPU_INTERRUPT_SMI) );
+                cpu_interrupt(&apic_iter->cpu->env, CPU_INTERRUPT_SMI)
+            );
             return;
 
         case APIC_DM_NMI:
             foreach_apic(apic_iter, deliver_bitmask,
-                cpu_interrupt(apic_iter->cpu_env, CPU_INTERRUPT_NMI) );
+                cpu_interrupt(&apic_iter->cpu->env, CPU_INTERRUPT_NMI)
+            );
             return;
 
         case APIC_DM_INIT:
             /* normal INIT IPI sent to processors */
             foreach_apic(apic_iter, deliver_bitmask,
-                         cpu_interrupt(apic_iter->cpu_env, CPU_INTERRUPT_INIT) );
+                         cpu_interrupt(&apic_iter->cpu->env,
+                                       CPU_INTERRUPT_INIT)
+            );
             return;
 
         case APIC_DM_EXTINT:
@@ -300,7 +304,7 @@ static void apic_set_base(APICCommonState *s, uint64_t val)
     /* if disabled, cannot be enabled again */
     if (!(val & MSR_IA32_APICBASE_ENABLE)) {
         s->apicbase &= ~MSR_IA32_APICBASE_ENABLE;
-        cpu_clear_apic_feature(s->cpu_env);
+        cpu_clear_apic_feature(&s->cpu->env);
         s->spurious_vec &= ~APIC_SV_ENABLE;
     }
 }
@@ -370,7 +374,7 @@ static void apic_update_irq(APICCommonState *s)
         return;
     }
     if (apic_irq_pending(s) > 0) {
-        cpu_interrupt(s->cpu_env, CPU_INTERRUPT_HARD);
+        cpu_interrupt(&s->cpu->env, CPU_INTERRUPT_HARD);
     } else if (apic_accept_pic_intr(&s->busdev.qdev) &&
                pic_get_output(isa_pic)) {
         apic_deliver_pic_intr(&s->busdev.qdev, 1);
@@ -480,18 +484,18 @@ static void apic_get_delivery_bitmask(uint32_t *deliver_bitmask,
 static void apic_startup(APICCommonState *s, int vector_num)
 {
     s->sipi_vector = vector_num;
-    cpu_interrupt(s->cpu_env, CPU_INTERRUPT_SIPI);
+    cpu_interrupt(&s->cpu->env, CPU_INTERRUPT_SIPI);
 }
 
 void apic_sipi(DeviceState *d)
 {
     APICCommonState *s = DO_UPCAST(APICCommonState, busdev.qdev, d);
 
-    cpu_reset_interrupt(s->cpu_env, CPU_INTERRUPT_SIPI);
+    cpu_reset_interrupt(&s->cpu->env, CPU_INTERRUPT_SIPI);
 
     if (!s->wait_for_sipi)
         return;
-    cpu_x86_load_seg_cache_sipi(s->cpu_env, s->sipi_vector);
+    cpu_x86_load_seg_cache_sipi(&s->cpu->env, s->sipi_vector);
     s->wait_for_sipi = 0;
 }
 
@@ -666,7 +670,7 @@ static uint32_t apic_mem_readl(void *opaque, target_phys_addr_t addr)
     case 0x08:
         apic_sync_vapic(s, SYNC_FROM_VAPIC);
         if (apic_report_tpr_access) {
-            cpu_report_tpr_access(s->cpu_env, TPR_ACCESS_READ);
+            cpu_report_tpr_access(&s->cpu->env, TPR_ACCESS_READ);
         }
         val = s->tpr;
         break;
@@ -768,7 +772,7 @@ static void apic_mem_writel(void *opaque, target_phys_addr_t addr, uint32_t val)
         break;
     case 0x08:
         if (apic_report_tpr_access) {
-            cpu_report_tpr_access(s->cpu_env, TPR_ACCESS_WRITE);
+            cpu_report_tpr_access(&s->cpu->env, TPR_ACCESS_WRITE);
         }
         s->tpr = val;
         apic_sync_vapic(s, SYNC_TO_VAPIC);

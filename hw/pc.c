@@ -888,6 +888,7 @@ DeviceState *cpu_get_current_apic(void)
 static DeviceState *apic_init(void *env, uint8_t apic_id)
 {
     DeviceState *dev;
+    Error *error = NULL;
     static int apic_mapped;
 
     if (kvm_irqchip_in_kernel()) {
@@ -899,7 +900,13 @@ static DeviceState *apic_init(void *env, uint8_t apic_id)
     }
 
     qdev_prop_set_uint8(dev, "id", apic_id);
-    qdev_prop_set_ptr(dev, "cpu_env", env);
+    object_property_set_link(OBJECT(dev), OBJECT(ENV_GET_CPU(env)), "cpu",
+                             &error);
+    if (error_is_set(&error)) {
+        qerror_report_err(error);
+        error_free(error);
+        exit(1);
+    }
     qdev_init_nofail(dev);
 
     /* XXX: mapping more APICs at the same memory location */
