@@ -422,17 +422,15 @@ static void do_vm_stop(RunState state)
     }
 }
 
-static int cpu_can_run(CPUArchState *env)
+static bool cpu_can_run(CPUState *cpu)
 {
-    CPUState *cpu = ENV_GET_CPU(env);
-
     if (cpu->stop) {
-        return 0;
+        return false;
     }
     if (cpu->stopped || !runstate_is_running()) {
-        return 0;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 static bool cpu_thread_is_idle(CPUArchState *env)
@@ -758,7 +756,7 @@ static void *qemu_kvm_cpu_thread_fn(void *arg)
     qemu_cond_signal(&qemu_cpu_cond);
 
     while (1) {
-        if (cpu_can_run(env)) {
+        if (cpu_can_run(cpu)) {
             r = kvm_cpu_exec(env);
             if (r == EXCP_DEBUG) {
                 cpu_handle_guest_debug(env);
@@ -1150,7 +1148,7 @@ static void tcg_exec_all(void)
         qemu_clock_enable(vm_clock,
                           (env->singlestep_enabled & SSTEP_NOTIMER) == 0);
 
-        if (cpu_can_run(env)) {
+        if (cpu_can_run(cpu)) {
             r = tcg_cpu_exec(env);
             if (r == EXCP_DEBUG) {
                 cpu_handle_guest_debug(env);
