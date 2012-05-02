@@ -424,7 +424,9 @@ static void do_vm_stop(RunState state)
 
 static int cpu_can_run(CPUArchState *env)
 {
-    if (env->stop) {
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    if (cpu->stop) {
         return 0;
     }
     if (env->stopped || !runstate_is_running()) {
@@ -435,7 +437,9 @@ static int cpu_can_run(CPUArchState *env)
 
 static bool cpu_thread_is_idle(CPUArchState *env)
 {
-    if (env->stop || env->queued_work_first) {
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    if (cpu->stop || env->queued_work_first) {
         return false;
     }
     if (env->stopped || !runstate_is_running()) {
@@ -689,8 +693,8 @@ static void qemu_wait_io_event_common(CPUArchState *env)
 {
     CPUState *cpu = ENV_GET_CPU(env);
 
-    if (env->stop) {
-        env->stop = 0;
+    if (cpu->stop) {
+        cpu->stop = false;
         env->stopped = 1;
         qemu_cond_signal(&qemu_pause_cond);
     }
@@ -938,7 +942,8 @@ void pause_all_vcpus(void)
 
     qemu_clock_enable(vm_clock, false);
     while (penv) {
-        penv->stop = 1;
+        CPUState *pcpu = ENV_GET_CPU(penv);
+        pcpu->stop = true;
         qemu_cpu_kick(penv);
         penv = penv->next_cpu;
     }
@@ -947,7 +952,8 @@ void pause_all_vcpus(void)
         cpu_stop_current();
         if (!kvm_enabled()) {
             while (penv) {
-                penv->stop = 0;
+                CPUState *pcpu = ENV_GET_CPU(penv);
+                pcpu->stop = 0;
                 penv->stopped = 1;
                 penv = penv->next_cpu;
             }
@@ -971,7 +977,8 @@ void resume_all_vcpus(void)
 
     qemu_clock_enable(vm_clock, true);
     while (penv) {
-        penv->stop = 0;
+        CPUState *pcpu = ENV_GET_CPU(penv);
+        pcpu->stop = false;
         penv->stopped = 0;
         qemu_cpu_kick(penv);
         penv = penv->next_cpu;
@@ -1051,7 +1058,8 @@ void qemu_init_vcpu(void *_env)
 void cpu_stop_current(void)
 {
     if (cpu_single_env) {
-        cpu_single_env->stop = 0;
+        CPUState *cpu_single_cpu = ENV_GET_CPU(cpu_single_env);
+        cpu_single_cpu->stop = false;
         cpu_single_env->stopped = 1;
         cpu_exit(cpu_single_env);
         qemu_cond_signal(&qemu_pause_cond);
@@ -1133,6 +1141,7 @@ static void tcg_exec_all(void)
     }
     for (; next_cpu != NULL && !exit_request; next_cpu = next_cpu->next_cpu) {
         CPUArchState *env = next_cpu;
+        CPUState *cpu = ENV_GET_CPU(env);
 
         qemu_clock_enable(vm_clock,
                           (env->singlestep_enabled & SSTEP_NOTIMER) == 0);
@@ -1143,7 +1152,7 @@ static void tcg_exec_all(void)
                 cpu_handle_guest_debug(env);
                 break;
             }
-        } else if (env->stop || env->stopped) {
+        } else if (cpu->stop || env->stopped) {
             break;
         }
     }
