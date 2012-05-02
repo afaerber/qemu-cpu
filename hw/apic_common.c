@@ -207,7 +207,7 @@ static void apic_reset_common(DeviceState *d)
     APICCommonClass *info = APIC_COMMON_GET_CLASS(s);
     bool bsp;
 
-    bsp = cpu_is_bsp(&s->cpu->env);
+    bsp = cpu_is_bsp(s->cpu);
     s->apicbase = 0xfee00000 |
         (bsp ? MSR_IA32_APICBASE_BSP : 0) | MSR_IA32_APICBASE_ENABLE;
 

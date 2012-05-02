@@ -22,7 +22,7 @@ void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip,
                                    TPRAccess access);
 
 /* pc.c */
-int cpu_is_bsp(CPUX86State *env);
+bool cpu_is_bsp(X86CPU *cpu);
 DeviceState *cpu_get_current_apic(void);
 
 #endif

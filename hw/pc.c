@@ -870,10 +870,10 @@ void pc_init_ne2k_isa(ISABus *bus, NICInfo *nd)
     nb_ne2k++;
 }
 
-int cpu_is_bsp(CPUX86State *env)
+bool cpu_is_bsp(X86CPU *cpu)
 {
     /* We hard-wire the BSP to the first CPU. */
-    return env->cpu_index == 0;
+    return cpu->env.cpu_index == 0;
 }
 
 DeviceState *cpu_get_current_apic(void)
@@ -945,7 +945,7 @@ static void pc_cpu_reset(void *opaque)
     CPUX86State *env = &cpu->env;
 
     cpu_reset(CPU(cpu));
-    env->halted = !cpu_is_bsp(env);
+    env->halted = !cpu_is_bsp(cpu);
 }
 
 static X86CPU *pc_new_cpu(const char *cpu_model)
