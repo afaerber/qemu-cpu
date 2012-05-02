@@ -945,6 +945,8 @@ static X86CPU *pc_new_cpu(const char *cpu_model)
 {
     X86CPU *cpu;
     CPUX86State *env;
+    char *name;
+    Error *error = NULL;
 
     cpu = cpu_x86_init(cpu_model);
     if (cpu == NULL) {
@@ -952,6 +954,16 @@ static X86CPU *pc_new_cpu(const char *cpu_model)
         exit(1);
     }
     env = &cpu->env;
+
+    name = g_strdup_printf("cpu[%d]", env->cpu_index);
+    object_property_add_child(OBJECT(qdev_get_machine()), name,
+                              OBJECT(cpu), &error);
+    g_free(name);
+    if (error_is_set(&error)) {
+        qerror_report_err(error);
+        exit(1);
+    }
+
     if ((env->cpuid_features & CPUID_APIC) || smp_cpus > 1) {
         env->apic_state = apic_init(env, env->cpuid_apic_id);
     }
