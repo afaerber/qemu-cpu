@@ -689,10 +689,8 @@ static void flush_queued_work(CPUState *cpu)
     qemu_cond_broadcast(&qemu_work_cond);
 }
 
-static void qemu_wait_io_event_common(CPUArchState *env)
+static void qemu_wait_io_event_common(CPUState *cpu)
 {
-    CPUState *cpu = ENV_GET_CPU(env);
-
     if (cpu->stop) {
         cpu->stop = false;
         cpu->stopped = true;
@@ -718,7 +716,7 @@ static void qemu_tcg_wait_io_event(void)
     }
 
     for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        qemu_wait_io_event_common(env);
+        qemu_wait_io_event_common(ENV_GET_CPU(env));
     }
 }
 
@@ -731,7 +729,7 @@ static void qemu_kvm_wait_io_event(CPUArchState *env)
     }
 
     qemu_kvm_eat_signals(env);
-    qemu_wait_io_event_common(env);
+    qemu_wait_io_event_common(cpu);
 }
 
 static void *qemu_kvm_cpu_thread_fn(void *arg)
@@ -806,7 +804,7 @@ static void *qemu_dummy_cpu_thread_fn(void *arg)
         }
         qemu_mutex_lock_iothread();
         cpu_single_env = env;
-        qemu_wait_io_event_common(env);
+        qemu_wait_io_event_common(cpu);
     }
 
     return NULL;
@@ -838,7 +836,7 @@ static void *qemu_tcg_cpu_thread_fn(void *arg)
 
         /* process any pending work */
         for (env = first_cpu; env != NULL; env = env->next_cpu) {
-            qemu_wait_io_event_common(env);
+            qemu_wait_io_event_common(ENV_GET_CPU(env));
         }
     }
 
