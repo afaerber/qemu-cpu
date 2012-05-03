@@ -162,9 +162,10 @@ void ppc6xx_irq_init(CPUPPCState *env)
 
 #if defined(TARGET_PPC64)
 /* PowerPC 970 internal IRQ controller */
-static void ppc970_set_irq (void *opaque, int pin, int level)
+static void ppc970_set_irq(void *opaque, int pin, int level)
 {
-    CPUPPCState *env = opaque;
+    PowerPCCPU *cpu = opaque;
+    CPUPPCState *env = &cpu->env;
     int cur_level;
 
     LOG_IRQ("%s: env %p pin %d level %d\n", __func__,
@@ -236,9 +237,11 @@ static void ppc970_set_irq (void *opaque, int pin, int level)
     }
 }
 
-void ppc970_irq_init (CPUPPCState *env)
+void ppc970_irq_init(CPUPPCState *env)
 {
-    env->irq_inputs = (void **)qemu_allocate_irqs(&ppc970_set_irq, env,
+    PowerPCCPU *cpu = ppc_env_get_cpu(env);
+
+    env->irq_inputs = (void **)qemu_allocate_irqs(&ppc970_set_irq, cpu,
                                                   PPC970_INPUT_NB);
 }
 
