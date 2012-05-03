@@ -194,7 +194,7 @@ static void rtce_init(VIOsPAPRDevice *dev)
     }
 }
 
-static target_ulong h_put_tce(CPUPPCState *env, sPAPREnvironment *spapr,
+static target_ulong h_put_tce(PowerPCCPU *cpu, sPAPREnvironment *spapr,
                               target_ulong opcode, target_ulong *args)
 {
     target_ulong liobn = args[0];
@@ -403,7 +403,7 @@ uint64_t ldq_tce(VIOsPAPRDevice *dev, uint64_t taddr)
 /*
  * CRQ handling
  */
-static target_ulong h_reg_crq(CPUPPCState *env, sPAPREnvironment *spapr,
+static target_ulong h_reg_crq(PowerPCCPU *cpu, sPAPREnvironment *spapr,
                               target_ulong opcode, target_ulong *args)
 {
     target_ulong reg = args[0];
@@ -461,7 +461,7 @@ static target_ulong free_crq(VIOsPAPRDevice *dev)
     return H_SUCCESS;
 }
 
-static target_ulong h_free_crq(CPUPPCState *env, sPAPREnvironment *spapr,
+static target_ulong h_free_crq(PowerPCCPU *cpu, sPAPREnvironment *spapr,
                                target_ulong opcode, target_ulong *args)
 {
     target_ulong reg = args[0];
@@ -475,7 +475,7 @@ static target_ulong h_free_crq(CPUPPCState *env, sPAPREnvironment *spapr,
     return free_crq(dev);
 }
 
-static target_ulong h_send_crq(CPUPPCState *env, sPAPREnvironment *spapr,
+static target_ulong h_send_crq(PowerPCCPU *cpu, sPAPREnvironment *spapr,
                                target_ulong opcode, target_ulong *args)
 {
     target_ulong reg = args[0];
@@ -498,7 +498,7 @@ static target_ulong h_send_crq(CPUPPCState *env, sPAPREnvironment *spapr,
     return H_HARDWARE;
 }
 
-static target_ulong h_enable_crq(CPUPPCState *env, sPAPREnvironment *spapr,
+static target_ulong h_enable_crq(PowerPCCPU *cpu, sPAPREnvironment *spapr,
                                  target_ulong opcode, target_ulong *args)
 {
     target_ulong reg = args[0];
@@ -706,7 +706,7 @@ static int spapr_vio_busdev_init(DeviceState *qdev)
     return pc->init(dev);
 }
 
-static target_ulong h_vio_signal(CPUPPCState *env, sPAPREnvironment *spapr,
+static target_ulong h_vio_signal(PowerPCCPU *cpu, sPAPREnvironment *spapr,
                                  target_ulong opcode,
                                  target_ulong *args)
 {
