@@ -766,8 +766,10 @@ static inline void mips_vpe_sleep(CPUMIPSState *c)
     cpu_reset_interrupt(c, CPU_INTERRUPT_WAKE);
 }
 
-static inline void mips_tc_wake(CPUMIPSState *c, int tc)
+static inline void mips_tc_wake(MIPSCPU *cpu, int tc)
 {
+    CPUMIPSState *c = &cpu->env;
+
     /* FIXME: TC reschedule.  */
     if (mips_vpe_active(c) && !mips_vpe_is_wfi(c)) {
         mips_vpe_wake(c);
@@ -1376,7 +1378,7 @@ void helper_mtc0_tchalt (target_ulong arg1)
     if (env->active_tc.CP0_TCHalt & 1) {
         mips_tc_sleep(env, env->current_tc);
     } else {
-        mips_tc_wake(env, env->current_tc);
+        mips_tc_wake(mips_env_get_cpu(env), env->current_tc);
     }
 }
 
@@ -1395,7 +1397,7 @@ void helper_mttc0_tchalt (target_ulong arg1)
     if (arg1 & 1) {
         mips_tc_sleep(other, other_tc);
     } else {
-        mips_tc_wake(other, other_tc);
+        mips_tc_wake(mips_env_get_cpu(other), other_tc);
     }
 }
 
