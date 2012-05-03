@@ -744,7 +744,7 @@ static TypeInfo ram_info = {
     .class_init    = ram_class_init,
 };
 
-static CPUSPARCState *cpu_devinit(const char *cpu_model, const struct hwdef *hwdef)
+static SPARCCPU *cpu_devinit(const char *cpu_model, const struct hwdef *hwdef)
 {
     SPARCCPU *cpu;
     CPUSPARCState *env;
@@ -778,7 +778,7 @@ static CPUSPARCState *cpu_devinit(const char *cpu_model, const struct hwdef *hwd
     reset_info->prom_addr = hwdef->prom_addr;
     qemu_register_reset(main_cpu_reset, reset_info);
 
-    return env;
+    return cpu;
 }
 
 static void sun4uv_init(MemoryRegion *address_space_mem,
@@ -788,6 +788,7 @@ static void sun4uv_init(MemoryRegion *address_space_mem,
                         const char *initrd_filename, const char *cpu_model,
                         const struct hwdef *hwdef)
 {
+    SPARCCPU *cpu;
     CPUSPARCState *env;
     M48t59State *nvram;
     unsigned int i;
@@ -800,7 +801,8 @@ static void sun4uv_init(MemoryRegion *address_space_mem,
     void *fw_cfg;
 
     /* init CPUs */
-    env = cpu_devinit(cpu_model, hwdef);
+    cpu = cpu_devinit(cpu_model, hwdef);
+    env = &cpu->env;
 
     /* set up devices */
     ram_init(0, RAM_size);
