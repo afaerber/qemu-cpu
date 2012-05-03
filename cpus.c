@@ -739,7 +739,7 @@ static void *qemu_kvm_cpu_thread_fn(void *arg)
 
     qemu_mutex_lock(&qemu_global_mutex);
     qemu_thread_get_self(cpu->thread);
-    env->thread_id = qemu_get_thread_id();
+    cpu->thread_id = qemu_get_thread_id();
     cpu_single_env = env;
 
     r = kvm_init_vcpu(env);
@@ -780,7 +780,7 @@ static void *qemu_dummy_cpu_thread_fn(void *arg)
 
     qemu_mutex_lock_iothread();
     qemu_thread_get_self(cpu->thread);
-    env->thread_id = qemu_get_thread_id();
+    cpu->thread_id = qemu_get_thread_id();
 
     sigemptyset(&waitset);
     sigaddset(&waitset, SIG_IPI);
@@ -824,7 +824,7 @@ static void *qemu_tcg_cpu_thread_fn(void *arg)
     qemu_mutex_lock(&qemu_global_mutex);
     for (env = first_cpu; env != NULL; env = env->next_cpu) {
         cpu = ENV_GET_CPU(env);
-        env->thread_id = qemu_get_thread_id();
+        cpu->thread_id = qemu_get_thread_id();
         cpu->created = true;
     }
     qemu_cond_signal(&qemu_cpu_cond);
@@ -1204,7 +1204,8 @@ CpuInfoList *qmp_query_cpus(Error **errp)
     CpuInfoList *head = NULL, *cur_item = NULL;
     CPUArchState *env;
 
-    for(env = first_cpu; env != NULL; env = env->next_cpu) {
+    for (env = first_cpu; env != NULL; env = env->next_cpu) {
+        CPUState *cpu = ENV_GET_CPU(env);
         CpuInfoList *info;
 
         cpu_synchronize_state(env);
@@ -1214,7 +1215,7 @@ CpuInfoList *qmp_query_cpus(Error **errp)
         info->value->CPU = env->cpu_index;
         info->value->current = (env == first_cpu);
         info->value->halted = env->halted;
-        info->value->thread_id = env->thread_id;
+        info->value->thread_id = cpu->thread_id;
 #if defined(TARGET_I386)
         info->value->has_pc = true;
         info->value->pc = env->eip + env->segs[R_CS].base;
