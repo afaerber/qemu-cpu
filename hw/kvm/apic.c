@@ -143,7 +143,7 @@ static void do_inject_external_nmi(void *data)
 
 static void kvm_apic_external_nmi(APICCommonState *s)
 {
-    run_on_cpu(&s->cpu->env, do_inject_external_nmi, s);
+    run_on_cpu(CPU(s->cpu), do_inject_external_nmi, s);
 }
 
 static void kvm_apic_init(APICCommonState *s)

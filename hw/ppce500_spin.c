@@ -163,7 +163,7 @@ static void spin_write(void *opaque, target_phys_addr_t addr, uint64_t value,
             .spin = curspin,
         };
 
-        run_on_cpu(env, spin_kick, &kick);
+        run_on_cpu(CPU(kick.cpu), spin_kick, &kick);
     }
 }
 
