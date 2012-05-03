@@ -481,7 +481,7 @@ static void emulate_spapr_hypercall(PowerPCCPU *cpu)
 {
     CPUPPCState *env = &cpu->env;
 
-    env->gpr[3] = spapr_hypercall(env, env->gpr[3], &env->gpr[4]);
+    env->gpr[3] = spapr_hypercall(cpu, env->gpr[3], &env->gpr[4]);
 }
 
 static void spapr_reset(void *opaque)

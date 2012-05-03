@@ -644,9 +644,11 @@ void spapr_register_hypercall(target_ulong opcode, spapr_hcall_fn fn)
     *slot = fn;
 }
 
-target_ulong spapr_hypercall(CPUPPCState *env, target_ulong opcode,
+target_ulong spapr_hypercall(PowerPCCPU *cpu, target_ulong opcode,
                              target_ulong *args)
 {
+    CPUPPCState *env = &cpu->env;
+
     if (msr_pr) {
         hcall_dprintf("Hypercall made with MSR[PR]=1\n");
         return H_PRIVILEGE;

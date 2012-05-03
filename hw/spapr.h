@@ -283,7 +283,7 @@ typedef target_ulong (*spapr_hcall_fn)(CPUPPCState *env, sPAPREnvironment *spapr
                                        target_ulong *args);
 
 void spapr_register_hypercall(target_ulong opcode, spapr_hcall_fn fn);
-target_ulong spapr_hypercall(CPUPPCState *env, target_ulong opcode,
+target_ulong spapr_hypercall(PowerPCCPU *cpu, target_ulong opcode,
                              target_ulong *args);
 
 qemu_irq spapr_allocate_irq(uint32_t hint, uint32_t *irq_num,
