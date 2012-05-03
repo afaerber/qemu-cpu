@@ -71,8 +71,11 @@ static int cap_spapr_tce;
  */
 static QEMUTimer *idle_timer;
 
-static void kvm_kick_env(void *env)
+static void kvm_kick_cpu(void *opaque)
 {
+    PowerPCCPU *cpu = opaque;
+    CPUPPCState *env = &cpu->env;
+
     qemu_cpu_kick(env);
 }
 
@@ -169,6 +172,7 @@ static int kvm_booke206_tlb_init(CPUPPCState *env)
 
 int kvm_arch_init_vcpu(CPUPPCState *cenv)
 {
+    PowerPCCPU *cpu = ppc_env_get_cpu(cenv);
     int ret;
 
     ret = kvm_arch_sync_sregs(cenv);
@@ -176,7 +180,7 @@ int kvm_arch_init_vcpu(CPUPPCState *cenv)
         return ret;
     }
 
-    idle_timer = qemu_new_timer_ns(vm_clock, kvm_kick_env, cenv);
+    idle_timer = qemu_new_timer_ns(vm_clock, kvm_kick_cpu, cpu);
 
     /* Some targets support access to KVM's guest TLB. */
     switch (cenv->mmu_model) {
