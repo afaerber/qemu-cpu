@@ -477,8 +477,10 @@ static uint64_t translate_kernel_address(void *opaque, uint64_t addr)
     return (addr & 0x0fffffff) + KERNEL_LOAD_ADDR;
 }
 
-static void emulate_spapr_hypercall(CPUPPCState *env)
+static void emulate_spapr_hypercall(PowerPCCPU *cpu)
 {
+    CPUPPCState *env = &cpu->env;
+
     env->gpr[3] = spapr_hypercall(env, env->gpr[3], &env->gpr[4]);
 }
 

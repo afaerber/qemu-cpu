@@ -2182,7 +2182,7 @@ static inline uint32_t booke206_tlbnps(CPUPPCState *env, const int tlbn)
 
 #endif
 
-extern void (*cpu_ppc_hypercall)(CPUPPCState *);
+extern void (*cpu_ppc_hypercall)(PowerPCCPU *);
 
 static inline bool cpu_has_work(CPUPPCState *env)
 {
