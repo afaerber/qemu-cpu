@@ -201,11 +201,6 @@ static bool fpregs_is_1_no_mmx(void *opaque, int version_id)
     VMSTATE_ARRAY_TEST(_field, _state, _n, fpregs_is_1_mmx, vmstate_fpreg_1_mmx, FPReg), \
     VMSTATE_ARRAY_TEST(_field, _state, _n, fpregs_is_1_no_mmx, vmstate_fpreg_1_no_mmx, FPReg)
 
-static bool version_is_5(void *opaque, int version_id)
-{
-    return version_id == 5;
-}
-
 #ifdef TARGET_X86_64
 static bool less_than_7(void *opaque, int version_id)
 {
@@ -349,8 +344,8 @@ static const VMStateDescription vmstate_msr_ia32_misc_enable = {
 static const VMStateDescription vmstate_cpu = {
     .name = "cpu",
     .version_id = CPU_SAVE_VERSION,
-    .minimum_version_id = 3,
-    .minimum_version_id_old = 3,
+    .minimum_version_id = 6,
+    .minimum_version_id_old = 6,
     .pre_save = cpu_pre_save,
     .post_load = cpu_post_load,
     .fields      = (VMStateField []) {
@@ -407,7 +402,6 @@ static const VMStateDescription vmstate_cpu = {
         VMSTATE_UINT64_V(pat, CPUX86State, 5),
         VMSTATE_UINT32_V(hflags2, CPUX86State, 5),
 
-        VMSTATE_UINT32_TEST(halted, CPUX86State, version_is_5),
         VMSTATE_UINT64_V(vm_hsave, CPUX86State, 5),
         VMSTATE_UINT64_V(vm_vmcb, CPUX86State, 5),
         VMSTATE_UINT64_V(tsc_offset, CPUX86State, 5),
