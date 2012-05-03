@@ -75,9 +75,10 @@ void ppc_set_irq(CPUPPCState *env, int n_IRQ, int level)
 }
 
 /* PowerPC 6xx / 7xx internal IRQ controller */
-static void ppc6xx_set_irq (void *opaque, int pin, int level)
+static void ppc6xx_set_irq(void *opaque, int pin, int level)
 {
-    CPUPPCState *env = opaque;
+    PowerPCCPU *cpu = opaque;
+    CPUPPCState *env = &cpu->env;
     int cur_level;
 
     LOG_IRQ("%s: env %p pin %d level %d\n", __func__,
@@ -151,9 +152,11 @@ static void ppc6xx_set_irq (void *opaque, int pin, int level)
     }
 }
 
-void ppc6xx_irq_init (CPUPPCState *env)
+void ppc6xx_irq_init(CPUPPCState *env)
 {
-    env->irq_inputs = (void **)qemu_allocate_irqs(&ppc6xx_set_irq, env,
+    PowerPCCPU *cpu = ppc_env_get_cpu(env);
+
+    env->irq_inputs = (void **)qemu_allocate_irqs(&ppc6xx_set_irq, cpu,
                                                   PPC6xx_INPUT_NB);
 }
 
