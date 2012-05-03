@@ -511,9 +511,11 @@ struct CPUSPARCState {
     uint32_t cache_control;
 };
 
+#include "cpu-qom.h"
+
 #ifndef NO_CPU_IO_DEFS
 /* cpu_init.c */
-CPUSPARCState *cpu_sparc_init(const char *cpu_model);
+SPARCCPU *cpu_sparc_init(const char *cpu_model);
 void cpu_sparc_set_id(CPUSPARCState *env, unsigned int cpu);
 void sparc_cpu_list(FILE *f, fprintf_function cpu_fprintf);
 /* mmu_helper.c */
@@ -590,7 +592,7 @@ target_phys_addr_t cpu_get_phys_page_nofault(CPUSPARCState *env, target_ulong ad
 #endif
 int cpu_sparc_signal_handler(int host_signum, void *pinfo, void *puc);
 
-#define cpu_init cpu_sparc_init
+#define cpu_init(model) (&cpu_sparc_init(model)->env)
 #define cpu_exec cpu_sparc_exec
 #define cpu_gen_code cpu_sparc_gen_code
 #define cpu_signal_handler cpu_sparc_signal_handler
@@ -691,7 +693,6 @@ static inline void cpu_clone_regs(CPUSPARCState *env, target_ulong newsp)
 #endif
 
 #include "cpu-all.h"
-#include "cpu-qom.h"
 
 #ifdef TARGET_SPARC64
 /* sun4u.c */
