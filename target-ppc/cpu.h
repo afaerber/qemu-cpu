@@ -2184,8 +2184,10 @@ static inline uint32_t booke206_tlbnps(CPUPPCState *env, const int tlbn)
 
 extern void (*cpu_ppc_hypercall)(PowerPCCPU *);
 
-static inline bool cpu_has_work(CPUPPCState *env)
+static inline bool cpu_has_work(CPUState *cpu)
 {
+    CPUPPCState *env = &POWERPC_CPU(cpu)->env;
+
     return msr_ee && (env->interrupt_request & CPU_INTERRUPT_HARD);
 }
 

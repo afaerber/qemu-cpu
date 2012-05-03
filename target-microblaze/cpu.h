@@ -369,8 +369,10 @@ void cpu_unassigned_access(CPUMBState *env1, target_phys_addr_t addr,
                            int is_write, int is_exec, int is_asi, int size);
 #endif
 
-static inline bool cpu_has_work(CPUMBState *env)
+static inline bool cpu_has_work(CPUState *cpu)
 {
+    CPUMBState *env = &MICROBLAZE_CPU(cpu)->env;
+
     return env->interrupt_request & (CPU_INTERRUPT_HARD | CPU_INTERRUPT_NMI);
 }
 

@@ -1033,8 +1033,10 @@ static inline void cpu_clone_regs(CPUX86State *env, target_ulong newsp)
 #include "hw/apic.h"
 #endif
 
-static inline bool cpu_has_work(CPUX86State *env)
+static inline bool cpu_has_work(CPUState *cpu)
 {
+    CPUX86State *env = &X86_CPU(cpu)->env;
+
     return ((env->interrupt_request & CPU_INTERRUPT_HARD) &&
             (env->eflags & IF_MASK)) ||
            (env->interrupt_request & (CPU_INTERRUPT_NMI |
