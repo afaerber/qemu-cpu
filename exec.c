@@ -1745,7 +1745,7 @@ static void tcg_handle_interrupt(CPUArchState *env, int mask)
      * case its halted.
      */
     if (!qemu_cpu_is_self(cpu)) {
-        qemu_cpu_kick(env);
+        qemu_cpu_kick(cpu);
         return;
     }
 
