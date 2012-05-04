@@ -2573,8 +2573,8 @@ static inline void powerpc_excp(PowerPCCPU *cpu, int excp_model, int excp)
                 fprintf(stderr, "Machine check while not allowed. "
                         "Entering checkstop state\n");
             }
-            env->halted = 1;
-            env->interrupt_request |= CPU_INTERRUPT_EXITTB;
+            CPU(cpu)->halted = 1;
+            CPU(cpu)->interrupt_request |= CPU_INTERRUPT_EXITTB;
         }
         if (0) {
             /* XXX: find a suitable condition to enable the hypervisor mode */

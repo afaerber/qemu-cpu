@@ -26,7 +26,9 @@ void helper_raise_exception(uint32_t index)
 
 void helper_hlt(void)
 {
-    env->halted = 1;
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    cpu->halted = 1;
     env->exception_index = EXCP_HLT;
     cpu_loop_exit(env);
 }

@@ -1594,9 +1594,11 @@ void helper_fcmpo (uint64_t arg1, uint64_t arg2, uint32_t crfD)
 #if !defined (CONFIG_USER_ONLY)
 void helper_store_msr (target_ulong val)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
+
     val = hreg_store_msr(env, val, 0);
     if (val != 0) {
-        env->interrupt_request |= CPU_INTERRUPT_EXITTB;
+        cpu->interrupt_request |= CPU_INTERRUPT_EXITTB;
         helper_raise_exception(val);
     }
 }
@@ -1604,6 +1606,8 @@ void helper_store_msr (target_ulong val)
 static inline void do_rfi(target_ulong nip, target_ulong msr,
                           target_ulong msrm, int keep_msrh)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
+
 #if defined(TARGET_PPC64)
     if (msr & (1ULL << MSR_SF)) {
         nip = (uint64_t)nip;
@@ -1627,7 +1631,7 @@ static inline void do_rfi(target_ulong nip, target_ulong msr,
     /* No need to raise an exception here,
      * as rfi is always the last insn of a TB
      */
-    env->interrupt_request |= CPU_INTERRUPT_EXITTB;
+    cpu->interrupt_request |= CPU_INTERRUPT_EXITTB;
 }
 
 void helper_rfi (void)

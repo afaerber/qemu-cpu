@@ -42,6 +42,8 @@
 #undef DEFO64
 #undef DEFF64
 
+static TCGv QREG_HALTED;
+
 static TCGv_ptr cpu_env;
 
 static char cpu_reg_names[3*8*3 + 5*4];
@@ -75,6 +77,10 @@ void m68k_tcg_init(void)
 #undef DEFO32
 #undef DEFO64
 #undef DEFF64
+
+    QREG_HALTED = tcg_global_mem_new_i32(TCG_AREG0, offsetof(CPUState, halted)
+                                                  - offsetof(M68kCPU, env),
+                                         "HALTED");
 
     cpu_env = tcg_global_reg_new_ptr(TCG_AREG0, "env");
 

@@ -58,6 +58,8 @@ typedef struct CPUClass {
 /**
  * CPUState:
  * @created: Indicates whether the CPU thread has been successfully created.
+ * @interrupt_request: Indicates a pending interrupt request.
+ * @halted: Nonzero if the CPU is in suspended state.
  * @stop: Indicates a pending stop request.
  * @stopped: Indicates the CPU has been artificially stopped.
  *
@@ -77,6 +79,8 @@ struct CPUState {
     struct qemu_work_item *queued_work_first, *queued_work_last;
     bool thread_kicked;
     bool created;
+    uint32_t interrupt_request;
+    uint32_t halted;
     bool stop;
     bool stopped;
 

@@ -96,6 +96,7 @@ static void do_rte(void)
 
 static void do_interrupt_all(int is_hw)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     uint32_t sp;
     uint32_t fmt;
     uint32_t retaddr;
@@ -120,7 +121,7 @@ static void do_interrupt_all(int is_hw)
                 do_m68k_semihosting(env, env->dregs[0]);
                 return;
             }
-            env->halted = 1;
+            cpu->halted = 1;
             env->exception_index = EXCP_HLT;
             cpu_loop_exit(env);
             return;

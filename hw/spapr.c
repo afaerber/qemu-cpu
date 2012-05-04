@@ -500,7 +500,7 @@ static void spapr_reset(void *opaque)
     /* Set up the entry state */
     first_cpu->gpr[3] = spapr->fdt_addr;
     first_cpu->gpr[5] = 0;
-    first_cpu->halted = 0;
+    ENV_GET_CPU(first_cpu)->halted = 0;
     first_cpu->nip = spapr->entry_point;
 
 }
@@ -732,7 +732,7 @@ static void ppc_spapr_init(ram_addr_t ram_size,
 
     /* SLOF will startup the secondary CPUs using RTAS */
     for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        env->halted = 1;
+        ENV_GET_CPU(env)->halted = 1;
     }
 
     /* Prepare the device tree */

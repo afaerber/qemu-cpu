@@ -864,7 +864,7 @@ static inline void cpu_x86_load_seg_cache_sipi(X86CPU *cpu,
                            sipi_vector << 12,
                            env->segs[R_CS].limit,
                            env->segs[R_CS].flags);
-    env->halted = 0;
+    CPU(cpu)->halted = 0;
 }
 
 int cpu_x86_get_descr_debug(CPUX86State *env, unsigned int selector,
@@ -1039,9 +1039,9 @@ static inline bool cpu_has_work(CPUState *cpu)
 {
     CPUX86State *env = &X86_CPU(cpu)->env;
 
-    return ((env->interrupt_request & CPU_INTERRUPT_HARD) &&
+    return ((cpu->interrupt_request & CPU_INTERRUPT_HARD) &&
             (env->eflags & IF_MASK)) ||
-           (env->interrupt_request & (CPU_INTERRUPT_NMI |
+           (cpu->interrupt_request & (CPU_INTERRUPT_NMI |
                                       CPU_INTERRUPT_INIT |
                                       CPU_INTERRUPT_SIPI |
                                       CPU_INTERRUPT_MCE));

@@ -390,6 +390,8 @@ void HELPER(dump_state)(void)
 
 void HELPER(waiti)(uint32_t pc, uint32_t intlevel)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
+
     env->pc = pc;
     env->sregs[PS] = (env->sregs[PS] & ~PS_INTLEVEL) |
         (intlevel << PS_INTLEVEL_SHIFT);
@@ -400,7 +402,7 @@ void HELPER(waiti)(uint32_t pc, uint32_t intlevel)
     }
 
     env->halt_clock = qemu_get_clock_ns(vm_clock);
-    env->halted = 1;
+    cpu->halted = 1;
     if (xtensa_option_enabled(env->config, XTENSA_OPTION_TIMER_INTERRUPT)) {
         xtensa_rearm_ccompare_timer(env);
     }

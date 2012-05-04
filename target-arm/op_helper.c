@@ -234,8 +234,10 @@ uint32_t HELPER(usat16)(uint32_t x, uint32_t shift)
 
 void HELPER(wfi)(void)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
+
     env->exception_index = EXCP_HLT;
-    env->halted = 1;
+    cpu->halted = 1;
     cpu_loop_exit(env);
 }
 

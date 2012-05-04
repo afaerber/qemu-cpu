@@ -989,7 +989,7 @@ static inline bool cpu_has_work(CPUState *cpu)
 {
     CPUS390XState *env = &S390_CPU(cpu)->env;
 
-    return (env->interrupt_request & CPU_INTERRUPT_HARD) &&
+    return (cpu->interrupt_request & CPU_INTERRUPT_HARD) &&
         (env->psw.mask & PSW_MASK_EXT);
 }
 

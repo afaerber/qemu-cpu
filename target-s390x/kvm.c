@@ -172,7 +172,9 @@ void kvm_arch_post_run(CPUS390XState *env, struct kvm_run *run)
 
 int kvm_arch_process_async_events(CPUS390XState *env)
 {
-    return env->halted;
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    return cpu->halted;
 }
 
 void kvm_s390_interrupt_internal(CPUS390XState *env, int type, uint32_t parm,

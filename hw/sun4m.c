@@ -257,7 +257,7 @@ static void cpu_kick_irq(SPARCCPU *cpu)
 {
     CPUSPARCState *env = &cpu->env;
 
-    env->halted = 0;
+    CPU(cpu)->halted = 0;
     cpu_check_irqs(env);
     qemu_cpu_kick(CPU(cpu));
 }
@@ -284,20 +284,18 @@ static void dummy_cpu_set_irq(void *opaque, int irq, int level)
 
 static void main_cpu_reset(void *opaque)
 {
-    SPARCCPU *cpu = opaque;
-    CPUSPARCState *env = &cpu->env;
+    CPUState *cpu = CPU(opaque);
 
-    cpu_reset(CPU(cpu));
-    env->halted = 0;
+    cpu_reset(cpu);
+    cpu->halted = 0;
 }
 
 static void secondary_cpu_reset(void *opaque)
 {
-    SPARCCPU *cpu = opaque;
-    CPUSPARCState *env = &cpu->env;
+    CPUState *cpu = CPU(opaque);
 
-    cpu_reset(CPU(cpu));
-    env->halted = 1;
+    cpu_reset(cpu);
+    cpu->halted = 1;
 }
 
 static void cpu_halt_signal(void *opaque, int irq, int level)
@@ -829,7 +827,7 @@ static void cpu_devinit(const char *cpu_model, unsigned int id,
         qemu_register_reset(main_cpu_reset, cpu);
     } else {
         qemu_register_reset(secondary_cpu_reset, cpu);
-        env->halted = 1;
+        CPU(cpu)->halted = 1;
     }
     *cpu_irqs = qemu_allocate_irqs(cpu_set_irq, cpu, MAX_PILS);
     env->prom_addr = prom_addr;

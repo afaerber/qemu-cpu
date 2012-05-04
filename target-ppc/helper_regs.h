@@ -67,6 +67,9 @@ static inline void hreg_compute_hflags(CPUPPCState *env)
 static inline int hreg_store_msr(CPUPPCState *env, target_ulong value,
                                  int alter_hv)
 {
+#if !defined(CONFIG_USER_ONLY)
+    CPUState *cpu = ENV_GET_CPU(env);
+#endif
     int excp;
 
     excp = 0;
@@ -82,7 +85,7 @@ static inline int hreg_store_msr(CPUPPCState *env, target_ulong value,
         /* Flush all tlb when changing translation mode */
         tlb_flush(env, 1);
         excp = POWERPC_EXCP_NONE;
-        env->interrupt_request |= CPU_INTERRUPT_EXITTB;
+        cpu->interrupt_request |= CPU_INTERRUPT_EXITTB;
     }
     if (unlikely((env->flags & POWERPC_FLAG_TGPR) &&
                  ((value ^ env->msr) & (1 << MSR_TGPR)))) {
@@ -99,7 +102,7 @@ static inline int hreg_store_msr(CPUPPCState *env, target_ulong value,
 #if !defined (CONFIG_USER_ONLY)
     if (unlikely(msr_pow == 1)) {
         if ((*env->check_pow)(env)) {
-            env->halted = 1;
+            cpu->halted = 1;
             excp = EXCP_HALTED;
         }
     }

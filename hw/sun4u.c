@@ -253,6 +253,7 @@ static uint64_t sun4u_load_kernel(const char *kernel_filename,
 
 void cpu_check_irqs(CPUSPARCState *env)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     uint32_t pil = env->pil_in |
                   (env->softint & ~(SOFTINT_TIMER | SOFTINT_STIMER));
 
@@ -269,7 +270,7 @@ void cpu_check_irqs(CPUSPARCState *env)
     /* The bit corresponding to psrpil is (1<< psrpil), the next bit
        is (2 << psrpil). */
     if (pil < (2 << env->psrpil)){
-        if (env->interrupt_request & CPU_INTERRUPT_HARD) {
+        if (cpu->interrupt_request & CPU_INTERRUPT_HARD) {
             CPUIRQ_DPRINTF("Reset CPU IRQ (current interrupt %x)\n",
                            env->interrupt_index);
             env->interrupt_index = 0;
@@ -301,7 +302,7 @@ void cpu_check_irqs(CPUSPARCState *env)
                 break;
             }
         }
-    } else if (env->interrupt_request & CPU_INTERRUPT_HARD) {
+    } else if (cpu->interrupt_request & CPU_INTERRUPT_HARD) {
         CPUIRQ_DPRINTF("Interrupts disabled, pil=%08x pil_in=%08x softint=%08x "
                        "current interrupt %x\n",
                        pil, env->pil_in, env->softint, env->interrupt_index);
@@ -314,7 +315,7 @@ static void cpu_kick_irq(SPARCCPU *cpu)
 {
     CPUSPARCState *env = &cpu->env;
 
-    env->halted = 0;
+    CPU(cpu)->halted = 0;
     cpu_check_irqs(env);
     qemu_cpu_kick(CPU(cpu));
 }
@@ -327,7 +328,7 @@ static void cpu_set_ivec_irq(void *opaque, int irq, int level)
     if (level) {
         if (!(env->ivec_status & 0x20)) {
             CPUIRQ_DPRINTF("Raise IVEC IRQ %d\n", irq);
-            env->halted = 0;
+            CPU(cpu)->halted = 0;
             env->interrupt_index = TT_IVEC;
             env->ivec_status |= 0x20;
             env->ivec_data[0] = (0x1f << 6) | irq;

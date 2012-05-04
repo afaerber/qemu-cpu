@@ -2895,7 +2895,9 @@ static int dec_rfe_etc(DisasContext *dc)
 	cris_cc_mask(dc, 0);
 
 	if (dc->op2 == 15) {
-		t_gen_mov_env_TN(halted, tcg_const_tl(1));
+                tcg_gen_st_i32(tcg_const_i32(1), cpu_env,
+                               offsetof(CPUState, halted) -
+                               offsetof(CRISCPU, env));
 		tcg_gen_movi_tl(env_pc, dc->pc + 2);
 		t_gen_raise_exception(EXCP_HLT);
 		return 2;

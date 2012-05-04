@@ -1354,7 +1354,7 @@ static int kvm_get_mp_state(X86CPU *cpu)
     }
     env->mp_state = mp_state.mp_state;
     if (kvm_irqchip_in_kernel()) {
-        env->halted = (mp_state.mp_state == KVM_MP_STATE_HALTED);
+        CPU(cpu)->halted = (mp_state.mp_state == KVM_MP_STATE_HALTED);
     }
     return 0;
 }
@@ -1634,11 +1634,12 @@ int kvm_arch_get_registers(CPUX86State *env)
 
 void kvm_arch_pre_run(CPUX86State *env, struct kvm_run *run)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     int ret;
 
     /* Inject NMI */
-    if (env->interrupt_request & CPU_INTERRUPT_NMI) {
-        env->interrupt_request &= ~CPU_INTERRUPT_NMI;
+    if (cpu->interrupt_request & CPU_INTERRUPT_NMI) {
+        cpu->interrupt_request &= ~CPU_INTERRUPT_NMI;
         DPRINTF("injected NMI\n");
         ret = kvm_vcpu_ioctl(env, KVM_NMI);
         if (ret < 0) {
@@ -1650,18 +1651,18 @@ void kvm_arch_pre_run(CPUX86State *env, struct kvm_run *run)
     if (!kvm_irqchip_in_kernel()) {
         /* Force the VCPU out of its inner loop to process any INIT requests
          * or pending TPR access reports. */
-        if (env->interrupt_request &
+        if (cpu->interrupt_request &
             (CPU_INTERRUPT_INIT | CPU_INTERRUPT_TPR)) {
             env->exit_request = 1;
         }
 
         /* Try to inject an interrupt if the guest can accept it */
         if (run->ready_for_interrupt_injection &&
-            (env->interrupt_request & CPU_INTERRUPT_HARD) &&
+            (cpu->interrupt_request & CPU_INTERRUPT_HARD) &&
             (env->eflags & IF_MASK)) {
             int irq;
 
-            env->interrupt_request &= ~CPU_INTERRUPT_HARD;
+            cpu->interrupt_request &= ~CPU_INTERRUPT_HARD;
             irq = cpu_get_pic_interrupt(env);
             if (irq >= 0) {
                 struct kvm_interrupt intr;
@@ -1681,7 +1682,7 @@ void kvm_arch_pre_run(CPUX86State *env, struct kvm_run *run)
          * interrupt, request an interrupt window exit.  This will
          * cause a return to userspace as soon as the guest is ready to
          * receive interrupts. */
-        if ((env->interrupt_request & CPU_INTERRUPT_HARD)) {
+        if ((cpu->interrupt_request & CPU_INTERRUPT_HARD)) {
             run->request_interrupt_window = 1;
         } else {
             run->request_interrupt_window = 0;
@@ -1706,12 +1707,13 @@ void kvm_arch_post_run(CPUX86State *env, struct kvm_run *run)
 int kvm_arch_process_async_events(CPUX86State *env)
 {
     X86CPU *cpu = x86_env_get_cpu(env);
+    CPUState *c = CPU(cpu);
 
-    if (env->interrupt_request & CPU_INTERRUPT_MCE) {
+    if (c->interrupt_request & CPU_INTERRUPT_MCE) {
         /* We must not raise CPU_INTERRUPT_MCE if it's not supported. */
         assert(env->mcg_cap);
 
-        env->interrupt_request &= ~CPU_INTERRUPT_MCE;
+        c->interrupt_request &= ~CPU_INTERRUPT_MCE;
 
         kvm_cpu_synchronize_state(env);
 
@@ -1724,7 +1726,7 @@ int kvm_arch_process_async_events(CPUX86State *env)
         env->exception_injected = EXCP12_MCHK;
         env->has_error_code = 0;
 
-        env->halted = 0;
+        c->halted = 0;
         if (kvm_irqchip_in_kernel() && env->mp_state == KVM_MP_STATE_HALTED) {
             env->mp_state = KVM_MP_STATE_RUNNABLE;
         }
@@ -1734,37 +1736,38 @@ int kvm_arch_process_async_events(CPUX86State *env)
         return 0;
     }
 
-    if (((env->interrupt_request & CPU_INTERRUPT_HARD) &&
+    if (((c->interrupt_request & CPU_INTERRUPT_HARD) &&
          (env->eflags & IF_MASK)) ||
-        (env->interrupt_request & CPU_INTERRUPT_NMI)) {
-        env->halted = 0;
+        (c->interrupt_request & CPU_INTERRUPT_NMI)) {
+        c->halted = 0;
     }
-    if (env->interrupt_request & CPU_INTERRUPT_INIT) {
+    if (c->interrupt_request & CPU_INTERRUPT_INIT) {
         kvm_cpu_synchronize_state(env);
         do_cpu_init(cpu);
     }
-    if (env->interrupt_request & CPU_INTERRUPT_SIPI) {
+    if (c->interrupt_request & CPU_INTERRUPT_SIPI) {
         kvm_cpu_synchronize_state(env);
         do_cpu_sipi(cpu);
     }
-    if (env->interrupt_request & CPU_INTERRUPT_TPR) {
-        env->interrupt_request &= ~CPU_INTERRUPT_TPR;
+    if (c->interrupt_request & CPU_INTERRUPT_TPR) {
+        c->interrupt_request &= ~CPU_INTERRUPT_TPR;
         kvm_cpu_synchronize_state(env);
         apic_handle_tpr_access_report(env->apic_state, env->eip,
                                       env->tpr_access_type);
     }
 
-    return env->halted;
+    return c->halted;
 }
 
-static int kvm_handle_halt(X86CPU *cpu)
+static int kvm_handle_halt(X86CPU *c)
 {
-    CPUX86State *env = &cpu->env;
+    CPUState *cpu = CPU(c);
+    CPUX86State *env = &c->env;
 
-    if (!((env->interrupt_request & CPU_INTERRUPT_HARD) &&
+    if (!((cpu->interrupt_request & CPU_INTERRUPT_HARD) &&
           (env->eflags & IF_MASK)) &&
-        !(env->interrupt_request & CPU_INTERRUPT_NMI)) {
-        env->halted = 1;
+        !(cpu->interrupt_request & CPU_INTERRUPT_NMI)) {
+        cpu->halted = 1;
         return EXCP_HLT;
     }
 

@@ -2188,7 +2188,7 @@ static inline bool cpu_has_work(CPUState *cpu)
 {
     CPUPPCState *env = &POWERPC_CPU(cpu)->env;
 
-    return msr_ee && (env->interrupt_request & CPU_INTERRUPT_HARD);
+    return msr_ee && (cpu->interrupt_request & CPU_INTERRUPT_HARD);
 }
 
 #include "exec-all.h"

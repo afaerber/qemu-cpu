@@ -125,7 +125,7 @@ static void ppc6xx_set_irq(void *opaque, int pin, int level)
             /* XXX: Note that the only way to restart the CPU is to reset it */
             if (level) {
                 LOG_IRQ("%s: stop the CPU\n", __func__);
-                env->halted = 1;
+                CPU(cpu)->halted = 1;
             }
             break;
         case PPC6xx_INPUT_HRESET:
@@ -202,10 +202,10 @@ static void ppc970_set_irq(void *opaque, int pin, int level)
             /* XXX: TODO: relay the signal to CKSTP_OUT pin */
             if (level) {
                 LOG_IRQ("%s: stop the CPU\n", __func__);
-                env->halted = 1;
+                CPU(cpu)->halted = 1;
             } else {
                 LOG_IRQ("%s: restart the CPU\n", __func__);
-                env->halted = 0;
+                CPU(cpu)->halted = 0;
                 qemu_cpu_kick(CPU(cpu));
             }
             break;
@@ -331,10 +331,10 @@ static void ppc40x_set_irq(void *opaque, int pin, int level)
             /* Level sensitive - active low */
             if (level) {
                 LOG_IRQ("%s: stop the CPU\n", __func__);
-                env->halted = 1;
+                CPU(cpu)->halted = 1;
             } else {
                 LOG_IRQ("%s: restart the CPU\n", __func__);
-                env->halted = 0;
+                CPU(cpu)->halted = 0;
                 qemu_cpu_kick(CPU(cpu));
             }
             break;

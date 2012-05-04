@@ -1735,7 +1735,7 @@ static uint64_t omap_clkdsp_read(void *opaque, target_phys_addr_t addr,
 
     case 0x18:	/* DSP_SYSST */
         return (s->clkm.clocking_scheme << 11) | s->clkm.cold_start |
-                (s->cpu->env.halted << 6);      /* Quite useless... */
+                (CPU(s->cpu)->halted << 6);      /* Quite useless... */
     }
 
     OMAP_BAD_REG(addr);
@@ -3752,7 +3752,7 @@ void omap_mpu_wakeup(void *opaque, int irq, int req)
 {
     struct omap_mpu_state_s *mpu = (struct omap_mpu_state_s *) opaque;
 
-    if (mpu->cpu->env.halted) {
+    if (CPU(mpu->cpu)->halted) {
         cpu_interrupt(&mpu->cpu->env, CPU_INTERRUPT_EXITTB);
     }
 }

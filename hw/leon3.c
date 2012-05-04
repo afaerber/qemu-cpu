@@ -53,7 +53,7 @@ static void main_cpu_reset(void *opaque)
 
     cpu_reset(CPU(s->cpu));
 
-    env->halted = 0;
+    CPU(s->cpu)->halted = 0;
     env->pc     = s->entry;
     env->npc    = s->entry + 4;
 }

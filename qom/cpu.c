@@ -32,6 +32,8 @@ void cpu_reset(CPUState *cpu)
 
 static void cpu_common_reset(CPUState *cpu)
 {
+    cpu->halted = 0;
+    cpu->interrupt_request = 0;
 }
 
 void cpu_tlb_flush(CPUState *cpu, bool flush_global)

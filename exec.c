@@ -654,12 +654,12 @@ void cpu_exec_init_all(void)
 
 static int cpu_common_post_load(void *opaque, int version_id)
 {
-    CPUArchState *env = opaque;
+    CPUState *cpu = opaque;
 
     /* 0x01 was CPU_INTERRUPT_EXIT. This line can be removed when the
        version_id is increased. */
-    env->interrupt_request &= ~0x01;
-    tlb_flush(env, 1);
+    cpu->interrupt_request &= ~0x01;
+    cpu_tlb_flush(cpu, true);
 
     return 0;
 }
@@ -671,8 +671,8 @@ static const VMStateDescription vmstate_cpu_common = {
     .minimum_version_id_old = 1,
     .post_load = cpu_common_post_load,
     .fields      = (VMStateField []) {
-        VMSTATE_UINT32(halted, CPUArchState),
-        VMSTATE_UINT32(interrupt_request, CPUArchState),
+        VMSTATE_UINT32(halted, CPUState),
+        VMSTATE_UINT32(interrupt_request, CPUState),
         VMSTATE_END_OF_LIST()
     }
 };
@@ -721,7 +721,7 @@ void cpu_exec_init(CPUArchState *env)
     cpu_list_unlock();
 #endif
 #if defined(CPU_SAVE_VERSION) && !defined(CONFIG_USER_ONLY)
-    vmstate_register(NULL, cpu_index, &vmstate_cpu_common, env);
+    vmstate_register(NULL, cpu_index, &vmstate_cpu_common, ENV_GET_CPU(env));
     register_savevm(NULL, "cpu", cpu_index, CPU_SAVE_VERSION,
                     cpu_save, cpu_load, env);
 #endif
@@ -1104,6 +1104,7 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
                                    int is_cpu_write_access)
 {
     TranslationBlock *tb, *tb_next, *saved_tb;
+    CPUState *cpu = NULL;
     CPUArchState *env = cpu_single_env;
     tb_page_addr_t tb_start, tb_end;
     PageDesc *p;
@@ -1116,6 +1117,10 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
     target_ulong current_cs_base = 0;
     int current_flags = 0;
 #endif /* TARGET_HAS_PRECISE_SMC */
+
+    if (env != NULL) {
+        cpu = ENV_GET_CPU(env);
+    }
 
     p = page_find(start >> TARGET_PAGE_BITS);
     if (!p)
@@ -1178,8 +1183,9 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
             tb_phys_invalidate(tb, -1);
             if (env) {
                 env->current_tb = saved_tb;
-                if (env->interrupt_request && env->current_tb)
-                    cpu_interrupt(env, env->interrupt_request);
+                if (cpu->interrupt_request && env->current_tb) {
+                    cpu_interrupt(env, cpu->interrupt_request);
+                }
             }
         }
         tb = tb_next;
@@ -1740,8 +1746,8 @@ static void tcg_handle_interrupt(CPUArchState *env, int mask)
     CPUState *cpu = ENV_GET_CPU(env);
     int old_mask;
 
-    old_mask = env->interrupt_request;
-    env->interrupt_request |= mask;
+    old_mask = cpu->interrupt_request;
+    cpu->interrupt_request |= mask;
 
     /*
      * If called from iothread context, wake the target cpu in
@@ -1769,14 +1775,18 @@ CPUInterruptHandler cpu_interrupt_handler = tcg_handle_interrupt;
 
 void cpu_interrupt(CPUArchState *env, int mask)
 {
-    env->interrupt_request |= mask;
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    cpu->interrupt_request |= mask;
     cpu_unlink_tb(env);
 }
 #endif /* CONFIG_USER_ONLY */
 
 void cpu_reset_interrupt(CPUArchState *env, int mask)
 {
-    env->interrupt_request &= ~mask;
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    cpu->interrupt_request &= ~mask;
 }
 
 void cpu_exit(CPUArchState *env)

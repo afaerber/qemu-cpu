@@ -12716,6 +12716,10 @@ MIPSCPU *cpu_mips_init(const char *cpu_model)
 
 void cpu_state_reset(CPUMIPSState *env)
 {
+#ifndef CONFIG_USER_ONLY
+    CPUState *cpu = ENV_GET_CPU(env);
+#endif
+
     if (qemu_loglevel_mask(CPU_LOG_RESET)) {
         qemu_log("CPU Reset (CPU %d)\n", env->cpu_index);
         log_cpu_state(env, 0);
@@ -12817,7 +12821,7 @@ void cpu_state_reset(CPUMIPSState *env)
             env->tcs[i].CP0_TCHalt = 1;
         }
         env->active_tc.CP0_TCHalt = 1;
-        env->halted = 1;
+        cpu->halted = 1;
 
         if (!env->cpu_index) {
             /* VPE0 starts up enabled.  */
@@ -12825,7 +12829,7 @@ void cpu_state_reset(CPUMIPSState *env)
             env->CP0_VPEConf0 |= (1 << CP0VPEC0_MVP) | (1 << CP0VPEC0_VPA);
 
             /* TC0 starts up unhalted.  */
-            env->halted = 0;
+            cpu->halted = 0;
             env->active_tc.CP0_TCHalt = 0;
             env->tcs[0].CP0_TCHalt = 0;
             /* With thread 0 active.  */

@@ -37,7 +37,6 @@ static void xen_init_pv(ram_addr_t ram_size,
 			const char *cpu_model)
 {
     X86CPU *cpu;
-    CPUX86State *env;
     DriveInfo *dinfo;
     int i;
 
@@ -50,8 +49,7 @@ static void xen_init_pv(ram_addr_t ram_size,
 #endif
     }
     cpu = cpu_x86_init(cpu_model);
-    env = &cpu->env;
-    env->halted = 1;
+    CPU(cpu)->halted = 1;
 
     /* Initialize backend core & drivers */
     if (xen_be_init() != 0) {

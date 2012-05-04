@@ -132,19 +132,23 @@ static unsigned s390_running_cpus;
 
 void s390_add_running_cpu(CPUS390XState *env)
 {
-    if (env->halted) {
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    if (cpu->halted) {
         s390_running_cpus++;
-        env->halted = 0;
+        cpu->halted = 0;
         env->exception_index = -1;
     }
 }
 
 unsigned s390_del_running_cpu(CPUS390XState *env)
 {
-    if (env->halted == 0) {
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    if (cpu->halted == 0) {
         assert(s390_running_cpus >= 1);
         s390_running_cpus--;
-        env->halted = 1;
+        cpu->halted = 1;
         env->exception_index = EXCP_HLT;
     }
     return s390_running_cpus;
@@ -218,7 +222,7 @@ static void s390_init(ram_addr_t my_ram_size,
             env = tmp_env;
         }
         ipi_states[i] = cpu;
-        tmp_env->halted = 1;
+        CPU(cpu)->halted = 1;
         tmp_env->exception_index = EXCP_HLT;
         tmp_env->storage_keys = storage_keys;
     }

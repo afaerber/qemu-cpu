@@ -471,6 +471,7 @@ int kvmppc_set_interrupt(CPUPPCState *env, int irq, int level)
 
 void kvm_arch_pre_run(CPUPPCState *env, struct kvm_run *run)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     int r;
     unsigned irq;
 
@@ -478,7 +479,7 @@ void kvm_arch_pre_run(CPUPPCState *env, struct kvm_run *run)
      * interrupt, reset, etc) in PPC-specific env->irq_input_state. */
     if (!cap_interrupt_level &&
         run->ready_for_interrupt_injection &&
-        (env->interrupt_request & CPU_INTERRUPT_HARD) &&
+        (cpu->interrupt_request & CPU_INTERRUPT_HARD) &&
         (env->irq_input_state & (1<<PPC_INPUT_INT)))
     {
         /* For now KVM disregards the 'irq' argument. However, in the
@@ -508,13 +509,17 @@ void kvm_arch_post_run(CPUPPCState *env, struct kvm_run *run)
 
 int kvm_arch_process_async_events(CPUPPCState *env)
 {
-    return env->halted;
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    return cpu->halted;
 }
 
 static int kvmppc_handle_halt(CPUPPCState *env)
 {
-    if (!(env->interrupt_request & CPU_INTERRUPT_HARD) && (msr_ee)) {
-        env->halted = 1;
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    if (!(cpu->interrupt_request & CPU_INTERRUPT_HARD) && (msr_ee)) {
+        cpu->halted = 1;
         env->exception_index = EXCP_HLT;
     }
 

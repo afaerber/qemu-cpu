@@ -527,6 +527,7 @@ static void do_interrupt_v7m(CPUARMState *env)
 /* Handle a CPU exception.  */
 void do_interrupt(CPUARMState *env)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     uint32_t addr;
     uint32_t mask;
     int new_mode;
@@ -632,7 +633,7 @@ void do_interrupt(CPUARMState *env)
     }
     env->regs[14] = env->regs[15] + offset;
     env->regs[15] = addr;
-    env->interrupt_request |= CPU_INTERRUPT_EXITTB;
+    cpu->interrupt_request |= CPU_INTERRUPT_EXITTB;
 }
 
 /* Check section/page access permissions.

@@ -438,6 +438,8 @@ target_phys_addr_t cpu_get_phys_page_debug(CPUS390XState *env, target_ulong vadd
 
 void load_psw(CPUS390XState *env, uint64_t mask, uint64_t addr)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
+
     if (mask & PSW_MASK_WAIT) {
         if (!(mask & (PSW_MASK_IO | PSW_MASK_EXT | PSW_MASK_MCHECK))) {
             if (s390_del_running_cpu(env) == 0) {
@@ -446,7 +448,7 @@ void load_psw(CPUS390XState *env, uint64_t mask, uint64_t addr)
 #endif
             }
         }
-        env->halted = 1;
+        cpu->halted = 1;
         env->exception_index = EXCP_HLT;
     }
 
@@ -571,8 +573,10 @@ static void do_ext_interrupt(CPUS390XState *env)
     load_psw(env, mask, addr);
 }
 
-void do_interrupt (CPUS390XState *env)
+void do_interrupt(CPUS390XState *env)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
+
     qemu_log("%s: %d at pc=%" PRIx64 "\n", __FUNCTION__, env->exception_index,
              env->psw.addr);
 
@@ -610,7 +614,7 @@ void do_interrupt (CPUS390XState *env)
     env->exception_index = -1;
 
     if (!env->pending_int) {
-        env->interrupt_request &= ~CPU_INTERRUPT_HARD;
+        cpu->interrupt_request &= ~CPU_INTERRUPT_HARD;
     }
 }
 

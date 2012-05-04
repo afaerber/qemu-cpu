@@ -942,10 +942,10 @@ void pc_acpi_smi_interrupt(void *opaque, int irq, int level)
 static void pc_cpu_reset(void *opaque)
 {
     X86CPU *cpu = opaque;
-    CPUX86State *env = &cpu->env;
+    CPUState *c = CPU(cpu);
 
-    cpu_reset(CPU(cpu));
-    env->halted = !cpu_is_bsp(cpu);
+    cpu_reset(c);
+    c->halted = !cpu_is_bsp(cpu);
 }
 
 static X86CPU *pc_new_cpu(const char *cpu_model)
