@@ -496,7 +496,7 @@ void cpu_unassigned_access(CPUMIPSState *env, target_phys_addr_t addr,
 
 void mips_cpu_list (FILE *f, fprintf_function cpu_fprintf);
 
-#define cpu_init cpu_mips_init
+#define cpu_init(model) (&cpu_mips_init(model)->env)
 #define cpu_exec cpu_mips_exec
 #define cpu_gen_code cpu_mips_gen_code
 #define cpu_signal_handler cpu_mips_signal_handler
@@ -626,7 +626,7 @@ enum {
 #define CPU_INTERRUPT_WAKE CPU_INTERRUPT_TGT_INT_0
 
 int cpu_mips_exec(CPUMIPSState *s);
-CPUMIPSState *cpu_mips_init(const char *cpu_model);
+MIPSCPU *cpu_mips_init(const char *cpu_model);
 int cpu_mips_signal_handler(int host_signum, void *pinfo, void *puc);
 
 /* mips_timer.c */
