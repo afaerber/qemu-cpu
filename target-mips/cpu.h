@@ -496,6 +496,9 @@ void cpu_unassigned_access(CPUMIPSState *env, target_phys_addr_t addr,
 
 void mips_cpu_list (FILE *f, fprintf_function cpu_fprintf);
 
+/* TODO QOM'ify CPU reset and remove */
+void cpu_state_reset(CPUMIPSState *s);
+
 #define cpu_init(model) (&cpu_mips_init(model)->env)
 #define cpu_exec cpu_mips_exec
 #define cpu_gen_code cpu_mips_gen_code
