@@ -83,6 +83,14 @@ static void mb_cpu_reset(CPUState *s)
 #endif
 }
 
+/* CPUClass::tlb_flush() */
+static void mb_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    MicroBlazeCPU *cpu = MICROBLAZE_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void mb_cpu_initfn(Object *obj)
 {
     MicroBlazeCPU *cpu = MICROBLAZE_CPU(obj);
@@ -100,6 +108,8 @@ static void mb_cpu_class_init(ObjectClass *oc, void *data)
 
     mcc->parent_reset = cc->reset;
     cc->reset = mb_cpu_reset;
+
+    cc->tlb_flush = mb_cpu_tlb_flush;
 }
 
 static const TypeInfo mb_cpu_type_info = {

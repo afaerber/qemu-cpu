@@ -34,6 +34,14 @@ static void mips_cpu_reset(CPUState *s)
     cpu_state_reset(env);
 }
 
+/* CPUClass::tlb_flush() */
+static void mips_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    MIPSCPU *cpu = MIPS_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void mips_cpu_initfn(Object *obj)
 {
     MIPSCPU *cpu = MIPS_CPU(obj);
@@ -49,6 +57,8 @@ static void mips_cpu_class_init(ObjectClass *c, void *data)
 
     mcc->parent_reset = cc->reset;
     cc->reset = mips_cpu_reset;
+
+    cc->tlb_flush = mips_cpu_tlb_flush;
 }
 
 static const TypeInfo mips_cpu_type_info = {

@@ -23,6 +23,14 @@
 #include "qemu-common.h"
 
 
+/* CPUClass::tlb_flush() */
+static void alpha_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    AlphaCPU *cpu = ALPHA_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void alpha_cpu_initfn(Object *obj)
 {
     AlphaCPU *cpu = ALPHA_CPU(obj);
@@ -41,6 +49,13 @@ static void alpha_cpu_initfn(Object *obj)
     env->fen = 1;
 }
 
+static void alpha_cpu_class_init(ObjectClass *oc, void *data)
+{
+    CPUClass *cc = CPU_CLASS(oc);
+
+    cc->tlb_flush = alpha_cpu_tlb_flush;
+}
+
 static const TypeInfo alpha_cpu_type_info = {
     .name = TYPE_ALPHA_CPU,
     .parent = TYPE_CPU,
@@ -48,6 +63,7 @@ static const TypeInfo alpha_cpu_type_info = {
     .instance_init = alpha_cpu_initfn,
     .abstract = false,
     .class_size = sizeof(AlphaCPUClass),
+    .class_init = alpha_cpu_class_init,
 };
 
 static void alpha_cpu_register_types(void)

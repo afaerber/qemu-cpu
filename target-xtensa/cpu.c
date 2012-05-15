@@ -53,6 +53,14 @@ static void xtensa_cpu_reset(CPUState *s)
     reset_mmu(env);
 }
 
+/* CPUClass::tlb_flush() */
+static void xtensa_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    XtensaCPU *cpu = XTENSA_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void xtensa_cpu_initfn(Object *obj)
 {
     XtensaCPU *cpu = XTENSA_CPU(obj);
@@ -68,6 +76,8 @@ static void xtensa_cpu_class_init(ObjectClass *oc, void *data)
 
     xcc->parent_reset = cc->reset;
     cc->reset = xtensa_cpu_reset;
+
+    cc->tlb_flush = xtensa_cpu_tlb_flush;
 }
 
 static const TypeInfo xtensa_cpu_type_info = {

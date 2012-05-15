@@ -42,6 +42,14 @@ static void lm32_cpu_reset(CPUState *s)
     memset(env, 0, offsetof(CPULM32State, breakpoints));
 }
 
+/* CPUClass::tlb_flush() */
+static void lm32_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    LM32CPU *cpu = LM32_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void lm32_cpu_initfn(Object *obj)
 {
     LM32CPU *cpu = LM32_CPU(obj);
@@ -61,6 +69,8 @@ static void lm32_cpu_class_init(ObjectClass *oc, void *data)
 
     lcc->parent_reset = cc->reset;
     cc->reset = lm32_cpu_reset;
+
+    cc->tlb_flush = lm32_cpu_tlb_flush;
 }
 
 static const TypeInfo lm32_cpu_type_info = {

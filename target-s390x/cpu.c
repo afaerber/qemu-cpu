@@ -45,6 +45,14 @@ static void s390_cpu_reset(CPUState *s)
     s390_add_running_cpu(env);
 }
 
+/* CPUClass::tlb_flush() */
+static void s390_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    S390CPU *cpu = S390_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void s390_cpu_initfn(Object *obj)
 {
     S390CPU *cpu = S390_CPU(obj);
@@ -76,6 +84,8 @@ static void s390_cpu_class_init(ObjectClass *oc, void *data)
 
     scc->parent_reset = cc->reset;
     cc->reset = s390_cpu_reset;
+
+    cc->tlb_flush = s390_cpu_tlb_flush;
 }
 
 static const TypeInfo s390_cpu_type_info = {

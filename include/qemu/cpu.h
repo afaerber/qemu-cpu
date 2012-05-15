@@ -41,6 +41,7 @@ typedef struct CPUState CPUState;
 /**
  * CPUClass:
  * @reset: Callback to reset the #CPUState to its initial state.
+ * @tlb_flush: Callback to flush the TLB.
  *
  * Represents a CPU family or model.
  */
@@ -50,6 +51,8 @@ typedef struct CPUClass {
     /*< public >*/
 
     void (*reset)(CPUState *cpu);
+
+    void (*tlb_flush)(CPUState *cpu, bool flush_global);
 } CPUClass;
 
 /**
@@ -86,6 +89,15 @@ struct CPUState {
  * @cpu: The CPU whose state is to be reset.
  */
 void cpu_reset(CPUState *cpu);
+
+/**
+ * cpu_tlb_flush:
+ * @cpu: The CPU whose TLB is to be flushed.
+ * @flush_global: Whether to flush TLB entries marked as global.
+ *
+ * Flushes the TLB of the CPU.
+ */
+void cpu_tlb_flush(CPUState *cpu, bool flush_global);
 
 /**
  * qemu_cpu_has_work:

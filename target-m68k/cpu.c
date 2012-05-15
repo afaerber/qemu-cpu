@@ -53,6 +53,14 @@ static void m68k_cpu_reset(CPUState *s)
     tlb_flush(env, 1);
 }
 
+/* CPUClass::tlb_flush() */
+static void m68k_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    M68kCPU *cpu = M68K_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 /* CPU models */
 
 static void m5206_cpu_initfn(Object *obj)
@@ -134,6 +142,8 @@ static void m68k_cpu_class_init(ObjectClass *c, void *data)
 
     mcc->parent_reset = cc->reset;
     cc->reset = m68k_cpu_reset;
+
+    cc->tlb_flush = m68k_cpu_tlb_flush;
 }
 
 static void register_cpu_type(const M68kCPUInfo *info)

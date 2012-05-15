@@ -10266,6 +10266,14 @@ static void ppc_cpu_reset(CPUState *s)
     tlb_flush(env, 1);
 }
 
+/* CPUClass::tlb_flush() */
+static void ppc_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    PowerPCCPU *cpu = POWERPC_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void ppc_cpu_initfn(Object *obj)
 {
     PowerPCCPU *cpu = POWERPC_CPU(obj);
@@ -10281,6 +10289,8 @@ static void ppc_cpu_class_init(ObjectClass *oc, void *data)
 
     pcc->parent_reset = cc->reset;
     cc->reset = ppc_cpu_reset;
+
+    cc->tlb_flush = ppc_cpu_tlb_flush;
 }
 
 static const TypeInfo ppc_cpu_type_info = {

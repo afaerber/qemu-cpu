@@ -55,6 +55,14 @@ static void cris_cpu_reset(CPUState *s)
 #endif
 }
 
+/* CPUClass::tlb_flush() */
+static void cris_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    CRISCPU *cpu = CRIS_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void cris_cpu_initfn(Object *obj)
 {
     CRISCPU *cpu = CRIS_CPU(obj);
@@ -70,6 +78,8 @@ static void cris_cpu_class_init(ObjectClass *oc, void *data)
 
     ccc->parent_reset = cc->reset;
     cc->reset = cris_cpu_reset;
+
+    cc->tlb_flush = cris_cpu_tlb_flush;
 }
 
 static const TypeInfo cris_cpu_type_info = {

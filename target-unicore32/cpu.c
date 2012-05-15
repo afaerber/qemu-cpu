@@ -20,6 +20,14 @@ static inline void set_feature(CPUUniCore32State *env, int feature)
     env->features |= feature;
 }
 
+/* CPUClass::tlb_flush() */
+static void uc32_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    UniCore32CPU *cpu = UNICORE32_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 /* CPU models */
 
 typedef struct UniCore32CPUInfo {
@@ -71,6 +79,13 @@ static void uc32_cpu_initfn(Object *obj)
     tlb_flush(env, 1);
 }
 
+static void uc32_cpu_class_init(ObjectClass *oc, void *data)
+{
+    CPUClass *cc = CPU_CLASS(oc);
+
+    cc->tlb_flush = uc32_cpu_tlb_flush;
+}
+
 static void uc32_register_cpu_type(const UniCore32CPUInfo *info)
 {
     TypeInfo type_info = {
@@ -89,6 +104,7 @@ static const TypeInfo uc32_cpu_type_info = {
     .instance_init = uc32_cpu_initfn,
     .abstract = true,
     .class_size = sizeof(UniCore32CPUClass),
+    .class_init = uc32_cpu_class_init,
 };
 
 static void uc32_cpu_register_types(void)

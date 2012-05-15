@@ -53,6 +53,14 @@ static void superh_cpu_reset(CPUState *s)
     set_default_nan_mode(1, &env->fp_status);
 }
 
+/* CPUClass::tlb_flush() */
+static void superh_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    SuperHCPU *cpu = SUPERH_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void superh_cpu_initfn(Object *obj)
 {
     SuperHCPU *cpu = SUPERH_CPU(obj);
@@ -70,6 +78,8 @@ static void superh_cpu_class_init(ObjectClass *oc, void *data)
 
     scc->parent_reset = cc->reset;
     cc->reset = superh_cpu_reset;
+
+    cc->tlb_flush = superh_cpu_tlb_flush;
 }
 
 static const TypeInfo superh_cpu_type_info = {

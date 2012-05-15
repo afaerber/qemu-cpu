@@ -34,6 +34,15 @@ static void cpu_common_reset(CPUState *cpu)
 {
 }
 
+void cpu_tlb_flush(CPUState *cpu, bool flush_global)
+{
+    CPUClass *cc = CPU_GET_CLASS(cpu);
+
+    g_assert(cc->tlb_flush != NULL);
+
+    cc->tlb_flush(cpu, flush_global);
+}
+
 static void cpu_class_init(ObjectClass *klass, void *data)
 {
     CPUClass *k = CPU_CLASS(klass);

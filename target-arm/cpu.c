@@ -120,6 +120,14 @@ static void arm_cpu_reset(CPUState *s)
     tb_flush(env);
 }
 
+/* CPUClass::tlb_flush() */
+static void arm_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    ARMCPU *cpu = ARM_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static inline void set_feature(CPUARMState *env, int feature)
 {
     env->features |= 1u << feature;
@@ -637,6 +645,8 @@ static void arm_cpu_class_init(ObjectClass *oc, void *data)
 
     acc->parent_reset = cc->reset;
     cc->reset = arm_cpu_reset;
+
+    cc->tlb_flush = arm_cpu_tlb_flush;
 }
 
 static void cpu_register(const ARMCPUInfo *info)

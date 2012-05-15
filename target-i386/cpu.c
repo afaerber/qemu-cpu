@@ -1706,6 +1706,14 @@ static void x86_cpu_reset(CPUState *s)
     cpu_watchpoint_remove_all(env, BP_CPU);
 }
 
+/* CPUClass::tlb_flush() */
+static void x86_cpu_tlb_flush(CPUState *c, bool flush_global)
+{
+    X86CPU *cpu = X86_CPU(c);
+
+    tlb_flush(&cpu->env, flush_global);
+}
+
 static void mce_init(X86CPU *cpu)
 {
     CPUX86State *cenv = &cpu->env;
@@ -1772,6 +1780,8 @@ static void x86_cpu_common_class_init(ObjectClass *oc, void *data)
 
     xcc->parent_reset = cc->reset;
     cc->reset = x86_cpu_reset;
+
+    cc->tlb_flush = x86_cpu_tlb_flush;
 }
 
 static const TypeInfo x86_cpu_type_info = {
