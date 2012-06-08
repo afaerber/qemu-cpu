@@ -265,6 +265,85 @@ static void object_interface_init(Object *obj, InterfaceImpl *iface)
     obj->interfaces = g_slist_prepend(obj->interfaces, iface_obj);
 }
 
+static void object_get_realized(Object *obj, Visitor *v, void *opaque,
+                                const char *name, Error **errp)
+{
+    visit_type_bool(v, &obj->realized, name, errp);
+}
+
+static void object_unrealize(Object *obj)
+{
+    ObjectClass *klass = object_get_class(obj);
+
+    if (klass->unrealize_children) {
+        klass->unrealize_children(obj);
+    }
+    if (obj->realized && klass->unrealize) {
+        klass->unrealize(obj);
+    }
+    obj->realized = false;
+}
+
+static int object_unrealize_one(Object *obj, void *unused)
+{
+    object_unrealize(obj);
+    return 0;
+}
+
+void object_unrealize_children(Object *obj)
+{
+    object_child_foreach(obj, object_unrealize_one, NULL);
+}
+
+static void object_realize(Object *obj, Error **errp)
+{
+    ObjectClass *klass = object_get_class(obj);
+
+    if (!obj->realized && klass->realize) {
+        klass->realize(obj, errp);
+    }
+    obj->realized = true;
+    if (klass->realize_children) {
+        klass->realize_children(obj, errp);
+    }
+}
+
+static int object_realize_one(Object *obj, void *errp)
+{
+    Error *err = NULL;
+    object_realize(obj, &err);
+    if (err) {
+        error_propagate((Error **)errp, err);
+        return 1;
+    }
+
+    return 0;
+}
+
+void object_realize_children(Object *obj, Error **errp)
+{
+    object_child_foreach(obj, object_realize_one, errp);
+}
+
+static void object_set_realized(Object *obj, Visitor *v, void *opaque,
+                                const char *name, Error **errp)
+{
+    bool value;
+    Error *err = NULL;
+
+    visit_type_bool(v, &value, name, &err);
+    if (err) {
+        error_propagate(errp, err);
+        return;
+    }
+
+    if (value) {
+        object_realize(obj, errp);
+    } else {
+        object_unrealize(obj);
+    }
+}
+
 static void object_init_with_type(Object *obj, TypeImpl *ti)
 {
     int i;
@@ -353,6 +432,8 @@ void object_unparent(Object *obj)
 
 static void object_deinit(Object *obj, TypeImpl *type)
 {
+    object_property_set_bool(obj, false, "realized", NULL);
+
     if (type->instance_finalize) {
         type->instance_finalize(obj);
     }
@@ -1245,6 +1326,15 @@ bool object_is_realized(Object *obj)
 static void object_instance_init(Object *obj)
 {
     object_property_add_str(obj, "type", qdev_get_type, NULL, NULL);
+
+    object_property_add(obj, "realized", "bool", object_get_realized,
+                        object_set_realized, NULL, NULL, NULL);
+}
+
+static void object_class_init(ObjectClass *klass, void *class_data)
+{
+    klass->realize_children = object_realize_children;
+    klass->unrealize_children = object_unrealize_children;
 }
 
 static void register_types(void)
@@ -1258,6 +1348,7 @@ static void register_types(void)
     static TypeInfo object_info = {
         .name = TYPE_OBJECT,
         .instance_size = sizeof(Object),
+        .class_init = object_class_init,
         .instance_init = object_instance_init,
         .abstract = true,
     };
