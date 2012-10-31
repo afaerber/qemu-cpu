@@ -53,6 +53,24 @@ static void alpha_cpu_disas_set_info(CPUState *cpu, disassemble_info *info)
     info->print_insn = print_insn_alpha;
 }
 
+/* CPUClass::reset() */
+static void alpha_cpu_reset(CPUState *s)
+{
+    AlphaCPU *cpu = ALPHA_CPU(s);
+    AlphaCPUClass *acc = ALPHA_CPU_GET_CLASS(cpu);
+    CPUAlphaState *env = &cpu->env;
+
+    if (qemu_loglevel_mask(CPU_LOG_RESET)) {
+        qemu_log("CPU Reset (CPU %d)\n", s->cpu_index);
+        log_cpu_state(env, 0);
+    }
+
+    acc->parent_reset(s);
+
+    memset(env, 0, offsetof(CPUAlphaState, breakpoints));
+    tlb_flush(env, 1);
+}
+
 static void alpha_cpu_realizefn(DeviceState *dev, Error **errp)
 {
     CPUState *cs = CPU(dev);
@@ -287,6 +305,9 @@ static void alpha_cpu_class_init(ObjectClass *oc, void *data)
 
     acc->parent_realize = dc->realize;
     dc->realize = alpha_cpu_realizefn;
+
+    acc->parent_reset = cc->reset;
+    cc->reset = alpha_cpu_reset;
 
     cc->class_by_name = alpha_cpu_class_by_name;
     cc->has_work = alpha_cpu_has_work;
