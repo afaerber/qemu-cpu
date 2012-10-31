@@ -77,6 +77,10 @@ struct CPUState {
     bool stop;
     bool stopped;
 
+#if !defined(CONFIG_USER_ONLY)
+    int kvm_fd;
+#endif
+
     /* TODO Move common fields from CPUArchState here. */
 };
 
