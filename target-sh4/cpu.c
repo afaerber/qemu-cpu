@@ -53,6 +53,125 @@ static void superh_cpu_reset(CPUState *s)
     set_default_nan_mode(1, &env->fp_status);
 }
 
+typedef struct SuperHCPUListState {
+    fprintf_function cpu_fprintf;
+    FILE *file;
+} SuperHCPUListState;
+
+/* Sort alphabetically by type name. */
+static gint superh_cpu_list_compare(gconstpointer a, gconstpointer b)
+{
+    ObjectClass *class_a = (ObjectClass *)a;
+    ObjectClass *class_b = (ObjectClass *)b;
+    const char *name_a, *name_b;
+
+    name_a = object_class_get_name(class_a);
+    name_b = object_class_get_name(class_b);
+    return strcmp(name_a, name_b);
+}
+
+static void superh_cpu_list_entry(gpointer data, gpointer user_data)
+{
+    ObjectClass *oc = data;
+    SuperHCPUClass *scc = SUPERH_CPU_CLASS(oc);
+    SuperHCPUListState *s = user_data;
+
+    (*s->cpu_fprintf)(s->file, "%s\n",
+                      scc->name);
+}
+
+void sh4_cpu_list(FILE *f, fprintf_function cpu_fprintf)
+{
+    SuperHCPUListState s = {
+        .cpu_fprintf = cpu_fprintf,
+        .file = f,
+    };
+    GSList *list;
+
+    list = object_class_get_list(TYPE_SUPERH_CPU, false);
+    list = g_slist_sort(list, superh_cpu_list_compare);
+    g_slist_foreach(list, superh_cpu_list_entry, &s);
+    g_slist_free(list);
+}
+
+static void sh7750r_cpu_initfn(Object *obj)
+{
+    SuperHCPU *cpu = SUPERH_CPU(obj);
+    CPUSH4State *env = &cpu->env;
+
+    env->id = SH_CPU_SH7750R;
+    env->pvr = 0x00050000;
+    env->prr = 0x00000100;
+    env->cvr = 0x00110000;
+    env->features = SH_FEATURE_BCR3_AND_BCR4;
+}
+
+static void sh7750r_class_init(ObjectClass *oc, void *data)
+{
+    SuperHCPUClass *scc = SUPERH_CPU_CLASS(oc);
+
+    scc->name = "SH7750R";
+}
+
+static const TypeInfo sh7750r_type_info = {
+    .name = TYPE_SH7750R_CPU,
+    .parent = TYPE_SUPERH_CPU,
+    .class_init = sh7750r_class_init,
+    .instance_init = sh7750r_cpu_initfn,
+};
+
+static void sh7751r_cpu_initfn(Object *obj)
+{
+    SuperHCPU *cpu = SUPERH_CPU(obj);
+    CPUSH4State *env = &cpu->env;
+
+    env->id = SH_CPU_SH7751R;
+    env->pvr = 0x04050005;
+    env->prr = 0x00000113;
+    env->cvr = 0x00110000; /* Neutered caches, should be 0x20480000 */
+    env->features = SH_FEATURE_BCR3_AND_BCR4;
+}
+
+static void sh7751r_class_init(ObjectClass *oc, void *data)
+{
+    SuperHCPUClass *scc = SUPERH_CPU_CLASS(oc);
+
+    scc->name = "SH7751R";
+}
+
+static const TypeInfo sh7751r_type_info = {
+    .name = TYPE_SH7751R_CPU,
+    .parent = TYPE_SUPERH_CPU,
+    .class_init = sh7751r_class_init,
+    .instance_init = sh7751r_cpu_initfn,
+};
+
+static void sh7785_cpu_initfn(Object *obj)
+{
+    SuperHCPU *cpu = SUPERH_CPU(obj);
+    CPUSH4State *env = &cpu->env;
+
+    env->id = SH_CPU_SH7785;
+    env->pvr = 0x10300700;
+    env->prr = 0x00000200;
+    env->cvr = 0x71440211;
+    env->features = SH_FEATURE_SH4A;
+}
+
+static void sh7785_class_init(ObjectClass *oc, void *data)
+{
+    SuperHCPUClass *scc = SUPERH_CPU_CLASS(oc);
+
+    scc->name = "SH7785";
+}
+
+static const TypeInfo sh7785_type_info = {
+    .name = TYPE_SH7785_CPU,
+    .parent = TYPE_SUPERH_CPU,
+    .class_init = sh7785_class_init,
+    .instance_init = sh7785_cpu_initfn,
+};
+
 static void superh_cpu_realizefn(DeviceState *dev, Error **errp)
 {
     SuperHCPU *cpu = SUPERH_CPU(dev);
@@ -96,7 +215,7 @@ static const TypeInfo superh_cpu_type_info = {
     .parent = TYPE_CPU,
     .instance_size = sizeof(SuperHCPU),
     .instance_init = superh_cpu_initfn,
-    .abstract = false,
+    .abstract = true,
     .class_size = sizeof(SuperHCPUClass),
     .class_init = superh_cpu_class_init,
 };
@@ -104,6 +223,9 @@ static const TypeInfo superh_cpu_type_info = {
 static void superh_cpu_register_types(void)
 {
     type_register_static(&superh_cpu_type_info);
+    type_register_static(&sh7750r_type_info);
+    type_register_static(&sh7751r_type_info);
+    type_register_static(&sh7785_type_info);
 }
 
 type_init(superh_cpu_register_types)

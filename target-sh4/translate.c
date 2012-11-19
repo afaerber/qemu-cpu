@@ -175,84 +175,54 @@ void cpu_dump_state(CPUSH4State * env, FILE * f,
     }
 }
 
-typedef struct {
-    const char *name;
-    int id;
-    uint32_t pvr;
-    uint32_t prr;
-    uint32_t cvr;
-    uint32_t features;
-} sh4_def_t;
-
-static sh4_def_t sh4_defs[] = {
-    {
-	.name = "SH7750R",
-	.id = SH_CPU_SH7750R,
-	.pvr = 0x00050000,
-	.prr = 0x00000100,
-	.cvr = 0x00110000,
-	.features = SH_FEATURE_BCR3_AND_BCR4,
-    }, {
-	.name = "SH7751R",
-	.id = SH_CPU_SH7751R,
-	.pvr = 0x04050005,
-	.prr = 0x00000113,
-	.cvr = 0x00110000,	/* Neutered caches, should be 0x20480000 */
-	.features = SH_FEATURE_BCR3_AND_BCR4,
-    }, {
-	.name = "SH7785",
-	.id = SH_CPU_SH7785,
-	.pvr = 0x10300700,
-	.prr = 0x00000200,
-	.cvr = 0x71440211,
-	.features = SH_FEATURE_SH4A,
-     },
-};
-
-static const sh4_def_t *cpu_sh4_find_by_name(const char *name)
+static gint superh_cpu_name_compare(gconstpointer a, gconstpointer b)
 {
-    int i;
+    const SuperHCPUClass *scc = SUPERH_CPU_CLASS(a);
+    const char *name = b;
 
-    if (strcasecmp(name, "any") == 0)
-	return &sh4_defs[0];
-
-    for (i = 0; i < ARRAY_SIZE(sh4_defs); i++)
-	if (strcasecmp(name, sh4_defs[i].name) == 0)
-	    return &sh4_defs[i];
-
-    return NULL;
+    return strcasecmp(scc->name, name);
 }
 
-void sh4_cpu_list(FILE *f, fprintf_function cpu_fprintf)
+static ObjectClass *superh_cpu_class_by_name(const char *cpu_model)
 {
-    int i;
+    ObjectClass *oc;
+    GSList *list, *item;
 
-    for (i = 0; i < ARRAY_SIZE(sh4_defs); i++)
-	(*cpu_fprintf)(f, "%s\n", sh4_defs[i].name);
-}
+    if (cpu_model == NULL) {
+        return NULL;
+    }
+    if (strcasecmp(cpu_model, "any") == 0) {
+        return object_class_by_name(TYPE_SH7750R_CPU);
+    }
 
-static void cpu_register(CPUSH4State *env, const sh4_def_t *def)
-{
-    env->pvr = def->pvr;
-    env->prr = def->prr;
-    env->cvr = def->cvr;
-    env->id = def->id;
+    oc = object_class_by_name(cpu_model);
+    if (oc != NULL && object_class_dynamic_cast(oc, TYPE_SUPERH_CPU) != NULL) {
+        return oc;
+    }
+
+    oc = NULL;
+    list = object_class_get_list(TYPE_SUPERH_CPU, false);
+    item = g_slist_find_custom(list, cpu_model, superh_cpu_name_compare);
+    if (item != NULL) {
+        oc = item->data;
+    }
+    g_slist_free(list);
+    return oc;
 }
 
 SuperHCPU *cpu_sh4_init(const char *cpu_model)
 {
     SuperHCPU *cpu;
     CPUSH4State *env;
-    const sh4_def_t *def;
+    ObjectClass *oc;
 
-    def = cpu_sh4_find_by_name(cpu_model);
-    if (!def)
-	return NULL;
-    cpu = SUPERH_CPU(object_new(TYPE_SUPERH_CPU));
+    oc = superh_cpu_class_by_name(cpu_model);
+    if (oc == NULL) {
+        return NULL;
+    }
+    cpu = SUPERH_CPU(object_new(object_class_get_name(oc)));
     env = &cpu->env;
-    env->features = def->features;
     env->cpu_model_str = cpu_model;
-    cpu_register(env, def);
 
     object_property_set_bool(OBJECT(cpu), true, "realized", NULL);
 
