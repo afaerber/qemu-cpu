@@ -386,7 +386,7 @@ DeviceState *qdev_find_recursive(BusState *bus, const char *id)
     return NULL;
 }
 
-static void qbus_realize(BusState *bus)
+static void qbus_realize(BusState *bus, Error **err)
 {
     const char *typename = object_get_typename(OBJECT(bus));
     char *buf;
@@ -429,7 +429,7 @@ void qbus_create_inplace(BusState *bus, const char *typename,
 
     bus->parent = parent;
     bus->name = name ? g_strdup(name) : NULL;
-    qbus_realize(bus);
+    qbus_realize(bus, NULL);
 }
 
 BusState *qbus_create(const char *typename, DeviceState *parent, const char *name)
@@ -440,7 +440,7 @@ BusState *qbus_create(const char *typename, DeviceState *parent, const char *nam
 
     bus->parent = parent;
     bus->name = name ? g_strdup(name) : NULL;
-    qbus_realize(bus);
+    qbus_realize(bus, NULL);
 
     return bus;
 }
