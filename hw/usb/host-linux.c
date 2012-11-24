@@ -1585,7 +1585,7 @@ USBDevice *usb_host_device_open(USBBus *bus, const char *devname)
     return dev;
 
 fail:
-    qdev_free(&dev->qdev);
+    object_delete(OBJECT(dev));
     return NULL;
 }
 

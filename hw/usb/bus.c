@@ -340,8 +340,9 @@ void usb_port_location(USBPort *downstream, USBPort *upstream, int portnr)
 
 void usb_unregister_port(USBBus *bus, USBPort *port)
 {
-    if (port->dev)
-        qdev_free(&port->dev->qdev);
+    if (port->dev) {
+        object_delete(OBJECT(port->dev));
+    }
     QTAILQ_REMOVE(&bus->free, port, next);
     bus->nfree--;
 }
@@ -461,7 +462,7 @@ int usb_device_delete_addr(int busnr, int addr)
         return -1;
     dev = port->dev;
 
-    qdev_free(&dev->qdev);
+    object_delete(OBJECT(dev));
     return 0;
 }
 
