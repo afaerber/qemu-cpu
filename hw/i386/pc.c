@@ -500,22 +500,22 @@ static const MemoryRegionOps port92_ops = {
     .endianness = DEVICE_LITTLE_ENDIAN,
 };
 
-static int port92_initfn(ISADevice *dev)
+static void port92_realizefn(DeviceState *dev, Error **err)
 {
+    ISADevice *isadev = ISA_DEVICE(dev);
     Port92State *s = PORT92(dev);
 
     memory_region_init_io(&s->io, &port92_ops, s, "port92", 1);
-    isa_register_ioport(dev, &s->io, 0x92);
+    isa_register_ioport(isadev, &s->io, 0x92);
 
     s->outport = 0;
-    return 0;
 }
 
 static void port92_class_initfn(ObjectClass *klass, void *data)
 {
     DeviceClass *dc = DEVICE_CLASS(klass);
-    ISADeviceClass *ic = ISA_DEVICE_CLASS(klass);
-    ic->init = port92_initfn;
+
+    dc->realize = port92_realizefn;
     dc->no_user = 1;
     dc->reset = port92_reset;
     dc->vmsd = &vmstate_port92_isa;

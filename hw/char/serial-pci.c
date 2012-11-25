@@ -51,7 +51,7 @@ static int serial_pci_init(PCIDevice *dev)
     SerialState *s = &pci->state;
 
     s->baudbase = 115200;
-    serial_init_core(s);
+    serial_realize_core(s, NULL);
 
     pci->dev.config[PCI_INTERRUPT_PIN] = 0x01;
     s->irq = pci->dev.irq[0];
@@ -102,7 +102,7 @@ static int multi_serial_pci_init(PCIDevice *dev)
     for (i = 0; i < pci->ports; i++) {
         s = pci->state + i;
         s->baudbase = 115200;
-        serial_init_core(s);
+        serial_realize_core(s, NULL);
         s->irq = pci->irqs[i];
         pci->name[i] = g_strdup_printf("uart #%d", i+1);
         memory_region_init_io(&s->io, &serial_io_ops, s, pci->name[i], 8);

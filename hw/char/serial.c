@@ -670,7 +670,7 @@ static void serial_reset(void *opaque)
     qemu_irq_lower(s->irq);
 }
 
-void serial_init_core(SerialState *s)
+void serial_realize_core(SerialState *s, Error **err)
 {
     if (!s->chr) {
         fprintf(stderr, "Can't create serial device, empty char device\n");
@@ -719,7 +719,7 @@ SerialState *serial_init(int base, qemu_irq irq, int baudbase,
     s->irq = irq;
     s->baudbase = baudbase;
     s->chr = chr;
-    serial_init_core(s);
+    serial_realize_core(s, NULL);
 
     vmstate_register(NULL, base, &vmstate_serial, s);
 
@@ -777,7 +777,7 @@ SerialState *serial_mm_init(MemoryRegion *address_space,
     s->baudbase = baudbase;
     s->chr = chr;
 
-    serial_init_core(s);
+    serial_realize_core(s, NULL);
     vmstate_register(NULL, base, &vmstate_serial, s);
 
     memory_region_init_io(&s->io, &serial_mm_ops[end], s,

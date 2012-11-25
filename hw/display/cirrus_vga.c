@@ -2907,19 +2907,20 @@ static void cirrus_init_common(CirrusVGAState * s, int device_id, int is_pci,
  *
  ***************************************/
 
-static int vga_initfn(ISADevice *dev)
+static void isa_cirrus_vga_realizefn(DeviceState *dev, Error **err)
 {
+    ISADevice *isadev = ISA_DEVICE(dev);
     ISACirrusVGAState *d = ISA_CIRRUS_VGA(dev);
     VGACommonState *s = &d->cirrus_vga.vga;
 
     vga_common_init(s);
     cirrus_init_common(&d->cirrus_vga, CIRRUS_ID_CLGD5430, 0,
-                       isa_address_space(dev), isa_address_space_io(dev));
+                       isa_address_space(isadev),
+                       isa_address_space_io(isadev));
     s->con = graphic_console_init(s->hw_ops, s);
     rom_add_vga(VGABIOS_CIRRUS_FILENAME);
     /* XXX ISA-LFB support */
     /* FIXME not qdev yet */
-    return 0;
 }
 
 static Property isa_cirrus_vga_properties[] = {
@@ -2930,11 +2931,10 @@ static Property isa_cirrus_vga_properties[] = {
 
 static void isa_cirrus_vga_class_init(ObjectClass *klass, void *data)
 {
-    ISADeviceClass *k = ISA_DEVICE_CLASS(klass);
     DeviceClass *dc = DEVICE_CLASS(klass);
 
     dc->vmsd  = &vmstate_cirrus_vga;
-    k->init   = vga_initfn;
+    dc->realize = isa_cirrus_vga_realizefn;
     dc->props = isa_cirrus_vga_properties;
 }
 
