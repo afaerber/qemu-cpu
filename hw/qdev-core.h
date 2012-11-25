@@ -20,6 +20,8 @@ enum {
 typedef int (*qdev_initfn)(DeviceState *dev);
 typedef int (*qdev_event)(DeviceState *dev);
 typedef void (*qdev_resetfn)(DeviceState *dev);
+typedef void (*DeviceRealize)(DeviceState *dev, Error **err);
+typedef void (*DeviceUnrealize)(DeviceState *dev, Error **err);
 
 struct VMStateDescription;
 
@@ -38,6 +40,8 @@ typedef struct DeviceClass {
     const struct VMStateDescription *vmsd;
 
     /* Private to qdev / bus.  */
+    DeviceRealize realize;
+    DeviceUnrealize unrealize;
     qdev_initfn init;
     qdev_event unplug;
     qdev_event exit;
