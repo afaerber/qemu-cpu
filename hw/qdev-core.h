@@ -8,11 +8,6 @@
 #include "hw/irq.h"
 #include "qapi/error.h"
 
-enum DevState {
-    DEV_STATE_CREATED = 1,
-    DEV_STATE_INITIALIZED,
-};
-
 enum {
     DEV_NVECTORS_UNSPECIFIED = -1,
 };
@@ -55,7 +50,7 @@ struct DeviceState {
     Object parent_obj;
 
     const char *id;
-    enum DevState state;
+    bool realized;
     QemuOpts *opts;
     int hotplugged;
     BusState *parent_bus;
