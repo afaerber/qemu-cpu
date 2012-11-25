@@ -170,14 +170,6 @@ static void pit_common_realize(DeviceState *dev, Error **err)
 {
     ISADevice *isadev = ISA_DEVICE(dev);
     PITCommonState *pit = PIT_COMMON(dev);
-    PITCommonClass *c = PIT_COMMON_GET_CLASS(pit);
-    int ret;
-
-    ret = c->init(pit);
-    if (ret < 0) {
-        error_setg(err, "PIT init failed.");
-        return;
-    }
 
     isa_register_ioport(isadev, &pit->ioports, pit->iobase);
 
