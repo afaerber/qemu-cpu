@@ -37,12 +37,14 @@ typedef struct PITChannelInfo {
     int out;
 } PITChannelInfo;
 
+#define TYPE_I8254 "isa-pit"
+
 static inline ISADevice *pit_init(ISABus *bus, int base, int isa_irq,
                                   qemu_irq alt_irq)
 {
     ISADevice *dev;
 
-    dev = isa_create(bus, "isa-pit");
+    dev = isa_create(bus, TYPE_I8254);
     qdev_prop_set_uint32(&dev->qdev, "iobase", base);
     qdev_init_nofail(&dev->qdev);
     qdev_connect_gpio_out(&dev->qdev, 0,
