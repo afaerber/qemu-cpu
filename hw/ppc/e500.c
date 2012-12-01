@@ -452,7 +452,7 @@ void ppce500_init(PPCE500Params *params)
         env->spr[SPR_BOOKE_PIR] = env->cpu_index = i;
         env->mpic_cpu_base = MPC8544_MPIC_REGS_BASE + 0x20000;
 
-        ppc_booke_timers_init(env, 400000000, PPC_TIMER_E500);
+        ppc_booke_timers_init(cpu, 400000000, PPC_TIMER_E500);
 
         /* Register reset handler */
         if (!i) {
