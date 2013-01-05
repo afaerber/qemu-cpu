@@ -61,6 +61,16 @@ static const UniCore32CPUInfo uc32_cpus[] = {
     { .name = "any",        .instance_init = uc32_any_cpu_initfn },
 };
 
+static void uc32_cpu_realizefn(DeviceState *dev, Error **errp)
+{
+    UniCore32CPU *cpu = UNICORE32_CPU(dev);
+    UniCore32CPUClass *ucc = UNICORE32_CPU_GET_CLASS(dev);
+
+    qemu_init_vcpu(&cpu->env);
+
+    ucc->parent_realize(dev, errp);
+}
+
 static void uc32_cpu_initfn(Object *obj)
 {
     UniCore32CPU *cpu = UNICORE32_CPU(obj);
@@ -78,6 +88,15 @@ static void uc32_cpu_initfn(Object *obj)
 #endif
 
     tlb_flush(env, 1);
+}
+
+static void uc32_cpu_class_init(ObjectClass *oc, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(oc);
+    UniCore32CPUClass *ucc = UNICORE32_CPU_CLASS(oc);
+
+    ucc->parent_realize = dc->realize;
+    dc->realize = uc32_cpu_realizefn;
 }
 
 static void uc32_register_cpu_type(const UniCore32CPUInfo *info)
@@ -98,6 +117,7 @@ static const TypeInfo uc32_cpu_type_info = {
     .instance_init = uc32_cpu_initfn,
     .abstract = true,
     .class_size = sizeof(UniCore32CPUClass),
+    .class_init = uc32_cpu_class_init,
 };
 
 static void uc32_cpu_register_types(void)
