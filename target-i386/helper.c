@@ -1280,7 +1280,7 @@ X86CPU *cpu_x86_init(const char *cpu_model)
         return NULL;
     }
 
-    x86_cpu_realize(OBJECT(cpu), &error);
+    object_property_set_bool(OBJECT(cpu), true, "realized", &error);
     if (error) {
         error_free(error);
         object_delete(OBJECT(cpu));
