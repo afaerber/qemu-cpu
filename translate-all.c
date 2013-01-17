@@ -1425,13 +1425,12 @@ void tb_invalidate_phys_addr(hwaddr addr)
 }
 #endif /* TARGET_HAS_ICE && !defined(CONFIG_USER_ONLY) */
 
-void cpu_unlink_tb(CPUArchState *env)
+void cpu_unlink_tb(CPUState *cpu)
 {
     /* FIXME: TB unchaining isn't SMP safe.  For now just ignore the
        problem and hope the cpu will stop of its own accord.  For userspace
        emulation this often isn't actually as bad as it sounds.  Often
        signals are used primarily to interrupt blocking syscalls.  */
-    CPUState *cpu = ENV_GET_CPU(env);
     TranslationBlock *tb;
     static spinlock_t interrupt_lock = SPIN_LOCK_UNLOCKED;
 
@@ -1485,7 +1484,7 @@ static void tcg_handle_interrupt(CPUArchState *env, int mask)
             cpu_abort(env, "Raised interrupt while not in I/O function");
         }
     } else {
-        cpu_unlink_tb(env);
+        cpu_unlink_tb(cpu);
     }
 }
 
@@ -1625,8 +1624,10 @@ void dump_exec_info(FILE *f, fprintf_function cpu_fprintf)
 
 void cpu_interrupt(CPUArchState *env, int mask)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
+
     env->interrupt_request |= mask;
-    cpu_unlink_tb(env);
+    cpu_unlink_tb(cpu);
 }
 
 /*
