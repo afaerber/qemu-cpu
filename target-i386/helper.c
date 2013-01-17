@@ -171,6 +171,7 @@ done:
 void cpu_dump_state(CPUX86State *env, FILE *f, fprintf_function cpu_fprintf,
                     int flags)
 {
+    CPUState *cs = CPU(x86_env_get_cpu(env));
     int eflags, i, nb;
     char cc_op_name[32];
     static const char *seg_name[6] = { "ES", "CS", "SS", "DS", "FS", "GS" };
@@ -214,7 +215,7 @@ void cpu_dump_state(CPUX86State *env, FILE *f, fprintf_function cpu_fprintf,
                     (env->hflags >> HF_INHIBIT_IRQ_SHIFT) & 1,
                     (env->a20_mask >> 20) & 1,
                     (env->hflags >> HF_SMM_SHIFT) & 1,
-                    env->halted);
+                    cs->halted);
     } else
 #endif
     {
@@ -241,7 +242,7 @@ void cpu_dump_state(CPUX86State *env, FILE *f, fprintf_function cpu_fprintf,
                     (env->hflags >> HF_INHIBIT_IRQ_SHIFT) & 1,
                     (env->a20_mask >> 20) & 1,
                     (env->hflags >> HF_SMM_SHIFT) & 1,
-                    env->halted);
+                    cs->halted);
     }
 
     for(i = 0; i < 6; i++) {
@@ -1294,12 +1295,13 @@ X86CPU *cpu_x86_init(const char *cpu_model)
 #if !defined(CONFIG_USER_ONLY)
 void do_cpu_init(X86CPU *cpu)
 {
+    CPUState *cs = CPU(cpu);
     CPUX86State *env = &cpu->env;
-    int sipi = env->interrupt_request & CPU_INTERRUPT_SIPI;
+    int sipi = cs->interrupt_request & CPU_INTERRUPT_SIPI;
     uint64_t pat = env->pat;
 
-    cpu_reset(CPU(cpu));
-    env->interrupt_request = sipi;
+    cpu_reset(cs);
+    cs->interrupt_request = sipi;
     env->pat = pat;
     apic_init_reset(env->apic_state);
 }

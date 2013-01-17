@@ -1980,7 +1980,7 @@ static void x86_cpu_reset(CPUState *s)
         apic_designate_bsp(env->apic_state);
     }
 
-    env->halted = !cpu_is_bsp(cpu);
+    s->halted = !cpu_is_bsp(cpu);
 #endif
 }
 
