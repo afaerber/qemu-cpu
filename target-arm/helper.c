@@ -1262,7 +1262,6 @@ ARMCPU *cpu_arm_init(const char *cpu_model)
 {
     ARMCPU *cpu;
     CPUARMState *env;
-    static int inited = 0;
 
     if (!object_class_by_name(cpu_model)) {
         return NULL;
@@ -1273,11 +1272,6 @@ ARMCPU *cpu_arm_init(const char *cpu_model)
 
     /* TODO this should be set centrally, once possible */
     object_property_set_bool(OBJECT(cpu), true, "realized", NULL);
-
-    if (tcg_enabled() && !inited) {
-        inited = 1;
-        arm_translate_init();
-    }
 
     return cpu;
 }
