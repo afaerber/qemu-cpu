@@ -75,6 +75,7 @@ static void uc32_cpu_initfn(Object *obj)
 {
     UniCore32CPU *cpu = UNICORE32_CPU(obj);
     CPUUniCore32State *env = &cpu->env;
+    static bool inited;
 
     cpu_exec_init(env);
     env->cpu_model_str = object_get_typename(obj);
@@ -88,6 +89,11 @@ static void uc32_cpu_initfn(Object *obj)
 #endif
 
     tlb_flush(env, 1);
+
+    if (tcg_enabled() && !inited) {
+        inited = true;
+        uc32_translate_init();
+    }
 }
 
 static void uc32_cpu_class_init(ObjectClass *oc, void *data)
