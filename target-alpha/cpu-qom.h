@@ -72,5 +72,7 @@ static inline AlphaCPU *alpha_env_get_cpu(CPUAlphaState *env)
 
 #define ENV_GET_CPU(e) CPU(alpha_env_get_cpu(e))
 
+extern const struct VMStateDescription vmstate_alpha_cpu;
+
 
 #endif

@@ -261,6 +261,9 @@ static void alpha_cpu_class_init(ObjectClass *oc, void *data)
     dc->realize = alpha_cpu_realizefn;
 
     cc->class_by_name = alpha_cpu_class_by_name;
+#ifndef CONFIG_USER_ONLY
+    cc->vmsd = &vmstate_alpha_cpu;
+#endif
 }
 
 static const TypeInfo alpha_cpu_type_info = {
