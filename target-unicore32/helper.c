@@ -30,7 +30,6 @@ CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
     UniCore32CPU *cpu;
     CPUUniCore32State *env;
     ObjectClass *oc;
-    static int inited = 1;
 
     oc = cpu_class_by_name(TYPE_UNICORE32_CPU, cpu_model);
     if (oc == NULL) {
@@ -38,11 +37,6 @@ CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
     }
     cpu = UNICORE32_CPU(object_new(object_class_get_name(oc)));
     env = &cpu->env;
-
-    if (inited) {
-        inited = 0;
-        uc32_translate_init();
-    }
 
     object_property_set_bool(OBJECT(cpu), true, "realized", NULL);
 
