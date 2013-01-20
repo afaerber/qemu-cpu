@@ -21,6 +21,7 @@
 
 #include "cpu.h"
 #include "qemu-common.h"
+#include "migration/vmstate.h"
 
 
 static void alpha_cpu_realizefn(DeviceState *dev, Error **errp)
@@ -263,6 +264,7 @@ static void alpha_cpu_class_init(ObjectClass *oc, void *data)
     dc->realize = alpha_cpu_realizefn;
 
     cc->class_by_name = alpha_cpu_class_by_name;
+    cc->vmsd = &vmstate_alpha_cpu;
 }
 
 static const TypeInfo alpha_cpu_type_info = {
