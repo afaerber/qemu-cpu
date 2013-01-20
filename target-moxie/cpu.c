@@ -62,7 +62,6 @@ static void moxie_cpu_realizefn(DeviceState *dev, Error **errp)
     MoxieCPUClass *mcc = MOXIE_CPU_GET_CLASS(dev);
 
     qemu_init_vcpu(cs);
-    cpu_reset(cs);
 
     mcc->parent_realize(dev, errp);
 }

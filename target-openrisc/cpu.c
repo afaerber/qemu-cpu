@@ -82,7 +82,6 @@ static void openrisc_cpu_realizefn(DeviceState *dev, Error **errp)
     OpenRISCCPUClass *occ = OPENRISC_CPU_GET_CLASS(dev);
 
     qemu_init_vcpu(cs);
-    cpu_reset(cs);
 
     occ->parent_realize(dev, errp);
 }

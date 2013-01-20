@@ -2976,7 +2976,6 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp)
     if (local_err != NULL) {
         goto out;
     }
-    cpu_reset(cs);
 
     xcc->parent_realize(dev, &local_err);
 
