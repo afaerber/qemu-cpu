@@ -15791,7 +15791,7 @@ void cpu_dump_state (CPUMIPSState *env, FILE *f, fprintf_function cpu_fprintf,
 #endif
 }
 
-static void mips_tcg_init(void)
+void mips_tcg_init(void)
 {
     int i;
     static int inited;
@@ -15870,7 +15870,6 @@ MIPSCPU *cpu_mips_init(const char *cpu_model)
 #endif
     fpu_init(env, def);
     mvp_init(env, def);
-    mips_tcg_init();
 
     object_property_set_bool(OBJECT(cpu), true, "realized", NULL);
 
