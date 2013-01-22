@@ -62,6 +62,7 @@ check-qtest-sparc64-y = tests/m48t59-test$(EXESUF)
 gcov-files-sparc-y += hw/m48t59.c
 check-qtest-arm-y = tests/tmp105-test$(EXESUF)
 qcov-files-arm-y += hw/tmp105.c
+check-qtest-s390x-y = tests/virtio-ccw-test$(EXESUF)
 
 GENERATED_HEADERS += tests/test-qapi-types.h tests/test-qapi-visit.h tests/test-qmp-commands.h
 
@@ -111,6 +112,7 @@ tests/m48t59-test$(EXESUF): tests/m48t59-test.o
 tests/fdc-test$(EXESUF): tests/fdc-test.o
 tests/hd-geo-test$(EXESUF): tests/hd-geo-test.o
 tests/tmp105-test$(EXESUF): tests/tmp105-test.o
+tests/virtio-ccw-test$(EXESUF): tests/virtio-ccw-test.o
 
 # QTest rules
 
