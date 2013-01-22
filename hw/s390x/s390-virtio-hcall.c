@@ -11,6 +11,7 @@
 
 #include "cpu.h"
 #include "hw/s390-virtio.h"
+#include "sysemu/qtest.h"
 
 #define MAX_DIAG_SUBCODES 255
 
@@ -33,4 +34,20 @@ int s390_virtio_hypercall(CPUS390XState *env)
     }
 
     return fn(&env->regs[2]);
+}
+
+int qtest_hypercall(uint64_t code, uint64_t *args)
+{
+    s390_virtio_fn fn = s390_diag500_table[code];
+
+    if (fn == NULL) {
+        return -EINVAL;
+    }
+
+    return fn(args);
+}
+
+bool qtest_hypercall_supported(void)
+{
+    return true;
 }
