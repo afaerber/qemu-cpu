@@ -476,3 +476,24 @@ void qtest_memwrite(QTestState *s, uint64_t addr, const void *data, size_t size)
     qtest_sendf(s, "\n");
     qtest_rsp(s, 0);
 }
+
+uint64_t qtest_hypercall(QTestState *s, uint64_t code, int argc, ...)
+{
+    va_list va;
+    gchar **args;
+    uint64_t resp, arg;
+    int i;
+
+    qtest_sendf(s, "hypercall 0x%" PRIx64, code);
+    va_start(va, argc);
+    for (i = 0; i < argc; i++) {
+        arg = va_arg(va, uint64_t);
+        qtest_sendf(s, " 0x%" PRIx64, arg);
+    }
+    va_end(va);
+    qtest_sendf(s, "\n");
+    args = qtest_rsp(s, 2);
+    resp = g_ascii_strtoull(args[1], NULL, 0);
+    g_strfreev(args);
+    return resp;
+}

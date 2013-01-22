@@ -187,6 +187,15 @@ int64_t qtest_clock_step(QTestState *s, int64_t step);
 int64_t qtest_clock_set(QTestState *s, int64_t val);
 
 /**
+ * qtest_hypercall:
+ * @s: QTestState instance to operate on.
+ * @code: Hypercall code to call.
+ *
+ * Peform a hypercall @code on the guest.
+ */
+uint64_t qtest_hypercall(QTestState *s, uint64_t code, int argc, ...);
+
+/**
  * qtest_get_arch:
  *
  * Returns the architecture for the QEMU executable under test.
@@ -348,5 +357,13 @@ void qtest_add_func(const char *str, void (*fn));
  * Return the current value of the vm_clock in nanoseconds.
  */
 #define clock_set(val) qtest_clock_set(global_qtest, val)
+
+/**
+ * hypercall:
+ * @code: Hypercall code.
+ *
+ * Invokes a hypercall in the guest.
+ */
+#define hypercall(code, argc, ...) qtest_hypercall(global_qtest, code, argc, ## __VA_ARGS__)
 
 #endif

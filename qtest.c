@@ -117,6 +117,11 @@ static bool qtest_opened;
  * where NUM is an IRQ number.  For the PC, interrupts can be intercepted
  * simply with "irq_intercept_in ioapic" (note that IRQ0 comes out with
  * NUM=0 even though it is remapped to GSI 2).
+ *
+ * Hypercalls:
+ *
+ * > hypercall CODE
+ * < OK
  */
 
 static int hex2nib(char ch)
@@ -344,6 +349,27 @@ static void qtest_process_command(CharDriverState *chr, gchar **words)
         qtest_clock_warp(ns);
         qtest_send_prefix(chr);
         qtest_send(chr, "OK %"PRIi64"\n", (int64_t)qemu_get_clock_ns(vm_clock));
+    } else if (strcmp(words[0], "hypercall") == 0 &&
+               qtest_hypercall_supported()) {
+        uint64_t code;
+        uint64_t args[13];
+        int ret, i;
+
+        g_assert(words[1] != NULL);
+        code = strtoull(words[1], NULL, 0);
+
+        memset(args, 0, sizeof(args));
+        for (i = 0; i < 13 && words[2 + i] != NULL; i++) {
+            args[i] = strtoull(words[2 + i], NULL, 0);
+        }
+
+        ret = qtest_hypercall(code, args);
+        qtest_send_prefix(chr);
+        if (ret < 0) {
+            qtest_send(chr, "ERR 0x%x\n", ret);
+            return;
+        }
+        qtest_send(chr, "OK 0x%x\n", ret);
     } else {
         qtest_send_prefix(chr);
         qtest_send(chr, "FAIL Unknown command `%s'\n", words[0]);

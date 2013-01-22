@@ -32,6 +32,8 @@ static inline int qtest_available(void)
 }
 
 int qtest_init(void);
+bool qtest_hypercall_supported(void);
+int qtest_hypercall(uint64_t code, uint64_t *args);
 #else
 static inline bool qtest_enabled(void)
 {
