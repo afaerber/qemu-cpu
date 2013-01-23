@@ -29,9 +29,11 @@ CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
 {
     UniCore32CPU *cpu;
     CPUUniCore32State *env;
+    ObjectClass *oc;
     static int inited = 1;
 
-    if (object_class_by_name(cpu_model) == NULL) {
+    oc = cpu_class_by_name(TYPE_UNICORE32_CPU, cpu_model);
+    if (oc == NULL) {
         return NULL;
     }
     cpu = UNICORE32_CPU(object_new(cpu_model));
