@@ -26,14 +26,14 @@
 #define GEN_HELPER 1
 #include "helper.h"
 
-#undef ALPHA_DEBUG_DISAS
+#define ALPHA_DEBUG_DISAS 0
 #define CONFIG_SOFTFLOAT_INLINE
 
-#ifdef ALPHA_DEBUG_DISAS
-#  define LOG_DISAS(...) qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__)
-#else
-#  define LOG_DISAS(...) do { } while (0)
-#endif
+#define LOG_DISAS(...) G_STMT_START \
+    if (ALPHA_DEBUG_DISAS) { \
+        qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 
 typedef struct DisasContext DisasContext;
 struct DisasContext {
