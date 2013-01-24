@@ -27,12 +27,20 @@
 
 
 #ifdef CRIS_OP_HELPER_DEBUG
-#define D(x) x
-#define D_LOG(...) qemu_log(__VA_ARGS__)
+static const bool debug_op_helper = true;
 #else
-#define D(x)
-#define D_LOG(...) do { } while (0)
+static const bool debug_op_helper;
 #endif
+
+static void GCC_FMT_ATTR(1, 2) D_LOG(const char *fmt, ...)
+{
+    if (debug_op_helper) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
 
 #if !defined(CONFIG_USER_ONLY)
 #include "exec/softmmu_exec.h"

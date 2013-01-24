@@ -27,11 +27,31 @@
 
 
 #ifdef CRIS_HELPER_DEBUG
-#define D(x) x
-#define D_LOG(...) qemu_log(__VA_ARGS__)
+static const bool debug_helper = true;
 #else
-#define D(x)
-#define D_LOG(...) do { } while (0)
+static const bool debug_helper;
+#endif
+
+#ifndef CONFIG_USER_ONLY
+static void GCC_FMT_ATTR(1, 2) D_LOG(const char *fmt, ...)
+{
+    if (debug_helper) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
+
+static void GCC_FMT_ATTR(1, 2) DPRINTF(const char *fmt, ...)
+{
+    if (debug_helper) {
+        va_list ap;
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+    }
+}
 #endif
 
 #if defined(CONFIG_USER_ONLY)
@@ -71,7 +91,7 @@ int cpu_cris_handle_mmu_fault(CPUCRISState *env, target_ulong address, int rw,
     int r = -1;
     target_ulong phy;
 
-    D(printf("%s addr=%x pc=%x rw=%x\n", __func__, address, env->pc, rw));
+    DPRINTF("%s addr=%x pc=%x rw=%x\n", __func__, address, env->pc, rw);
     miss = cris_mmu_translate(&res, env, address & TARGET_PAGE_MASK,
                               rw, mmu_idx, 0);
     if (miss) {
@@ -259,7 +279,7 @@ hwaddr cpu_get_phys_page_debug(CPUCRISState * env, target_ulong addr)
     if (!miss) {
         phy = res.phy;
     }
-    D(fprintf(stderr, "%s %x -> %x\n", __func__, addr, phy));
+    DPRINTF("%s %x -> %x\n", __func__, addr, phy);
     return phy;
 }
 #endif

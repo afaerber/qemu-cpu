@@ -24,12 +24,30 @@
 #include "mmu.h"
 
 #ifdef DEBUG
-#define D(x) x
-#define D_LOG(...) qemu_log(__VA_ARGS__)
+static const bool debug_mmu = true;
 #else
-#define D(x) do { } while (0)
-#define D_LOG(...) do { } while (0)
+static const bool debug_mmu;
 #endif
+
+static void GCC_FMT_ATTR(1, 2) DPRINTF(const char *fmt, ...)
+{
+    if (debug_mmu) {
+        va_list ap;
+        va_start(ap, fmt);
+        vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
+
+static void GCC_FMT_ATTR(1, 2) D_LOG(const char *fmt, ...)
+{
+    if (debug_mmu) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
 
 void cris_mmu_init(CPUCRISState *env)
 {
@@ -105,7 +123,6 @@ static inline void set_field(uint32_t *dst, unsigned int val,
 	*dst |= val;
 }
 
-#ifdef DEBUG
 static void dump_tlb(CPUCRISState *env, int mmu)
 {
 	int set;
@@ -124,7 +141,6 @@ static void dump_tlb(CPUCRISState *env, int mmu)
 		}
 	}
 }
-#endif
 
 /* rw 0 = read, 1 = write, 2 = exec.  */
 static int cris_mmu_translate_page(struct cris_mmu_result *res,
@@ -225,23 +241,23 @@ static int cris_mmu_translate_page(struct cris_mmu_result *res,
         set_exception_vector(0x0b, d_mmu_write);
         */
         if (cfg_k && tlb_k && usermode) {
-            D(printf("tlb: kernel protected %x lo=%x pc=%x\n",
-                     vaddr, lo, env->pc));
+            DPRINTF("tlb: kernel protected %x lo=%x pc=%x\n",
+                    vaddr, lo, env->pc);
             match = 0;
             res->bf_vec = vect_base + 2;
         } else if (rw == 1 && cfg_w && !tlb_w) {
-            D(printf("tlb: write protected %x lo=%x pc=%x\n",
-                     vaddr, lo, env->pc));
+            DPRINTF("tlb: write protected %x lo=%x pc=%x\n",
+                    vaddr, lo, env->pc);
             match = 0;
             /* write accesses never go through the I mmu.  */
             res->bf_vec = vect_base + 3;
         } else if (rw == 2 && cfg_x && !tlb_x) {
-            D(printf("tlb: exec protected %x lo=%x pc=%x\n",
-                     vaddr, lo, env->pc));
+            DPRINTF("tlb: exec protected %x lo=%x pc=%x\n",
+                    vaddr, lo, env->pc);
             match = 0;
             res->bf_vec = vect_base + 3;
         } else if (cfg_v && !tlb_v) {
-            D(printf("tlb: invalid %x\n", vaddr));
+            DPRINTF("tlb: invalid %x\n", vaddr);
             match = 0;
             res->bf_vec = vect_base + 1;
         }
@@ -256,7 +272,9 @@ static int cris_mmu_translate_page(struct cris_mmu_result *res,
                 res->prot |= PAGE_EXEC;
             }
         } else {
-            D(dump_tlb(env, mmu));
+            if (debug_mmu) {
+                dump_tlb(env, mmu);
+            }
         }
     } else {
         /* If refill, provide a randomized set.  */
@@ -279,18 +297,18 @@ static int cris_mmu_translate_page(struct cris_mmu_result *res,
         set_field(&r_cause, vpage, 13, 19);
         set_field(&r_cause, pid, 0, 8);
         env->sregs[SFR_R_MM_CAUSE] = r_cause;
-        D(printf("refill vaddr=%x pc=%x\n", vaddr, env->pc));
+        DPRINTF("refill vaddr=%x pc=%x\n", vaddr, env->pc);
     }
 
-    D(printf("%s rw=%d mtch=%d pc=%x va=%x vpn=%x tlbvpn=%x pfn=%x pid=%x"
-             " %x cause=%x sel=%x sp=%x %x %x\n",
-             __func__, rw, match, env->pc,
-             vaddr, vpage,
-             tlb_vpn, tlb_pfn, tlb_pid,
-             pid,
-             r_cause,
-             env->sregs[SFR_RW_MM_TLB_SEL],
-             env->regs[R_SP], env->pregs[PR_USP], env->ksp));
+    DPRINTF("%s rw=%d mtch=%d pc=%x va=%x vpn=%x tlbvpn=%x pfn=%x pid=%x"
+            " %x cause=%x sel=%x sp=%x %x %x\n",
+            __func__, rw, match, env->pc,
+            vaddr, vpage,
+            tlb_vpn, tlb_pfn, tlb_pid,
+            pid,
+            r_cause,
+            env->sregs[SFR_RW_MM_TLB_SEL],
+            env->regs[R_SP], env->pregs[PR_USP], env->ksp);
 
     res->phy = tlb_pfn << TARGET_PAGE_BITS;
     return !match;
