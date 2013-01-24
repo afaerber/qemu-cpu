@@ -23,16 +23,17 @@
 #include "qemu/host-utils.h"
 
 
-//#define CRIS_HELPER_DEBUG
+#define CRIS_HELPER_DEBUG 0
 
+#define D_LOG(...) G_STMT_START \
+    if (CRIS_HELPER_DEBUG) { \
+        qemu_log(__VA_ARGS__); \
+    } G_STMT_END
 
-#ifdef CRIS_HELPER_DEBUG
-#define D(x) x
-#define D_LOG(...) qemu_log(__VA_ARGS__)
-#else
-#define D(x)
-#define D_LOG(...) do { } while (0)
-#endif
+#define DPRINTF(...) G_STMT_START \
+    if (CRIS_HELPER_DEBUG) { \
+        fprintf(stderr, ## __VA_ARGS__); \
+    } G_STMT_END
 
 #if defined(CONFIG_USER_ONLY)
 
@@ -71,7 +72,7 @@ int cpu_cris_handle_mmu_fault(CPUCRISState *env, target_ulong address, int rw,
     int r = -1;
     target_ulong phy;
 
-    D(printf("%s addr=%x pc=%x rw=%x\n", __func__, address, env->pc, rw));
+    DPRINTF("%s addr=%x pc=%x rw=%x\n", __func__, address, env->pc, rw);
     miss = cris_mmu_translate(&res, env, address & TARGET_PAGE_MASK,
                               rw, mmu_idx, 0);
     if (miss) {
@@ -259,7 +260,7 @@ hwaddr cpu_get_phys_page_debug(CPUCRISState * env, target_ulong addr)
     if (!miss) {
         phy = res.phy;
     }
-    D(fprintf(stderr, "%s %x -> %x\n", __func__, addr, phy));
+    DPRINTF("%s %x -> %x\n", __func__, addr, phy);
     return phy;
 }
 #endif

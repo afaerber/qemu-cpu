@@ -23,16 +23,13 @@
 #include "helper.h"
 #include "qemu/host-utils.h"
 
-//#define CRIS_OP_HELPER_DEBUG
+#define CRIS_OP_HELPER_DEBUG 0
 
-
-#ifdef CRIS_OP_HELPER_DEBUG
-#define D(x) x
-#define D_LOG(...) qemu_log(__VA_ARGS__)
-#else
-#define D(x)
-#define D_LOG(...) do { } while (0)
-#endif
+#define D_LOG(...) G_STMT_START \
+    if (CRIS_OP_HELPER_DEBUG) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #if !defined(CONFIG_USER_ONLY)
 #include "exec/softmmu_exec.h"

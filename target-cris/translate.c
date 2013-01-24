@@ -34,11 +34,11 @@
 #include "helper.h"
 
 #define DISAS_CRIS 0
-#if DISAS_CRIS
-#  define LOG_DIS(...) qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__)
-#else
-#  define LOG_DIS(...) do { } while (0)
-#endif
+#define LOG_DIS(...) G_STMT_START \
+    if (DISAS_CRIS) { \
+        qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #define D(x)
 #define BUG() (gen_BUG(dc, __FILE__, __LINE__))
@@ -1263,7 +1263,6 @@ static inline void t_gen_zext(TCGv d, TCGv s, int size)
     }
 }
 
-#if DISAS_CRIS
 static char memsize_char(int size)
 {
     switch (size) {
@@ -1275,7 +1274,6 @@ static char memsize_char(int size)
         break;
     }
 }
-#endif
 
 static inline unsigned int memsize_z(DisasContext *dc)
 {
@@ -1370,7 +1368,6 @@ static int dec_prep_alu_m(CPUCRISState *env, DisasContext *dc,
     return insn_len;
 }
 
-#if DISAS_CRIS
 static const char *cc_name(int cc)
 {
     static const char *cc_names[16] = {
@@ -1380,7 +1377,6 @@ static const char *cc_name(int cc)
     assert(cc < 16);
     return cc_names[cc];
 }
-#endif
 
 /* Start of insn decoders.  */
 
@@ -1842,7 +1838,6 @@ static int dec_mcp_r(CPUCRISState *env, DisasContext *dc)
     return 2;
 }
 
-#if DISAS_CRIS
 static char * swapmode_name(int mode, char *modename) {
     int i = 0;
     if (mode & 8) {
@@ -1860,14 +1855,11 @@ static char * swapmode_name(int mode, char *modename) {
     modename[i++] = 0;
     return modename;
 }
-#endif
 
 static int dec_swap_r(CPUCRISState *env, DisasContext *dc)
 {
     TCGv t0;
-#if DISAS_CRIS
     char modename[4];
-#endif
     LOG_DIS("swap%s $r%u\n",
              swapmode_name(dc->op2, modename), dc->op1);
 
