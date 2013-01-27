@@ -24,10 +24,28 @@
 //#define DEBUG_OP
 //#define DEBUG_EXCEPTIONS
 
-#ifdef DEBUG_EXCEPTIONS
-#  define LOG_EXCP(...) qemu_log(__VA_ARGS__)
+#ifdef DEBUG_OP
+static const bool debug_op = true;
 #else
-#  define LOG_EXCP(...) do { } while (0)
+static const bool debug_op;
+#endif
+
+#ifdef DEBUG_EXCEPTIONS
+static const bool debug_exceptions = true;
+#else
+static const bool debug_exceptions;
+#endif
+
+#ifndef CONFIG_USER_ONLY
+static void GCC_FMT_ATTR(1, 2) LOG_EXCP(const char *fmt, ...)
+{
+    if (debug_exceptions) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
 #endif
 
 /*****************************************************************************/
@@ -777,7 +795,7 @@ void ppc_hw_interrupt(CPUPPCState *env)
 }
 #endif /* !CONFIG_USER_ONLY */
 
-#if defined(DEBUG_OP)
+#ifndef CONFIG_USER_ONLY
 static void cpu_dump_rfi(target_ulong RA, target_ulong msr)
 {
     qemu_log("Return from exception at " TARGET_FMT_lx " with flags "
@@ -835,9 +853,9 @@ static inline void do_rfi(CPUPPCState *env, target_ulong nip, target_ulong msr,
     /* XXX: beware: this is false if VLE is supported */
     env->nip = nip & ~((target_ulong)0x00000003);
     hreg_store_msr(env, msr, 1);
-#if defined(DEBUG_OP)
-    cpu_dump_rfi(env->nip, env->msr);
-#endif
+    if (debug_op) {
+        cpu_dump_rfi(env->nip, env->msr);
+    }
     /* No need to raise an exception here,
      * as rfi is always the last insn of a TB
      */

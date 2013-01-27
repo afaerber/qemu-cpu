@@ -40,12 +40,20 @@
 //#define DEBUG_KVM
 
 #ifdef DEBUG_KVM
-#define dprintf(fmt, ...) \
-    do { fprintf(stderr, fmt, ## __VA_ARGS__); } while (0)
+static const bool debug_kvm = true;
 #else
-#define dprintf(fmt, ...) \
-    do { } while (0)
+static const bool debug_kvm;
 #endif
+
+static void GCC_FMT_ATTR(1, 2) kvm_dprintf(const char *fmt, ...)
+{
+    if (debug_kvm) {
+        va_list ap;
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+    }
+}
 
 #define PROC_DEVTREE_CPU      "/proc/device-tree/cpus/"
 
@@ -769,7 +777,7 @@ void kvm_arch_pre_run(CPUState *cs, struct kvm_run *run)
          */
         irq = KVM_INTERRUPT_SET;
 
-        dprintf("injected interrupt %d\n", irq);
+        kvm_dprintf("injected interrupt %d\n", irq);
         r = kvm_vcpu_ioctl(cs, KVM_INTERRUPT, &irq);
         if (r < 0) {
             printf("cpu %d fail inject %x\n", cs->cpu_index, irq);
@@ -831,20 +839,20 @@ int kvm_arch_handle_exit(CPUState *cs, struct kvm_run *run)
     switch (run->exit_reason) {
     case KVM_EXIT_DCR:
         if (run->dcr.is_write) {
-            dprintf("handle dcr write\n");
+            kvm_dprintf("handle dcr write\n");
             ret = kvmppc_handle_dcr_write(env, run->dcr.dcrn, run->dcr.data);
         } else {
-            dprintf("handle dcr read\n");
+            kvm_dprintf("handle dcr read\n");
             ret = kvmppc_handle_dcr_read(env, run->dcr.dcrn, &run->dcr.data);
         }
         break;
     case KVM_EXIT_HLT:
-        dprintf("handle halt\n");
+        kvm_dprintf("handle halt\n");
         ret = kvmppc_handle_halt(env);
         break;
 #ifdef CONFIG_PSERIES
     case KVM_EXIT_PAPR_HCALL:
-        dprintf("handle PAPR hypercall\n");
+        kvm_dprintf("handle PAPR hypercall\n");
         run->papr_hcall.ret = spapr_hypercall(cpu,
                                               run->papr_hcall.nr,
                                               run->papr_hcall.args);
@@ -852,7 +860,7 @@ int kvm_arch_handle_exit(CPUState *cs, struct kvm_run *run)
         break;
 #endif
     case KVM_EXIT_EPR:
-        dprintf("handle epr\n");
+        kvm_dprintf("handle epr\n");
         run->epr.epr = ldl_phys(env->mpic_iack);
         ret = 0;
         break;

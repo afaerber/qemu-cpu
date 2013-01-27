@@ -26,34 +26,75 @@
 //#define DEBUG_SLB
 //#define DEBUG_SOFTWARE_TLB
 //#define DUMP_PAGE_TABLES
-//#define DEBUG_SOFTWARE_TLB
 //#define FLUSH_ALL_TLBS
 
 #ifdef DEBUG_MMU
-#  define LOG_MMU(...) qemu_log(__VA_ARGS__)
-#  define LOG_MMU_STATE(env) log_cpu_state((env), 0)
+static const bool debug_mmu = true;
 #else
-#  define LOG_MMU(...) do { } while (0)
-#  define LOG_MMU_STATE(...) do { } while (0)
+static const bool debug_mmu;
 #endif
 
 #ifdef DEBUG_SOFTWARE_TLB
-#  define LOG_SWTLB(...) qemu_log(__VA_ARGS__)
+static const bool debug_software_tlb = true;
 #else
-#  define LOG_SWTLB(...) do { } while (0)
+static const bool debug_software_tlb;
 #endif
 
 #ifdef DEBUG_BATS
-#  define LOG_BATS(...) qemu_log(__VA_ARGS__)
+static const bool debug_bats = true;
 #else
-#  define LOG_BATS(...) do { } while (0)
+static const bool debug_bats;
 #endif
 
 #ifdef DEBUG_SLB
-#  define LOG_SLB(...) qemu_log(__VA_ARGS__)
+static const bool debug_slb = true;
 #else
-#  define LOG_SLB(...) do { } while (0)
+static const bool debug_slb;
 #endif
+
+#ifndef CONFIG_USER_ONLY
+static void GCC_FMT_ATTR(1, 2) LOG_MMU(const char *fmt, ...)
+{
+    if (debug_mmu) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
+
+static void GCC_FMT_ATTR(1, 2) LOG_SWTLB(const char *fmt, ...)
+{
+    if (debug_software_tlb) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
+
+static void GCC_FMT_ATTR(1, 2) LOG_BATS(const char *fmt, ...)
+{
+    if (debug_bats) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
+
+#if defined(TARGET_PPC64)
+static void GCC_FMT_ATTR(1, 2) LOG_SLB(const char *fmt, ...)
+{
+    if (debug_slb) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
+#endif /* TARGET_PPC64 */
+#endif /* !CONFIG_USER_ONLY */
 
 /*****************************************************************************/
 /* PowerPC MMU emulation */
@@ -534,8 +575,7 @@ static inline int get_bat(CPUPPCState *env, mmu_ctx_t *ctx,
         }
     }
     if (ret < 0) {
-#if defined(DEBUG_BATS)
-        if (qemu_log_enabled()) {
+        if (debug_bats && qemu_log_enabled()) {
             LOG_BATS("no BAT match for " TARGET_FMT_lx ":\n", virtual);
             for (i = 0; i < 4; i++) {
                 BATu = &BATut[i];
@@ -550,7 +590,6 @@ static inline int get_bat(CPUPPCState *env, mmu_ctx_t *ctx,
                          *BATu, *BATl, BEPIu, BEPIl, bl);
             }
         }
-#endif
     }
     /* No hit */
     return ret;
@@ -1858,7 +1897,9 @@ int cpu_ppc_handle_mmu_fault(CPUPPCState *env, target_ulong address, int rw,
                      mmu_idx, TARGET_PAGE_SIZE);
         ret = 0;
     } else if (ret < 0) {
-        LOG_MMU_STATE(env);
+        if (debug_mmu) {
+            log_cpu_state(env, 0);
+        }
         if (access_type == ACCESS_CODE) {
             switch (ret) {
             case -1:

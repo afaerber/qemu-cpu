@@ -36,6 +36,18 @@
 #define TODO_USER_ONLY 1
 #endif
 
+#ifdef PPC_DEBUG_SPR
+static const bool debug_spr = true;
+#else
+static const bool debug_spr;
+#endif
+
+#ifdef PPC_DUMP_SPR_ACCESSES
+static const bool dump_spr_accesses = true;
+#else
+static const bool dump_spr_accesses;
+#endif
+
 /* For user-mode emulation, we don't emulate any IRQ controller */
 #if defined(CONFIG_USER_ONLY)
 #define PPC_IRQ_INIT_FN(name)                                                 \
@@ -58,11 +70,11 @@ PPC_IRQ_INIT_FN(e500);
  */
 static void spr_load_dump_spr(int sprn)
 {
-#ifdef PPC_DUMP_SPR_ACCESSES
-    TCGv_i32 t0 = tcg_const_i32(sprn);
-    gen_helper_load_dump_spr(cpu_env, t0);
-    tcg_temp_free_i32(t0);
-#endif
+    if (dump_spr_accesses) {
+        TCGv_i32 t0 = tcg_const_i32(sprn);
+        gen_helper_load_dump_spr(cpu_env, t0);
+        tcg_temp_free_i32(t0);
+    }
 }
 
 static void spr_read_generic (void *opaque, int gprn, int sprn)
@@ -73,11 +85,11 @@ static void spr_read_generic (void *opaque, int gprn, int sprn)
 
 static void spr_store_dump_spr(int sprn)
 {
-#ifdef PPC_DUMP_SPR_ACCESSES
-    TCGv_i32 t0 = tcg_const_i32(sprn);
-    gen_helper_store_dump_spr(cpu_env, t0);
-    tcg_temp_free_i32(t0);
-#endif
+    if (dump_spr_accesses) {
+        TCGv_i32 t0 = tcg_const_i32(sprn);
+        gen_helper_store_dump_spr(cpu_env, t0);
+        tcg_temp_free_i32(t0);
+    }
 }
 
 static void spr_write_generic (void *opaque, int sprn, int gprn)
@@ -610,10 +622,10 @@ static inline void spr_register (CPUPPCState *env, int num,
         printf("Error: Trying to register SPR %d (%03x) twice !\n", num, num);
         exit(1);
     }
-#if defined(PPC_DEBUG_SPR)
-    printf("*** register spr %d (%03x) %s val " TARGET_FMT_lx "\n", num, num,
-           name, initial_value);
-#endif
+    if (debug_spr) {
+        printf("*** register spr %d (%03x) %s val " TARGET_FMT_lx "\n",
+               num, num, name, initial_value);
+    }
     spr->name = name;
     spr->uea_read = uea_read;
     spr->uea_write = uea_write;
