@@ -19,14 +19,14 @@
  */
 
 /* #define DEBUG_INLINE_BRANCHES */
-#define S390X_DEBUG_DISAS
-/* #define S390X_DEBUG_DISAS_VERBOSE */
+#define S390X_DEBUG_DISAS 1
+#define S390X_DEBUG_DISAS_VERBOSE 0
 
-#ifdef S390X_DEBUG_DISAS_VERBOSE
-#  define LOG_DISAS(...) qemu_log(__VA_ARGS__)
-#else
-#  define LOG_DISAS(...) do { } while (0)
-#endif
+#define LOG_DISAS(...) G_STMT_START \
+    if (S390X_DEBUG_DISAS_VERBOSE) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #include "cpu.h"
 #include "disas/disas.h"
@@ -4859,13 +4859,11 @@ static inline void gen_intermediate_code_internal(CPUS390XState *env,
         tb->icount = num_insns;
     }
 
-#if defined(S390X_DEBUG_DISAS)
-    if (qemu_loglevel_mask(CPU_LOG_TB_IN_ASM)) {
+    if (S390X_DEBUG_DISAS && qemu_loglevel_mask(CPU_LOG_TB_IN_ASM)) {
         qemu_log("IN: %s\n", lookup_symbol(pc_start));
         log_target_disas(env, pc_start, dc.pc - pc_start, 1);
         qemu_log("\n");
     }
-#endif
 }
 
 void gen_intermediate_code (CPUS390XState *env, struct TranslationBlock *tb)

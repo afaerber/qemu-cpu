@@ -25,30 +25,24 @@
 #include "sysemu/sysemu.h"
 #endif
 
-//#define DEBUG_S390
-//#define DEBUG_S390_PTE
-//#define DEBUG_S390_STDOUT
+#define DEBUG_S390 0
+#define DEBUG_S390_PTE 0
+#define DEBUG_S390_STDOUT 0
 
-#ifdef DEBUG_S390
-#ifdef DEBUG_S390_STDOUT
-#define DPRINTF(fmt, ...) \
-    do { fprintf(stderr, fmt, ## __VA_ARGS__); \
-         qemu_log(fmt, ##__VA_ARGS__); } while (0)
-#else
-#define DPRINTF(fmt, ...) \
-    do { qemu_log(fmt, ## __VA_ARGS__); } while (0)
-#endif
-#else
-#define DPRINTF(fmt, ...) \
-    do { } while (0)
-#endif
+#define DPRINTF(fmt, ...) G_STMT_START \
+    if (DEBUG_S390) { \
+        if (DEBUG_S390_STDOUT) { \
+            fprintf(stderr, fmt, ## __VA_ARGS__); \
+        } \
+        qemu_log(fmt, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 
-#ifdef DEBUG_S390_PTE
-#define PTE_DPRINTF DPRINTF
-#else
-#define PTE_DPRINTF(fmt, ...) \
-    do { } while (0)
-#endif
+#define PTE_DPRINTF(fmt, ...) G_STMT_START \
+    if (DEBUG_S390_PTE) { \
+        DPRINTF(fmt, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #ifndef CONFIG_USER_ONLY
 void s390x_tod_timer(void *opaque)

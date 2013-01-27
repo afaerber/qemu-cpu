@@ -35,15 +35,10 @@
 #include "cpu.h"
 #include "sysemu/device_tree.h"
 
-/* #define DEBUG_KVM */
+#define DEBUG_KVM 0
 
-#ifdef DEBUG_KVM
 #define dprintf(fmt, ...) \
-    do { fprintf(stderr, fmt, ## __VA_ARGS__); } while (0)
-#else
-#define dprintf(fmt, ...) \
-    do { } while (0)
-#endif
+    do { if (DEBUG_KVM) { fprintf(stderr, fmt, ## __VA_ARGS__); } } while (0)
 
 #define IPA0_DIAG                       0x8300
 #define IPA0_SIGP                       0xae00

@@ -25,12 +25,13 @@
 #include "exec/softmmu_exec.h"
 #endif
 
-/* #define DEBUG_HELPER */
-#ifdef DEBUG_HELPER
-#define HELPER_LOG(x...) qemu_log(x)
-#else
-#define HELPER_LOG(x...)
-#endif
+#define DEBUG_HELPER 0
+
+#define HELPER_LOG(...) G_STMT_START \
+    if (DEBUG_HELPER) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #define RET128(F) (env->retxl = F.low, F.high)
 

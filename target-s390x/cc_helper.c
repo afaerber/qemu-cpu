@@ -22,12 +22,13 @@
 #include "helper.h"
 #include "qemu/host-utils.h"
 
-/* #define DEBUG_HELPER */
-#ifdef DEBUG_HELPER
-#define HELPER_LOG(x...) qemu_log(x)
-#else
-#define HELPER_LOG(x...)
-#endif
+#define DEBUG_HELPER 0
+
+#define HELPER_LOG(...) G_STMT_START \
+    if (DEBUG_HELPER) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 static uint32_t cc_calc_ltgt_32(int32_t src, int32_t dst)
 {
