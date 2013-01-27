@@ -21,14 +21,14 @@
 
 #include "helper_regs.h"
 
-//#define DEBUG_OP
-//#define DEBUG_EXCEPTIONS
+#define DEBUG_OP 0
+#define DEBUG_EXCEPTIONS 0
 
-#ifdef DEBUG_EXCEPTIONS
-#  define LOG_EXCP(...) qemu_log(__VA_ARGS__)
-#else
-#  define LOG_EXCP(...) do { } while (0)
-#endif
+#define LOG_EXCP(...) G_STMT_START \
+    if (DEBUG_EXCEPTIONS) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 /*****************************************************************************/
 /* PowerPC Hypercall emulation */
@@ -777,7 +777,7 @@ void ppc_hw_interrupt(CPUPPCState *env)
 }
 #endif /* !CONFIG_USER_ONLY */
 
-#if defined(DEBUG_OP)
+#ifndef CONFIG_USER_ONLY
 static void cpu_dump_rfi(target_ulong RA, target_ulong msr)
 {
     qemu_log("Return from exception at " TARGET_FMT_lx " with flags "
@@ -835,9 +835,9 @@ static inline void do_rfi(CPUPPCState *env, target_ulong nip, target_ulong msr,
     /* XXX: beware: this is false if VLE is supported */
     env->nip = nip & ~((target_ulong)0x00000003);
     hreg_store_msr(env, msr, 1);
-#if defined(DEBUG_OP)
-    cpu_dump_rfi(env->nip, env->msr);
-#endif
+    if (DEBUG_OP) {
+        cpu_dump_rfi(env->nip, env->msr);
+    }
     /* No need to raise an exception here,
      * as rfi is always the last insn of a TB
      */

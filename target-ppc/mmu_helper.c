@@ -21,39 +21,36 @@
 #include "sysemu/kvm.h"
 #include "kvm_ppc.h"
 
-//#define DEBUG_MMU
-//#define DEBUG_BATS
-//#define DEBUG_SLB
-//#define DEBUG_SOFTWARE_TLB
+#define DEBUG_MMU 0
+#define DEBUG_BATS 0
+#define DEBUG_SLB 0
+#define DEBUG_SOFTWARE_TLB 0
 //#define DUMP_PAGE_TABLES
-//#define DEBUG_SOFTWARE_TLB
 //#define FLUSH_ALL_TLBS
 
-#ifdef DEBUG_MMU
-#  define LOG_MMU(...) qemu_log(__VA_ARGS__)
-#  define LOG_MMU_STATE(env) log_cpu_state((env), 0)
-#else
-#  define LOG_MMU(...) do { } while (0)
-#  define LOG_MMU_STATE(...) do { } while (0)
-#endif
+#define LOG_MMU(...) G_STMT_START \
+    if (DEBUG_MMU) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
-#ifdef DEBUG_SOFTWARE_TLB
-#  define LOG_SWTLB(...) qemu_log(__VA_ARGS__)
-#else
-#  define LOG_SWTLB(...) do { } while (0)
-#endif
+#define LOG_SWTLB(...) G_STMT_START \
+    if (DEBUG_SOFTWARE_TLB) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
-#ifdef DEBUG_BATS
-#  define LOG_BATS(...) qemu_log(__VA_ARGS__)
-#else
-#  define LOG_BATS(...) do { } while (0)
-#endif
+#define LOG_BATS(...) G_STMT_START \
+    if (DEBUG_BATS) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
-#ifdef DEBUG_SLB
-#  define LOG_SLB(...) qemu_log(__VA_ARGS__)
-#else
-#  define LOG_SLB(...) do { } while (0)
-#endif
+#define LOG_SLB(...) G_STMT_START \
+    if (DEBUG_SLB) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 /*****************************************************************************/
 /* PowerPC MMU emulation */
@@ -534,7 +531,7 @@ static inline int get_bat(CPUPPCState *env, mmu_ctx_t *ctx,
         }
     }
     if (ret < 0) {
-#if defined(DEBUG_BATS)
+#if DEBUG_BATS
         if (qemu_log_enabled()) {
             LOG_BATS("no BAT match for " TARGET_FMT_lx ":\n", virtual);
             for (i = 0; i < 4; i++) {
@@ -1860,7 +1857,9 @@ int cpu_ppc_handle_mmu_fault(CPUPPCState *env, target_ulong address, int rw,
                      mmu_idx, TARGET_PAGE_SIZE);
         ret = 0;
     } else if (ret < 0) {
-        LOG_MMU_STATE(env);
+        if (DEBUG_MMU) {
+            log_cpu_state(env, 0);
+        }
         if (access_type == ACCESS_CODE) {
             switch (ret) {
             case -1:

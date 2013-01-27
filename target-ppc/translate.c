@@ -32,14 +32,14 @@
 #define GDBSTUB_SINGLE_STEP 0x4
 
 /* Include definitions for instructions classes and implementations flags */
-//#define PPC_DEBUG_DISAS
+#define PPC_DEBUG_DISAS 0
 //#define DO_PPC_STATISTICS
 
-#ifdef PPC_DEBUG_DISAS
-#  define LOG_DISAS(...) qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__)
-#else
-#  define LOG_DISAS(...) do { } while (0)
-#endif
+#define LOG_DISAS(...) G_STMT_START \
+    if (PPC_DEBUG_DISAS) { \
+        qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 /*****************************************************************************/
 /* Code translation helpers                                                  */
 

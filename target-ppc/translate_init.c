@@ -31,7 +31,7 @@
 #include "sysemu/cpus.h"
 
 //#define PPC_DUMP_CPU
-//#define PPC_DEBUG_SPR
+#define PPC_DEBUG_SPR 0
 //#define PPC_DUMP_SPR_ACCESSES
 #if defined(CONFIG_USER_ONLY)
 #define TODO_USER_ONLY 1
@@ -611,10 +611,10 @@ static inline void spr_register (CPUPPCState *env, int num,
         printf("Error: Trying to register SPR %d (%03x) twice !\n", num, num);
         exit(1);
     }
-#if defined(PPC_DEBUG_SPR)
-    printf("*** register spr %d (%03x) %s val " TARGET_FMT_lx "\n", num, num,
-           name, initial_value);
-#endif
+    if (PPC_DEBUG_SPR) {
+        printf("*** register spr %d (%03x) %s val " TARGET_FMT_lx "\n",
+               num, num, name, initial_value);
+    }
     spr->name = name;
     spr->uea_read = uea_read;
     spr->uea_write = uea_write;
