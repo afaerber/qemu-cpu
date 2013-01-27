@@ -23,8 +23,6 @@
 #include "helper.h"
 #include "qemu/host-utils.h"
 
-#define D(x)
-
 #if !defined(CONFIG_USER_ONLY)
 #include "exec/softmmu_exec.h"
 

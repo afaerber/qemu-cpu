@@ -21,8 +21,19 @@
 #include "cpu.h"
 #include "qemu/host-utils.h"
 
-#define D(x)
-#define DMMU(x)
+#define DEBUG_MB 0
+#define DEBUG_MB_MMU 0
+
+#define D_LOG(...) G_STMT_START \
+    if (DEBUG_MB) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
+#define MMU_LOG(...) G_STMT_START \
+    if (DEBUG_MB_MMU) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #if defined(CONFIG_USER_ONLY)
 
@@ -70,13 +81,13 @@ int cpu_mb_handle_mmu_fault (CPUMBState *env, target_ulong address, int rw,
             vaddr = address & TARGET_PAGE_MASK;
             paddr = lu.paddr + vaddr - lu.vaddr;
 
-            DMMU(qemu_log("MMU map mmu=%d v=%x p=%x prot=%x\n",
-                     mmu_idx, vaddr, paddr, lu.prot));
+            MMU_LOG("MMU map mmu=%d v=%x p=%x prot=%x\n",
+                    mmu_idx, vaddr, paddr, lu.prot);
             tlb_set_page(env, vaddr, paddr, lu.prot, mmu_idx, TARGET_PAGE_SIZE);
             r = 0;
         } else {
             env->sregs[SR_EAR] = address;
-            DMMU(qemu_log("mmu=%d miss v=%x\n", mmu_idx, address));
+            MMU_LOG("mmu=%d miss v=%x\n", mmu_idx, address);
 
             switch (lu.err) {
                 case ERR_PROT:
@@ -156,7 +167,7 @@ void do_interrupt(CPUMBState *env)
             env->sregs[SR_ESR] &= ~(1 << 12);
             /* Exception breaks branch + dslot sequence?  */
             if (env->iflags & D_FLAG) {
-                D(qemu_log("D_FLAG set at exception bimm=%d\n", env->bimm));
+                D_LOG("D_FLAG set at exception bimm=%d\n", env->bimm);
                 env->sregs[SR_ESR] |= 1 << 12 ;
                 env->sregs[SR_BTR] = env->btarget;
 
@@ -171,7 +182,7 @@ void do_interrupt(CPUMBState *env)
                     log_cpu_state_mask(CPU_LOG_INT, env, 0);
                 }
             } else if (env->iflags & IMM_FLAG) {
-                D(qemu_log("IMM_FLAG set at exception\n"));
+                D_LOG("IMM_FLAG set at exception\n");
                 env->regs[17] -= 4;
             }
 

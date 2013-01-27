@@ -20,7 +20,13 @@
 
 #include "cpu.h"
 
-#define D(x)
+#define DEBUG_MB 0
+
+#define D_LOG(...) G_STMT_START \
+    if (DEBUG_MB) { \
+        qemu_log(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 static unsigned int tlb_decode_size(unsigned int f)
 {
@@ -87,7 +93,7 @@ unsigned int mmu_translate(struct microblaze_mmu *mmu,
 
         /* Lookup and decode.  */
         t = mmu->rams[RAM_TAG][i];
-        D(qemu_log("TLB %d valid=%d\n", i, t & TLB_VALID));
+        D_LOG("TLB %d valid=%d\n", i, t & TLB_VALID);
         if (t & TLB_VALID) {
             tlb_size = tlb_decode_size((t & TLB_PAGESZ_MASK) >> 7);
             if (tlb_size < TARGET_PAGE_SIZE) {
@@ -98,14 +104,14 @@ unsigned int mmu_translate(struct microblaze_mmu *mmu,
             mask = ~(tlb_size - 1);
             tlb_tag = t & TLB_EPN_MASK;
             if ((vaddr & mask) != (tlb_tag & mask)) {
-                D(qemu_log("TLB %d vaddr=%x != tag=%x\n",
-                           i, vaddr & mask, tlb_tag & mask));
+                D_LOG("TLB %d vaddr=%x != tag=%x\n",
+                      i, vaddr & mask, tlb_tag & mask);
                 continue;
             }
             if (mmu->tids[i]
                 && ((mmu->regs[MMU_R_PID] & 0xff) != mmu->tids[i])) {
-                D(qemu_log("TLB %d pid=%x != tid=%x\n",
-                           i, mmu->regs[MMU_R_PID], mmu->tids[i]));
+                D_LOG("TLB %d pid=%x != tid=%x\n",
+                      i, mmu->regs[MMU_R_PID], mmu->tids[i]);
                 continue;
             }
 
@@ -170,8 +176,8 @@ unsigned int mmu_translate(struct microblaze_mmu *mmu,
         }
     }
 done:
-    D(qemu_log("MMU vaddr=%x rw=%d tlb_wr=%d tlb_ex=%d hit=%d\n",
-              vaddr, rw, tlb_wr, tlb_ex, hit));
+    D_LOG("MMU vaddr=%x rw=%d tlb_wr=%d tlb_ex=%d hit=%d\n",
+          vaddr, rw, tlb_wr, tlb_ex, hit);
     return hit;
 }
 
@@ -212,14 +218,14 @@ uint32_t mmu_read(CPUMBState *env, uint32_t rn)
             r = env->mmu.regs[rn];
             break;
     }
-    D(qemu_log("%s rn=%d=%x\n", __func__, rn, r));
+    D_LOG("%s rn=%d=%x\n", __func__, rn, r);
     return r;
 }
 
 void mmu_write(CPUMBState *env, uint32_t rn, uint32_t v)
 {
     unsigned int i;
-    D(qemu_log("%s rn=%d=%x old=%x\n", __func__, rn, v, env->mmu.regs[rn]));
+    D_LOG("%s rn=%d=%x old=%x\n", __func__, rn, v, env->mmu.regs[rn]);
 
     if (env->mmu.c_mmu < 2 || !env->mmu.c_mmu_tlb_access) {
         qemu_log("MMU access on MMU-less system\n");
@@ -240,7 +246,7 @@ void mmu_write(CPUMBState *env, uint32_t rn, uint32_t v)
             }
             env->mmu.rams[rn & 1][i] = v;
 
-            D(qemu_log("%s ram[%d][%d]=%x\n", __func__, rn & 1, i, v));
+            D_LOG("%s ram[%d][%d]=%x\n", __func__, rn & 1, i, v);
             break;
         case MMU_R_ZPR:
             if (env->mmu.c_mmu_tlb_access <= 1) {
