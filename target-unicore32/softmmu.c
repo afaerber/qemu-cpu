@@ -17,10 +17,23 @@
 #undef DEBUG_UC32
 
 #ifdef DEBUG_UC32
-#define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
+static const bool debug_softmmu = true;
 #else
-#define DPRINTF(fmt, ...) do {} while (0)
+static const bool debug_softmmu;
 #endif
+
+#define DPRINTF(fmt, ...) \
+    softmmu_dprintf("%s: " fmt , __func__, ## __VA_ARGS__)
+
+static void GCC_FMT_ATTR(1, 2) softmmu_dprintf(const char *fmt, ...)
+{
+    if (debug_softmmu) {
+        va_list ap;
+        va_start(ap, fmt);
+        vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
 
 #define SUPERPAGE_SIZE             (1 << 22)
 #define UC32_PAGETABLE_READ        (1 << 8)

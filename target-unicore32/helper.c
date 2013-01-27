@@ -20,9 +20,23 @@
 #undef DEBUG_UC32
 
 #ifdef DEBUG_UC32
-#define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
+static const bool debug_helper = true;
 #else
-#define DPRINTF(fmt, ...) do {} while (0)
+static const bool debug_helper;
+#endif
+
+#define DPRINTF(fmt, ...) \
+    helper_dprintf("%s: " fmt , __func__, ## __VA_ARGS__)
+#ifndef CONFIG_USER_ONLY
+static void GCC_FMT_ATTR(1, 2) helper_dprintf(const char *fmt, ...)
+{
+    if (debug_helper) {
+        va_list ap;
+        va_start(ap, fmt);
+        vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
 #endif
 
 CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
