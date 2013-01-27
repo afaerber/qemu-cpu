@@ -31,12 +31,20 @@
 #define DISAS_GNU 1
 #define DISAS_MB 1
 #if DISAS_MB && !SIM_COMPAT
-#  define LOG_DIS(...) qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__)
+static const bool debug_disas = true;
 #else
-#  define LOG_DIS(...) do { } while (0)
+static const bool debug_disas;
 #endif
 
-#define D(x)
+static void GCC_FMT_ATTR(1, 2) LOG_DIS(const char *fmt, ...)
+{
+    if (debug_disas) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_mask(CPU_LOG_TB_IN_ASM, fmt, ap);
+        va_end(ap);
+    }
+}
 
 #define EXTRACT_FIELD(src, start, end) \
             (((src) >> start) & ((1 << (end - start + 1)) - 1))
