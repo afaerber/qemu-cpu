@@ -21,6 +21,22 @@
 
 //#define DEBUG_FEATURES
 
+#ifdef DEBUG_FEATURES
+static const bool debug_features = true;
+#else
+static const bool debug_features;
+#endif
+
+static void GCC_FMT_ATTR(1, 2) features_printf(const char *fmt, ...)
+{
+    if (debug_features) {
+        va_list ap;
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+    }
+}
+
 static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model);
 
 /* CPUClass::reset() */
@@ -676,9 +692,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                     goto error;
                 }
                 cpu_def->iu_version = iu_version;
-#ifdef DEBUG_FEATURES
-                fprintf(stderr, "iu_version %" PRIx64 "\n", iu_version);
-#endif
+                features_printf("iu_version %" PRIx64 "\n", iu_version);
             } else if (!strcmp(featurestr, "fpu_version")) {
                 char *err;
 
@@ -688,9 +702,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                     goto error;
                 }
                 cpu_def->fpu_version = fpu_version;
-#ifdef DEBUG_FEATURES
-                fprintf(stderr, "fpu_version %x\n", fpu_version);
-#endif
+                features_printf("fpu_version %x\n", fpu_version);
             } else if (!strcmp(featurestr, "mmu_version")) {
                 char *err;
 
@@ -700,9 +712,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                     goto error;
                 }
                 cpu_def->mmu_version = mmu_version;
-#ifdef DEBUG_FEATURES
-                fprintf(stderr, "mmu_version %x\n", mmu_version);
-#endif
+                features_printf("mmu_version %x\n", mmu_version);
             } else if (!strcmp(featurestr, "nwindows")) {
                 char *err;
 
@@ -713,9 +723,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                     goto error;
                 }
                 cpu_def->nwindows = nwindows;
-#ifdef DEBUG_FEATURES
-                fprintf(stderr, "nwindows %d\n", nwindows);
-#endif
+                features_printf("nwindows %d\n", nwindows);
             } else {
                 fprintf(stderr, "unrecognized feature %s\n", featurestr);
                 goto error;
@@ -729,9 +737,9 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
     }
     cpu_def->features |= plus_features;
     cpu_def->features &= ~minus_features;
-#ifdef DEBUG_FEATURES
-    print_features(stderr, fprintf, cpu_def->features, NULL);
-#endif
+    if (debug_features) {
+        print_features(stderr, fprintf, cpu_def->features, NULL);
+    }
     g_free(s);
     return 0;
 
