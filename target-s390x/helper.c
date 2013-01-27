@@ -30,24 +30,53 @@
 //#define DEBUG_S390_STDOUT
 
 #ifdef DEBUG_S390
-#ifdef DEBUG_S390_STDOUT
-#define DPRINTF(fmt, ...) \
-    do { fprintf(stderr, fmt, ## __VA_ARGS__); \
-         qemu_log(fmt, ##__VA_ARGS__); } while (0)
+static const bool debug_helper = true;
 #else
-#define DPRINTF(fmt, ...) \
-    do { qemu_log(fmt, ## __VA_ARGS__); } while (0)
-#endif
-#else
-#define DPRINTF(fmt, ...) \
-    do { } while (0)
+static const bool debug_helper;
 #endif
 
 #ifdef DEBUG_S390_PTE
-#define PTE_DPRINTF DPRINTF
+static const bool debug_pte = true;
 #else
-#define PTE_DPRINTF(fmt, ...) \
-    do { } while (0)
+static const bool debug_pte;
+#endif
+
+#ifdef DEBUG_S390_STDOUT
+static const bool debug_to_stdout = true;
+#else
+static const bool debug_to_stdout;
+#endif
+
+#ifndef CONFIG_USER_ONLY
+static inline void GCC_FMT_ATTR(1, 0) vDPRINTF(const char *fmt, va_list ap)
+{
+    if (debug_helper) {
+        if (debug_to_stdout) {
+            vfprintf(stderr, fmt, ap);
+        }
+        qemu_log_vprintf(fmt, ap);
+    }
+}
+
+static void GCC_FMT_ATTR(1, 2) DPRINTF(const char *fmt, ...)
+{
+    if (debug_helper) {
+        va_list ap;
+        va_start(ap, fmt);
+        vDPRINTF(fmt, ap);
+        va_end(ap);
+    }
+}
+
+static void GCC_FMT_ATTR(1, 2) PTE_DPRINTF(const char *fmt, ...)
+{
+    if (debug_pte) {
+        va_list ap;
+        va_start(ap, fmt);
+        vDPRINTF(fmt, ap);
+        va_end(ap);
+    }
+}
 #endif
 
 #ifndef CONFIG_USER_ONLY

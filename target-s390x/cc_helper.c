@@ -24,10 +24,20 @@
 
 /* #define DEBUG_HELPER */
 #ifdef DEBUG_HELPER
-#define HELPER_LOG(x...) qemu_log(x)
+static const bool debug_helper = true;
 #else
-#define HELPER_LOG(x...)
+static const bool debug_helper;
 #endif
+
+static void GCC_FMT_ATTR(1, 2) HELPER_LOG(const char *fmt, ...)
+{
+    if (debug_helper) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
 
 static uint32_t cc_calc_ltgt_32(int32_t src, int32_t dst)
 {

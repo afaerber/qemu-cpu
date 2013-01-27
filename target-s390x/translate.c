@@ -18,21 +18,20 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-/* #define DEBUG_INLINE_BRANCHES */
-#define S390X_DEBUG_DISAS
-/* #define S390X_DEBUG_DISAS_VERBOSE */
-
-#ifdef S390X_DEBUG_DISAS_VERBOSE
-#  define LOG_DISAS(...) qemu_log(__VA_ARGS__)
-#else
-#  define LOG_DISAS(...) do { } while (0)
-#endif
-
 #include "cpu.h"
 #include "disas/disas.h"
 #include "tcg-op.h"
 #include "qemu/log.h"
 #include "qemu/host-utils.h"
+
+/* #define DEBUG_INLINE_BRANCHES */
+#define S390X_DEBUG_DISAS
+
+#ifdef S390X_DEBUG_DISAS
+static const bool debug_disas = true;
+#else
+static const bool debug_disas;
+#endif
 
 /* global register indexes */
 static TCGv_ptr cpu_env;
@@ -4859,13 +4858,11 @@ static inline void gen_intermediate_code_internal(CPUS390XState *env,
         tb->icount = num_insns;
     }
 
-#if defined(S390X_DEBUG_DISAS)
-    if (qemu_loglevel_mask(CPU_LOG_TB_IN_ASM)) {
+    if (debug_disas && qemu_loglevel_mask(CPU_LOG_TB_IN_ASM)) {
         qemu_log("IN: %s\n", lookup_symbol(pc_start));
         log_target_disas(env, pc_start, dc.pc - pc_start, 1);
         qemu_log("\n");
     }
-#endif
 }
 
 void gen_intermediate_code (CPUS390XState *env, struct TranslationBlock *tb)

@@ -36,10 +36,20 @@
 
 /* #define DEBUG_HELPER */
 #ifdef DEBUG_HELPER
-#define HELPER_LOG(x...) qemu_log(x)
+static const bool debug_helper = true;
 #else
-#define HELPER_LOG(x...)
+static const bool debug_helper;
 #endif
+
+static void GCC_FMT_ATTR(1, 2) HELPER_LOG(const char *fmt, ...)
+{
+    if (debug_helper) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_vprintf(fmt, ap);
+        va_end(ap);
+    }
+}
 
 /* Raise an exception dynamically from a helper function.  */
 void QEMU_NORETURN runtime_exception(CPUS390XState *env, int excp,

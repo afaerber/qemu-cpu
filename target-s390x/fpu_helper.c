@@ -25,13 +25,6 @@
 #include "exec/softmmu_exec.h"
 #endif
 
-/* #define DEBUG_HELPER */
-#ifdef DEBUG_HELPER
-#define HELPER_LOG(x...) qemu_log(x)
-#else
-#define HELPER_LOG(x...)
-#endif
-
 #define RET128(F) (env->retxl = F.low, F.high)
 
 #define convert_bit(mask, from, to) \
