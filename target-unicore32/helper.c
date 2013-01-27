@@ -17,13 +17,13 @@
 #include "ui/console.h"
 #endif
 
-#undef DEBUG_UC32
+#define DEBUG_UC32 0
 
-#ifdef DEBUG_UC32
-#define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
-#else
-#define DPRINTF(fmt, ...) do {} while (0)
-#endif
+#define DPRINTF(fmt, ...) G_STMT_START \
+    if (DEBUG_UC32) { \
+        printf("%s: " fmt , __func__, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 
 CPUUniCore32State *uc32_cpu_init(const char *cpu_model)
 {

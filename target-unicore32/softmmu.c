@@ -14,13 +14,13 @@
 
 #include <cpu.h>
 
-#undef DEBUG_UC32
+#define DEBUG_UC32 0
 
-#ifdef DEBUG_UC32
-#define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
-#else
-#define DPRINTF(fmt, ...) do {} while (0)
-#endif
+#define DPRINTF(fmt, ...) G_STMT_START \
+    if (DEBUG_UC32) { \
+        printf("%s: " fmt , __func__, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #define SUPERPAGE_SIZE             (1 << 22)
 #define UC32_PAGETABLE_READ        (1 << 8)
