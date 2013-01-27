@@ -37,12 +37,20 @@
 //#define DEBUG_KVM
 
 #ifdef DEBUG_KVM
-#define DPRINTF(fmt, ...) \
-    do { fprintf(stderr, fmt, ## __VA_ARGS__); } while (0)
+static const bool debug_kvm = true;
 #else
-#define DPRINTF(fmt, ...) \
-    do { } while (0)
+static const bool debug_kvm;
 #endif
+
+static void GCC_FMT_ATTR(1, 2) DPRINTF(const char *fmt, ...)
+{
+    if (debug_kvm) {
+        va_list ap;
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+    }
+}
 
 #define MSR_KVM_WALL_CLOCK  0x11
 #define MSR_KVM_SYSTEM_TIME 0x12

@@ -29,13 +29,27 @@
 #endif /* !defined(CONFIG_USER_ONLY) */
 
 #ifdef DEBUG_PCALL
-# define LOG_PCALL(...) qemu_log_mask(CPU_LOG_PCALL, ## __VA_ARGS__)
-# define LOG_PCALL_STATE(env)                                  \
-    log_cpu_state_mask(CPU_LOG_PCALL, (env), CPU_DUMP_CCOP)
+static const bool debug_pcall = true;
 #else
-# define LOG_PCALL(...) do { } while (0)
-# define LOG_PCALL_STATE(env) do { } while (0)
+static const bool debug_pcall;
 #endif
+
+static void GCC_FMT_ATTR(1, 2) LOG_PCALL(const char *fmt, ...)
+{
+    if (debug_pcall) {
+        va_list ap;
+        va_start(ap, fmt);
+        qemu_log_mask(CPU_LOG_PCALL, fmt, ap);
+        va_end(ap);
+    }
+}
+
+static inline void LOG_PCALL_STATE(CPUX86State *env)
+{
+    if (debug_pcall) {
+        log_cpu_state_mask(CPU_LOG_PCALL, (env), CPU_DUMP_CCOP);
+    }
+}
 
 /* return non zero if error */
 static inline int load_segment(CPUX86State *env, uint32_t *e1_ptr,
