@@ -22,20 +22,22 @@
 #include "qemu/log.h"
 #include "helper.h"
 
-//#define DEBUG_PCALL
+#define DEBUG_PCALL 0
 
 #if !defined(CONFIG_USER_ONLY)
 #include "exec/softmmu_exec.h"
 #endif /* !defined(CONFIG_USER_ONLY) */
 
-#ifdef DEBUG_PCALL
-# define LOG_PCALL(...) qemu_log_mask(CPU_LOG_PCALL, ## __VA_ARGS__)
-# define LOG_PCALL_STATE(env)                                  \
-    log_cpu_state_mask(CPU_LOG_PCALL, (env), CPU_DUMP_CCOP)
-#else
-# define LOG_PCALL(...) do { } while (0)
-# define LOG_PCALL_STATE(env) do { } while (0)
-#endif
+#define LOG_PCALL(...) G_STMT_START \
+    if (DEBUG_PCALL) { \
+        qemu_log_mask(CPU_LOG_PCALL, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
+#define LOG_PCALL_STATE(env) G_STMT_START \
+    if (DEBUG_PCALL) { \
+        log_cpu_state_mask(CPU_LOG_PCALL, (env), CPU_DUMP_CCOP); \
+    } \
+    G_STMT_END
 
 /* return non zero if error */
 static inline int load_segment(CPUX86State *env, uint32_t *e1_ptr,

@@ -24,7 +24,12 @@
 #include "monitor/monitor.h"
 #endif
 
-//#define DEBUG_MMU
+#define DEBUG_MMU 0
+#define MMU_DPRINTF(...) G_STMT_START \
+    if (DEBUG_MMU) { \
+        printf(__VA_ARGS__); \
+    } \
+    G_STMT_END
 
 static void cpu_x86_version(CPUX86State *env, int *family, int *model)
 {
@@ -370,9 +375,8 @@ void cpu_x86_set_a20(CPUX86State *env, int a20_state)
 {
     a20_state = (a20_state != 0);
     if (a20_state != ((env->a20_mask >> 20) & 1)) {
-#if defined(DEBUG_MMU)
-        printf("A20 update: a20=%d\n", a20_state);
-#endif
+        MMU_DPRINTF("A20 update: a20=%d\n", a20_state);
+
         /* if the cpu is currently executing code, we must unlink it and
            all the potentially executing TB */
         cpu_interrupt(env, CPU_INTERRUPT_EXITTB);
@@ -388,9 +392,8 @@ void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0)
 {
     int pe_state;
 
-#if defined(DEBUG_MMU)
-    printf("CR0 update: CR0=0x%08x\n", new_cr0);
-#endif
+    MMU_DPRINTF("CR0 update: CR0=0x%08x\n", new_cr0);
+
     if ((new_cr0 & (CR0_PG_MASK | CR0_WP_MASK | CR0_PE_MASK)) !=
         (env->cr[0] & (CR0_PG_MASK | CR0_WP_MASK | CR0_PE_MASK))) {
         tlb_flush(env, 1);
@@ -431,18 +434,15 @@ void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3)
 {
     env->cr[3] = new_cr3;
     if (env->cr[0] & CR0_PG_MASK) {
-#if defined(DEBUG_MMU)
-        printf("CR3 update: CR3=" TARGET_FMT_lx "\n", new_cr3);
-#endif
+        MMU_DPRINTF("CR3 update: CR3=" TARGET_FMT_lx "\n", new_cr3);
         tlb_flush(env, 0);
     }
 }
 
 void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4)
 {
-#if defined(DEBUG_MMU)
-    printf("CR4 update: CR4=%08x\n", (uint32_t)env->cr[4]);
-#endif
+    MMU_DPRINTF("CR4 update: CR4=%08x\n", (uint32_t)env->cr[4]);
+
     if ((new_cr4 ^ env->cr[4]) &
         (CR4_PGE_MASK | CR4_PAE_MASK | CR4_PSE_MASK |
          CR4_SMEP_MASK | CR4_SMAP_MASK)) {
@@ -508,10 +508,9 @@ int cpu_x86_handle_mmu_fault(CPUX86State *env, target_ulong addr,
     target_ulong vaddr, virt_addr;
 
     is_user = mmu_idx == MMU_USER_IDX;
-#if defined(DEBUG_MMU)
-    printf("MMU fault: addr=" TARGET_FMT_lx " w=%d u=%d eip=" TARGET_FMT_lx "\n",
-           addr, is_write1, is_user, env->eip);
-#endif
+    MMU_DPRINTF("MMU fault: addr=" TARGET_FMT_lx " w=%d u=%d"
+                " eip=" TARGET_FMT_lx "\n",
+                addr, is_write1, is_user, env->eip);
     is_write = is_write1 & 1;
 
     if (!(env->cr[0] & CR0_PG_MASK)) {

@@ -34,15 +34,13 @@
 #include "hyperv.h"
 #include "hw/pci/pci.h"
 
-//#define DEBUG_KVM
+#define DEBUG_KVM 0
 
-#ifdef DEBUG_KVM
-#define DPRINTF(fmt, ...) \
-    do { fprintf(stderr, fmt, ## __VA_ARGS__); } while (0)
-#else
-#define DPRINTF(fmt, ...) \
-    do { } while (0)
-#endif
+#define DPRINTF(fmt, ...) G_STMT_START \
+    if (DEBUG_KVM) { \
+        fprintf(stderr, fmt, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #define MSR_KVM_WALL_CLOCK  0x11
 #define MSR_KVM_SYSTEM_TIME 0x12
