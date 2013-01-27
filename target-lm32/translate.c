@@ -28,11 +28,11 @@
 #include "helper.h"
 
 #define DISAS_LM32 1
-#if DISAS_LM32
-#  define LOG_DIS(...) qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__)
-#else
-#  define LOG_DIS(...) do { } while (0)
-#endif
+#define LOG_DIS(...) G_STMT_START \
+    if (DISAS_LM32) { \
+        qemu_log_mask(CPU_LOG_TB_IN_ASM, ## __VA_ARGS__); \
+    } \
+    G_STMT_END
 
 #define EXTRACT_FIELD(src, start, end) \
             (((src) >> start) & ((1 << (end - start + 1)) - 1))
