@@ -20,38 +20,26 @@
 #include "cpu.h"
 #include "helper.h"
 
-//#define DEBUG_MMU
-//#define DEBUG_MXCC
+#define DEBUG_MMU 0
+#define DEBUG_MXCC 0
 //#define DEBUG_UNALIGNED
 //#define DEBUG_UNASSIGNED
-//#define DEBUG_ASI
-//#define DEBUG_CACHE_CONTROL
+#define DEBUG_ASI 0
+#define DEBUG_CACHE_CONTROL 0
 
-#ifdef DEBUG_MMU
 #define DPRINTF_MMU(fmt, ...)                                   \
-    do { printf("MMU: " fmt , ## __VA_ARGS__); } while (0)
-#else
-#define DPRINTF_MMU(fmt, ...) do {} while (0)
-#endif
+    do { if (DEBUG_MMU) { printf("MMU: " fmt , ## __VA_ARGS__); } } while (0)
 
-#ifdef DEBUG_MXCC
 #define DPRINTF_MXCC(fmt, ...)                                  \
-    do { printf("MXCC: " fmt , ## __VA_ARGS__); } while (0)
-#else
-#define DPRINTF_MXCC(fmt, ...) do {} while (0)
-#endif
+    do { if (DEBUG_MXCC) { printf("MXCC: " fmt , ## __VA_ARGS__); } } while (0)
 
-#ifdef DEBUG_ASI
 #define DPRINTF_ASI(fmt, ...)                                   \
-    do { printf("ASI: " fmt , ## __VA_ARGS__); } while (0)
-#endif
+    do { if (DEBUG_ASI) { printf("ASI: " fmt , ## __VA_ARGS__); } } while (0)
 
-#ifdef DEBUG_CACHE_CONTROL
 #define DPRINTF_CACHE_CONTROL(fmt, ...)                                 \
-    do { printf("CACHE_CONTROL: " fmt , ## __VA_ARGS__); } while (0)
-#else
-#define DPRINTF_CACHE_CONTROL(fmt, ...) do {} while (0)
-#endif
+    do { if (DEBUG_CACHE_CONTROL) { \
+        printf("CACHE_CONTROL: " fmt , ## __VA_ARGS__); \
+    } } while (0)
 
 #ifdef TARGET_SPARC64
 #ifndef TARGET_ABI32
@@ -209,10 +197,10 @@ static void demap_tlb(SparcTLBEntry *tlb, target_ulong demap_addr,
             }
 
             replace_tlb_entry(&tlb[i], 0, 0, env1);
-#ifdef DEBUG_MMU
             DPRINTF_MMU("%s demap invalidated entry [%02u]\n", strmmu, i);
-            dump_mmu(stdout, fprintf, env1);
-#endif
+            if (DEBUG_MMU) {
+                dump_mmu(stdout, fprintf, env1);
+            }
         }
     }
 }
@@ -227,10 +215,10 @@ static void replace_tlb_1bit_lru(SparcTLBEntry *tlb,
     for (i = 0; i < 64; i++) {
         if (!TTE_IS_VALID(tlb[i].tte)) {
             replace_tlb_entry(&tlb[i], tlb_tag, tlb_tte, env1);
-#ifdef DEBUG_MMU
             DPRINTF_MMU("%s lru replaced invalid entry [%i]\n", strmmu, i);
-            dump_mmu(stdout, fprintf, env1);
-#endif
+            if (DEBUG_MMU) {
+                dump_mmu(stdout, fprintf, env1);
+            }
             return;
         }
     }
@@ -245,11 +233,12 @@ static void replace_tlb_1bit_lru(SparcTLBEntry *tlb,
             if (!TTE_IS_LOCKED(tlb[i].tte) && !TTE_IS_USED(tlb[i].tte)) {
 
                 replace_tlb_entry(&tlb[i], tlb_tag, tlb_tte, env1);
-#ifdef DEBUG_MMU
+
                 DPRINTF_MMU("%s lru replaced unlocked %s entry [%i]\n",
                             strmmu, (replace_used ? "used" : "unused"), i);
-                dump_mmu(stdout, fprintf, env1);
-#endif
+                if (DEBUG_MMU) {
+                    dump_mmu(stdout, fprintf, env1);
+                }
                 return;
             }
         }
@@ -261,9 +250,7 @@ static void replace_tlb_1bit_lru(SparcTLBEntry *tlb,
         }
     }
 
-#ifdef DEBUG_MMU
     DPRINTF_MMU("%s lru replacement failed: no entries available\n", strmmu);
-#endif
     /* error state? */
 }
 
@@ -327,8 +314,7 @@ void helper_check_align(CPUSPARCState *env, target_ulong addr, uint32_t align)
     }
 }
 
-#if !defined(TARGET_SPARC64) && !defined(CONFIG_USER_ONLY) &&   \
-    defined(DEBUG_MXCC)
+#if !defined(TARGET_SPARC64) && !defined(CONFIG_USER_ONLY)
 static void dump_mxcc(CPUSPARCState *env)
 {
     printf("mxccdata: %016" PRIx64 " %016" PRIx64 " %016" PRIx64 " %016" PRIx64
@@ -346,8 +332,7 @@ static void dump_mxcc(CPUSPARCState *env)
 }
 #endif
 
-#if (defined(TARGET_SPARC64) || !defined(CONFIG_USER_ONLY))     \
-    && defined(DEBUG_ASI)
+#if (defined(TARGET_SPARC64) || !defined(CONFIG_USER_ONLY))
 static void dump_asi(const char *txt, target_ulong addr, int asi, int size,
                      uint64_t r1)
 {
@@ -448,9 +433,7 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
                        int sign)
 {
     uint64_t ret = 0;
-#if defined(DEBUG_MXCC) || defined(DEBUG_ASI)
     uint32_t last_addr = addr;
-#endif
 
     helper_check_align(env, addr, size - 1);
     switch (asi) {
@@ -509,9 +492,9 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
         DPRINTF_MXCC("asi = %d, size = %d, sign = %d, "
                      "addr = %08x -> ret = %" PRIx64 ","
                      "addr = %08x\n", asi, size, sign, last_addr, ret, addr);
-#ifdef DEBUG_MXCC
-        dump_mxcc(env);
-#endif
+        if (DEBUG_MXCC) {
+            dump_mxcc(env);
+        }
         break;
     case 3: /* MMU probe */
         {
@@ -702,9 +685,9 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
             break;
         }
     }
-#ifdef DEBUG_ASI
-    dump_asi("read ", last_addr, asi, size, ret);
-#endif
+    if (DEBUG_ASI) {
+        dump_asi("read ", last_addr, asi, size, ret);
+    }
     return ret;
 }
 
@@ -839,9 +822,9 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, uint64_t val, int asi,
         }
         DPRINTF_MXCC("asi = %d, size = %d, addr = %08x, val = %" PRIx64 "\n",
                      asi, size, addr, val);
-#ifdef DEBUG_MXCC
-        dump_mxcc(env);
-#endif
+        if (DEBUG_MXCC) {
+            dump_mxcc(env);
+        }
         break;
     case 3: /* MMU flush */
         {
@@ -862,9 +845,9 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, uint64_t val, int asi,
             default:
                 break;
             }
-#ifdef DEBUG_MMU
-            dump_mmu(stdout, fprintf, env);
-#endif
+            if (DEBUG_MMU) {
+                dump_mmu(stdout, fprintf, env);
+            }
         }
         break;
     case 4: /* write MMU regs */
@@ -916,9 +899,9 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, uint64_t val, int asi,
                 DPRINTF_MMU("mmu change reg[%d]: 0x%08x -> 0x%08x\n",
                             reg, oldreg, env->mmuregs[reg]);
             }
-#ifdef DEBUG_MMU
-            dump_mmu(stdout, fprintf, env);
-#endif
+            if (DEBUG_MMU) {
+                dump_mmu(stdout, fprintf, env);
+            }
         }
         break;
     case 5: /* Turbosparc ITLB Diagnostic */
@@ -1085,9 +1068,9 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, uint64_t val, int asi,
         cpu_unassigned_access(env, addr, 1, 0, asi, size);
         break;
     }
-#ifdef DEBUG_ASI
-    dump_asi("write", addr, asi, size, val);
-#endif
+    if (DEBUG_ASI) {
+        dump_asi("write", addr, asi, size, val);
+    }
 }
 
 #endif /* CONFIG_USER_ONLY */
@@ -1098,9 +1081,7 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
                        int sign)
 {
     uint64_t ret = 0;
-#if defined(DEBUG_ASI)
     target_ulong last_addr = addr;
-#endif
 
     if (asi < 0x80) {
         helper_raise_exception(env, TT_PRIV_ACT);
@@ -1113,9 +1094,9 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
     case 0x82: /* Primary no-fault */
     case 0x8a: /* Primary no-fault LE */
         if (page_check_range(addr, size, PAGE_READ) == -1) {
-#ifdef DEBUG_ASI
-            dump_asi("read ", last_addr, asi, size, ret);
-#endif
+            if (DEBUG_ASI) {
+                dump_asi("read ", last_addr, asi, size, ret);
+            }
             return 0;
         }
         /* Fall through */
@@ -1142,9 +1123,9 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
     case 0x83: /* Secondary no-fault */
     case 0x8b: /* Secondary no-fault LE */
         if (page_check_range(addr, size, PAGE_READ) == -1) {
-#ifdef DEBUG_ASI
-            dump_asi("read ", last_addr, asi, size, ret);
-#endif
+            if (DEBUG_ASI) {
+                dump_asi("read ", last_addr, asi, size, ret);
+            }
             return 0;
         }
         /* Fall through */
@@ -1195,18 +1176,18 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
             break;
         }
     }
-#ifdef DEBUG_ASI
-    dump_asi("read ", last_addr, asi, size, ret);
-#endif
+    if (DEBUG_ASI) {
+        dump_asi("read ", last_addr, asi, size, ret);
+    }
     return ret;
 }
 
 void helper_st_asi(CPUSPARCState *env, target_ulong addr, target_ulong val,
                    int asi, int size)
 {
-#ifdef DEBUG_ASI
-    dump_asi("write", addr, asi, size, val);
-#endif
+    if (DEBUG_ASI) {
+        dump_asi("write", addr, asi, size, val);
+    }
     if (asi < 0x80) {
         helper_raise_exception(env, TT_PRIV_ACT);
     }
@@ -1277,9 +1258,7 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
                        int sign)
 {
     uint64_t ret = 0;
-#if defined(DEBUG_ASI)
     target_ulong last_addr = addr;
-#endif
 
     asi &= 0xff;
 
@@ -1305,9 +1284,9 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
         }
 
         if (cpu_get_phys_page_nofault(env, addr, mmu_idx) == -1ULL) {
-#ifdef DEBUG_ASI
-            dump_asi("read ", last_addr, asi, size, ret);
-#endif
+            if (DEBUG_ASI) {
+                dump_asi("read ", last_addr, asi, size, ret);
+            }
             /* env->exception_index is set in get_physical_address_data(). */
             helper_raise_exception(env, env->exception_index);
         }
@@ -1635,18 +1614,18 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
             break;
         }
     }
-#ifdef DEBUG_ASI
-    dump_asi("read ", last_addr, asi, size, ret);
-#endif
+    if (DEBUG_ASI) {
+        dump_asi("read ", last_addr, asi, size, ret);
+    }
     return ret;
 }
 
 void helper_st_asi(CPUSPARCState *env, target_ulong addr, target_ulong val,
                    int asi, int size)
 {
-#ifdef DEBUG_ASI
-    dump_asi("write", addr, asi, size, val);
-#endif
+    if (DEBUG_ASI) {
+        dump_asi("write", addr, asi, size, val);
+    }
 
     asi &= 0xff;
 
@@ -1849,9 +1828,9 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, target_ulong val,
             if (oldreg != env->lsu) {
                 DPRINTF_MMU("LSU change: 0x%" PRIx64 " -> 0x%" PRIx64 "\n",
                             oldreg, env->lsu);
-#ifdef DEBUG_MMU
-                dump_mmu(stdout, fprintf, env);
-#endif
+                if (DEBUG_MMU) {
+                    dump_mmu(stdout, fprintf, env);
+                }
                 tlb_flush(env, 1);
             }
             return;
@@ -1895,9 +1874,9 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, target_ulong val,
                 DPRINTF_MMU("immu change reg[%d]: 0x%016" PRIx64 " -> 0x%016"
                             PRIx64 "\n", reg, oldreg, env->immuregs[reg]);
             }
-#ifdef DEBUG_MMU
-            dump_mmu(stdout, fprintf, env);
-#endif
+            if (DEBUG_MMU) {
+                dump_mmu(stdout, fprintf, env);
+            }
             return;
         }
     case 0x54: /* I-MMU data in */
@@ -1911,10 +1890,10 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, target_ulong val,
 
             replace_tlb_entry(&env->itlb[i], env->immu.tag_access, val, env);
 
-#ifdef DEBUG_MMU
             DPRINTF_MMU("immu data access replaced entry [%i]\n", i);
-            dump_mmu(stdout, fprintf, env);
-#endif
+            if (DEBUG_MMU) {
+                dump_mmu(stdout, fprintf, env);
+            }
             return;
         }
     case 0x57: /* I-MMU demap */
@@ -1968,9 +1947,9 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, target_ulong val,
                 DPRINTF_MMU("dmmu change reg[%d]: 0x%016" PRIx64 " -> 0x%016"
                             PRIx64 "\n", reg, oldreg, env->dmmuregs[reg]);
             }
-#ifdef DEBUG_MMU
-            dump_mmu(stdout, fprintf, env);
-#endif
+            if (DEBUG_MMU) {
+                dump_mmu(stdout, fprintf, env);
+            }
             return;
         }
     case 0x5c: /* D-MMU data in */
@@ -1982,10 +1961,10 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, target_ulong val,
 
             replace_tlb_entry(&env->dtlb[i], env->dmmu.tag_access, val, env);
 
-#ifdef DEBUG_MMU
             DPRINTF_MMU("dmmu data access replaced entry [%i]\n", i);
-            dump_mmu(stdout, fprintf, env);
-#endif
+            if (DEBUG_MMU) {
+                dump_mmu(stdout, fprintf, env);
+            }
             return;
         }
     case 0x5f: /* D-MMU demap */
