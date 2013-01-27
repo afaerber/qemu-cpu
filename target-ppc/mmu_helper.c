@@ -589,7 +589,8 @@ static inline int find_pte2(CPUPPCState *env, mmu_ctx_t *ctx, int is_64b, int h,
             r = pte64_check(ctx, pte0, pte1, h, rw, type);
             LOG_MMU("Load pte from " TARGET_FMT_lx " => " TARGET_FMT_lx " "
                     TARGET_FMT_lx " %d %d %d " TARGET_FMT_lx "\n",
-                    pteg_off + (i * 16), pte0, pte1, (int)(pte0 & 1), h,
+                    (target_ulong)pteg_off + (i * 16), pte0, pte1,
+                    (int)(pte0 & 1), h,
                     (int)((pte0 >> 1) & 1), ctx->ptem);
         } else
 #endif
@@ -604,7 +605,8 @@ static inline int find_pte2(CPUPPCState *env, mmu_ctx_t *ctx, int is_64b, int h,
             r = pte32_check(ctx, pte0, pte1, h, rw, type);
             LOG_MMU("Load pte from " TARGET_FMT_lx " => " TARGET_FMT_lx " "
                     TARGET_FMT_lx " %d %d %d " TARGET_FMT_lx "\n",
-                    pteg_off + (i * 8), pte0, pte1, (int)(pte0 >> 31), h,
+                    (target_ulong)pteg_off + (i * 8), pte0, pte1,
+                    (int)(pte0 >> 31), h,
                     (int)((pte0 >> 6) & 1), ctx->ptem);
         }
         switch (r) {
@@ -634,7 +636,7 @@ static inline int find_pte2(CPUPPCState *env, mmu_ctx_t *ctx, int is_64b, int h,
     if (good != -1) {
     done:
         LOG_MMU("found PTE at addr " TARGET_FMT_lx " prot=%01x ret=%d\n",
-                ctx->raddr, ctx->prot, ret);
+                (target_ulong)ctx->raddr, ctx->prot, ret);
         /* Update page flags */
         pte1 = ctx->raddr;
         if (pte_update_flags(ctx, &pte1, ret, rw) == 1) {
