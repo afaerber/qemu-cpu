@@ -30,6 +30,27 @@
 #define TYPE_X86_CPU "i386-cpu"
 #endif
 
+#define TYPE_HOST_X86_CPU "host-" TYPE_X86_CPU
+
+typedef struct x86_def_t {
+    const char *name;
+    uint32_t level;
+    /* vendor is zero-terminated, 12 character ASCII string */
+    char vendor[CPUID_VENDOR_SZ + 1];
+    int family;
+    int model;
+    int stepping;
+    uint32_t features, ext_features, ext2_features, ext3_features;
+    uint32_t kvm_features, svm_features;
+    uint32_t xlevel;
+    char model_id[48];
+    /* Store the results of Centaur's CPUID instructions */
+    uint32_t ext4_features;
+    uint32_t xlevel2;
+    /* The feature bits on CPUID[EAX=7,ECX=0].EBX */
+    uint32_t cpuid_7_0_ebx_features;
+} x86_def_t;
+
 #define X86_CPU_CLASS(klass) \
     OBJECT_CLASS_CHECK(X86CPUClass, (klass), TYPE_X86_CPU)
 #define X86_CPU(obj) \
@@ -41,6 +62,7 @@
  * X86CPUClass:
  * @parent_realize: The parent class' realize handler.
  * @parent_reset: The parent class' reset handler.
+ * @info: Model-specific data.
  *
  * An x86 CPU model or family.
  */
@@ -51,6 +73,8 @@ typedef struct X86CPUClass {
 
     DeviceRealize parent_realize;
     void (*parent_reset)(CPUState *cpu);
+
+    x86_def_t info;
 } X86CPUClass;
 
 /**

@@ -346,25 +346,6 @@ static void add_flagname_to_bitmaps(const char *flagname,
     }
 }
 
-typedef struct x86_def_t {
-    const char *name;
-    uint32_t level;
-    /* vendor is zero-terminated, 12 character ASCII string */
-    char vendor[CPUID_VENDOR_SZ + 1];
-    int family;
-    int model;
-    int stepping;
-    uint32_t features, ext_features, ext2_features, ext3_features;
-    uint32_t kvm_features, svm_features;
-    uint32_t xlevel;
-    char model_id[48];
-    /* Store the results of Centaur's CPUID instructions */
-    uint32_t ext4_features;
-    uint32_t xlevel2;
-    /* The feature bits on CPUID[EAX=7,ECX=0].EBX */
-    uint32_t cpuid_7_0_ebx_features;
-} x86_def_t;
-
 #define I486_FEATURES (CPUID_FP87 | CPUID_VME | CPUID_PSE)
 #define PENTIUM_FEATURES (I486_FEATURES | CPUID_DE | CPUID_TSC | \
           CPUID_MSR | CPUID_MCE | CPUID_CX8 | CPUID_MMX | CPUID_APIC)
@@ -868,86 +849,6 @@ static x86_def_t builtin_x86_defs[] = {
     },
 };
 
-#ifdef CONFIG_KVM
-static int cpu_x86_fill_model_id(char *str)
-{
-    uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
-    int i;
-
-    for (i = 0; i < 3; i++) {
-        host_cpuid(0x80000002 + i, 0, &eax, &ebx, &ecx, &edx);
-        memcpy(str + i * 16 +  0, &eax, 4);
-        memcpy(str + i * 16 +  4, &ebx, 4);
-        memcpy(str + i * 16 +  8, &ecx, 4);
-        memcpy(str + i * 16 + 12, &edx, 4);
-    }
-    return 0;
-}
-#endif
-
-/* Fill a x86_def_t struct with information about the host CPU, and
- * the CPU features supported by the host hardware + host kernel
- *
- * This function may be called only if KVM is enabled.
- */
-static void kvm_cpu_fill_host(x86_def_t *x86_cpu_def)
-{
-#ifdef CONFIG_KVM
-    KVMState *s = kvm_state;
-    uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
-
-    assert(kvm_enabled());
-
-    x86_cpu_def->name = "host";
-    host_cpuid(0x0, 0, &eax, &ebx, &ecx, &edx);
-    x86_cpu_vendor_words2str(x86_cpu_def->vendor, ebx, edx, ecx);
-
-    host_cpuid(0x1, 0, &eax, &ebx, &ecx, &edx);
-    x86_cpu_def->family = ((eax >> 8) & 0x0F) + ((eax >> 20) & 0xFF);
-    x86_cpu_def->model = ((eax >> 4) & 0x0F) | ((eax & 0xF0000) >> 12);
-    x86_cpu_def->stepping = eax & 0x0F;
-
-    x86_cpu_def->level = kvm_arch_get_supported_cpuid(s, 0x0, 0, R_EAX);
-    x86_cpu_def->features = kvm_arch_get_supported_cpuid(s, 0x1, 0, R_EDX);
-    x86_cpu_def->ext_features = kvm_arch_get_supported_cpuid(s, 0x1, 0, R_ECX);
-
-    if (x86_cpu_def->level >= 7) {
-        x86_cpu_def->cpuid_7_0_ebx_features =
-                    kvm_arch_get_supported_cpuid(s, 0x7, 0, R_EBX);
-    } else {
-        x86_cpu_def->cpuid_7_0_ebx_features = 0;
-    }
-
-    x86_cpu_def->xlevel = kvm_arch_get_supported_cpuid(s, 0x80000000, 0, R_EAX);
-    x86_cpu_def->ext2_features =
-                kvm_arch_get_supported_cpuid(s, 0x80000001, 0, R_EDX);
-    x86_cpu_def->ext3_features =
-                kvm_arch_get_supported_cpuid(s, 0x80000001, 0, R_ECX);
-
-    cpu_x86_fill_model_id(x86_cpu_def->model_id);
-
-    /* Call Centaur's CPUID instruction. */
-    if (!strcmp(x86_cpu_def->vendor, CPUID_VENDOR_VIA)) {
-        host_cpuid(0xC0000000, 0, &eax, &ebx, &ecx, &edx);
-        eax = kvm_arch_get_supported_cpuid(s, 0xC0000000, 0, R_EAX);
-        if (eax >= 0xC0000001) {
-            /* Support VIA max extended level */
-            x86_cpu_def->xlevel2 = eax;
-            host_cpuid(0xC0000001, 0, &eax, &ebx, &ecx, &edx);
-            x86_cpu_def->ext4_features =
-                    kvm_arch_get_supported_cpuid(s, 0xC0000001, 0, R_EDX);
-        }
-    }
-
-    /* Other KVM-specific feature fields: */
-    x86_cpu_def->svm_features =
-        kvm_arch_get_supported_cpuid(s, 0x8000000A, 0, R_EDX);
-    x86_cpu_def->kvm_features =
-        kvm_arch_get_supported_cpuid(s, KVM_CPUID_FEATURES, 0, R_EAX);
-
-#endif /* CONFIG_KVM */
-}
-
 static int unavailable_host_feature(FeatureWordInfo *f, uint32_t mask)
 {
     int i;
@@ -975,31 +876,31 @@ static int unavailable_host_feature(FeatureWordInfo *f, uint32_t mask)
 static int kvm_check_features_against_host(X86CPU *cpu)
 {
     CPUX86State *env = &cpu->env;
-    x86_def_t host_def;
+    ObjectClass *host_oc = object_class_by_name(TYPE_HOST_X86_CPU);
+    X86CPUClass *host_xcc = X86_CPU_CLASS(host_oc);
     uint32_t mask;
     int rv, i;
     struct model_features_t ft[] = {
-        {&env->cpuid_features, &host_def.features,
+        {&env->cpuid_features, &host_xcc->info.features,
             FEAT_1_EDX },
-        {&env->cpuid_ext_features, &host_def.ext_features,
+        {&env->cpuid_ext_features, &host_xcc->info.ext_features,
             FEAT_1_ECX },
-        {&env->cpuid_ext2_features, &host_def.ext2_features,
+        {&env->cpuid_ext2_features, &host_xcc->info.ext2_features,
             FEAT_8000_0001_EDX },
-        {&env->cpuid_ext3_features, &host_def.ext3_features,
+        {&env->cpuid_ext3_features, &host_xcc->info.ext3_features,
             FEAT_8000_0001_ECX },
-        {&env->cpuid_ext4_features, &host_def.ext4_features,
+        {&env->cpuid_ext4_features, &host_xcc->info.ext4_features,
             FEAT_C000_0001_EDX },
-        {&env->cpuid_7_0_ebx_features, &host_def.cpuid_7_0_ebx_features,
+        {&env->cpuid_7_0_ebx_features, &host_xcc->info.cpuid_7_0_ebx_features,
             FEAT_7_0_EBX },
-        {&env->cpuid_svm_features, &host_def.svm_features,
+        {&env->cpuid_svm_features, &host_xcc->info.svm_features,
             FEAT_SVM },
-        {&env->cpuid_kvm_features, &host_def.kvm_features,
+        {&env->cpuid_kvm_features, &host_xcc->info.kvm_features,
             FEAT_KVM },
     };
 
     assert(kvm_enabled());
 
-    kvm_cpu_fill_host(&host_def);
     for (rv = 0, i = 0; i < ARRAY_SIZE(ft); ++i) {
         FeatureWord w = ft[i].feat_word;
         FeatureWordInfo *wi = &feature_word_info[w];
@@ -1261,40 +1162,30 @@ static void x86_cpuid_set_tsc_freq(Object *obj, Visitor *v, void *opaque,
     cpu->env.tsc_khz = value / 1000;
 }
 
-static int cpu_x86_find_by_name(x86_def_t *x86_cpu_def, const char *name)
+static ObjectClass *x86_cpu_class_by_name(const char *name)
 {
-    x86_def_t *def;
-    int i;
+    ObjectClass *oc;
+    char *typename;
 
     if (name == NULL) {
-        return -1;
-    }
-    if (kvm_enabled() && strcmp(name, "host") == 0) {
-        kvm_cpu_fill_host(x86_cpu_def);
-        return 0;
+        return NULL;
     }
 
-    for (i = 0; i < ARRAY_SIZE(builtin_x86_defs); i++) {
-        def = &builtin_x86_defs[i];
-        if (strcmp(name, def->name) == 0) {
-            memcpy(x86_cpu_def, def, sizeof(*def));
-            /* sysenter isn't supported in compatibility mode on AMD,
-             * syscall isn't supported in compatibility mode on Intel.
-             * Normally we advertise the actual CPU vendor, but you can
-             * override this using the 'vendor' property if you want to use
-             * KVM's sysenter/syscall emulation in compatibility mode and
-             * when doing cross vendor migration
-             */
-            if (kvm_enabled()) {
-                uint32_t  ebx = 0, ecx = 0, edx = 0;
-                host_cpuid(0, 0, NULL, &ebx, &ecx, &edx);
-                x86_cpu_vendor_words2str(x86_cpu_def->vendor, ebx, edx, ecx);
-            }
-            return 0;
+    if (strcmp(name, "host") == 0) {
+        if (kvm_enabled()) {
+            return object_class_by_name(TYPE_HOST_X86_CPU);
         }
+        return NULL;
     }
 
-    return -1;
+    typename = g_strdup_printf("%s-" TYPE_X86_CPU, name);
+    oc = object_class_by_name(typename);
+    g_free(typename);
+    if (oc != NULL && (!object_class_dynamic_cast(oc, TYPE_X86_CPU) ||
+                       object_class_is_abstract(oc))) {
+        oc = NULL;
+    }
+    return oc;
 }
 
 /* Parse "+feature,-feature,feature=foo" CPU feature string
@@ -1516,60 +1407,13 @@ static void filter_features_for_kvm(X86CPU *cpu)
 }
 #endif
 
-static int cpu_x86_register(X86CPU *cpu, const char *name)
-{
-    CPUX86State *env = &cpu->env;
-    x86_def_t def1, *def = &def1;
-    Error *error = NULL;
-
-    memset(def, 0, sizeof(*def));
-
-    if (cpu_x86_find_by_name(def, name) < 0) {
-        error_setg(&error, "Unable to find CPU definition: %s", name);
-        goto out;
-    }
-
-    if (kvm_enabled()) {
-        def->kvm_features |= kvm_default_features;
-    }
-    def->ext_features |= CPUID_EXT_HYPERVISOR;
-
-    object_property_set_str(OBJECT(cpu), def->vendor, "vendor", &error);
-    object_property_set_int(OBJECT(cpu), def->level, "level", &error);
-    object_property_set_int(OBJECT(cpu), def->family, "family", &error);
-    object_property_set_int(OBJECT(cpu), def->model, "model", &error);
-    object_property_set_int(OBJECT(cpu), def->stepping, "stepping", &error);
-    env->cpuid_features = def->features;
-    env->cpuid_ext_features = def->ext_features;
-    env->cpuid_ext2_features = def->ext2_features;
-    env->cpuid_ext3_features = def->ext3_features;
-    object_property_set_int(OBJECT(cpu), def->xlevel, "xlevel", &error);
-    env->cpuid_kvm_features = def->kvm_features;
-    env->cpuid_svm_features = def->svm_features;
-    env->cpuid_ext4_features = def->ext4_features;
-    env->cpuid_7_0_ebx_features = def->cpuid_7_0_ebx_features;
-    env->cpuid_xlevel2 = def->xlevel2;
-
-    object_property_set_str(OBJECT(cpu), def->model_id, "model-id", &error);
-    if (error) {
-        goto out;
-    }
-
-out:
-    if (error) {
-        fprintf(stderr, "%s\n", error_get_pretty(error));
-        error_free(error);
-        return -1;
-    }
-    return 0;
-}
-
 X86CPU *cpu_x86_init(const char *cpu_model)
 {
     X86CPU *cpu = NULL;
     CPUX86State *env;
     gchar **model_pieces;
     char *name, *features;
+    ObjectClass *oc;
     Error *error = NULL;
 
     model_pieces = g_strsplit(cpu_model, ",", 2);
@@ -1580,13 +1424,13 @@ X86CPU *cpu_x86_init(const char *cpu_model)
     name = model_pieces[0];
     features = model_pieces[1];
 
-    cpu = X86_CPU(object_new(TYPE_X86_CPU));
-    env = &cpu->env;
-    env->cpu_model_str = cpu_model;
-
-    if (cpu_x86_register(cpu, name) < 0) {
+    oc = x86_cpu_class_by_name(name);
+    if (oc == NULL) {
         goto error;
     }
+    cpu = X86_CPU(object_new(object_class_get_name(oc)));
+    env = &cpu->env;
+    env->cpu_model_str = cpu_model;
 
     cpu_x86_parse_featurestr(cpu, features, &error);
     if (error) {
@@ -1620,30 +1464,6 @@ void cpu_clear_apic_feature(CPUX86State *env)
 }
 
 #endif /* !CONFIG_USER_ONLY */
-
-/* Initialize list of CPU models, filling some non-static fields if necessary
- */
-void x86_cpudef_setup(void)
-{
-    int i, j;
-    static const char *model_with_versions[] = { "qemu32", "qemu64", "athlon" };
-
-    for (i = 0; i < ARRAY_SIZE(builtin_x86_defs); ++i) {
-        x86_def_t *def = &builtin_x86_defs[i];
-
-        /* Look for specific "cpudef" models that */
-        /* have the QEMU version in .model_id */
-        for (j = 0; j < ARRAY_SIZE(model_with_versions); j++) {
-            if (strcmp(model_with_versions[j], def->name) == 0) {
-                pstrcpy(def->model_id, sizeof(def->model_id),
-                        "QEMU Virtual CPU version ");
-                pstrcat(def->model_id, sizeof(def->model_id),
-                        qemu_get_version());
-                break;
-            }
-        }
-    }
-}
 
 static void get_cpuid_vendor(CPUX86State *env, uint32_t *ebx,
                              uint32_t *ecx, uint32_t *edx)
@@ -2198,6 +2018,8 @@ static void x86_cpu_initfn(Object *obj)
     CPUState *cs = CPU(obj);
     X86CPU *cpu = X86_CPU(obj);
     CPUX86State *env = &cpu->env;
+    X86CPUClass *xcc = X86_CPU_GET_CLASS(obj);
+    const x86_def_t *def = &xcc->info;
     static int inited;
 
     cpu_exec_init(env);
@@ -2227,6 +2049,41 @@ static void x86_cpu_initfn(Object *obj)
                         x86_cpuid_get_tsc_freq,
                         x86_cpuid_set_tsc_freq, NULL, NULL, NULL);
 
+    /* sysenter isn't supported in compatibility mode on AMD,
+     * syscall isn't supported in compatibility mode on Intel.
+     * Normally we advertise the actual CPU vendor, but you can
+     * override this using the 'vendor' property if you want to use
+     * KVM's sysenter/syscall emulation in compatibility mode and
+     * when doing cross vendor migration
+     */
+    if (kvm_enabled()) {
+        host_cpuid(0, 0, NULL, &env->cpuid_vendor1, &env->cpuid_vendor2,
+                   &env->cpuid_vendor3);
+    } else {
+        object_property_set_str(OBJECT(cpu), def->vendor, "vendor", NULL);
+    }
+
+    object_property_set_int(OBJECT(cpu), def->level, "level", NULL);
+    object_property_set_int(OBJECT(cpu), def->family, "family", NULL);
+    object_property_set_int(OBJECT(cpu), def->model, "model", NULL);
+    object_property_set_int(OBJECT(cpu), def->stepping, "stepping", NULL);
+    env->cpuid_features = def->features;
+    env->cpuid_ext_features = def->ext_features;
+    env->cpuid_ext_features |= CPUID_EXT_HYPERVISOR;
+    env->cpuid_ext2_features = def->ext2_features;
+    env->cpuid_ext3_features = def->ext3_features;
+    object_property_set_int(OBJECT(cpu), def->xlevel, "xlevel", NULL);
+    env->cpuid_kvm_features = def->kvm_features;
+    if (kvm_enabled()) {
+        env->cpuid_kvm_features |= kvm_default_features;
+    }
+    env->cpuid_svm_features = def->svm_features;
+    env->cpuid_ext4_features = def->ext4_features;
+    env->cpuid_7_0_ebx_features = def->cpuid_7_0_ebx_features;
+    env->cpuid_xlevel2 = def->xlevel2;
+
+    object_property_set_str(OBJECT(cpu), def->model_id, "model-id", NULL);
+
     env->cpuid_apic_id = x86_cpu_apic_id_from_index(cs->cpu_index);
 
     /* init various static tables used in TCG mode */
@@ -2236,6 +2093,27 @@ static void x86_cpu_initfn(Object *obj)
 #ifndef CONFIG_USER_ONLY
         cpu_set_debug_excp_handler(breakpoint_handler);
 #endif
+    }
+}
+
+static void x86_cpu_def_class_init(ObjectClass *oc, void *data)
+{
+    X86CPUClass *xcc = X86_CPU_CLASS(oc);
+    x86_def_t *def = data;
+    int i;
+    static const char *versioned_models[] = { "qemu32", "qemu64", "athlon" };
+
+    memcpy(&xcc->info, def, sizeof(x86_def_t));
+
+    /* Look for specific models that have the QEMU version in .model_id */
+    for (i = 0; i < ARRAY_SIZE(versioned_models); i++) {
+        if (strcmp(versioned_models[i], def->name) == 0) {
+            pstrcpy(xcc->info.model_id, sizeof(xcc->info.model_id),
+                    "QEMU Virtual CPU version ");
+            pstrcat(xcc->info.model_id, sizeof(xcc->info.model_id),
+                    qemu_get_version());
+            break;
+        }
     }
 }
 
@@ -2250,6 +2128,21 @@ static void x86_cpu_common_class_init(ObjectClass *oc, void *data)
 
     xcc->parent_reset = cc->reset;
     cc->reset = x86_cpu_reset;
+
+    cc->class_by_name = x86_cpu_class_by_name;
+}
+
+static void x86_register_cpu_type(const x86_def_t *def)
+{
+    TypeInfo type_info = {
+        .parent = TYPE_X86_CPU,
+        .class_init = x86_cpu_def_class_init,
+        .class_data = (void *)def,
+    };
+
+    type_info.name = g_strdup_printf("%s-" TYPE_X86_CPU, def->name);
+    type_register(&type_info);
+    g_free((void *)type_info.name);
 }
 
 static const TypeInfo x86_cpu_type_info = {
@@ -2257,14 +2150,19 @@ static const TypeInfo x86_cpu_type_info = {
     .parent = TYPE_CPU,
     .instance_size = sizeof(X86CPU),
     .instance_init = x86_cpu_initfn,
-    .abstract = false,
+    .abstract = true,
     .class_size = sizeof(X86CPUClass),
     .class_init = x86_cpu_common_class_init,
 };
 
 static void x86_cpu_register_types(void)
 {
+    int i;
+
     type_register_static(&x86_cpu_type_info);
+    for (i = 0; i < ARRAY_SIZE(builtin_x86_defs); i++) {
+        x86_register_cpu_type(&builtin_x86_defs[i]);
+    }
 }
 
 type_init(x86_cpu_register_types)
