@@ -1119,13 +1119,6 @@ void do_smbios_option(const char *optarg)
 #endif
 }
 
-void cpudef_init(void)
-{
-#if defined(cpudef_setup)
-    cpudef_setup(); /* parse cpu definitions in target config file */
-#endif
-}
-
 int audio_available(void)
 {
 #ifdef HAS_AUDIO
