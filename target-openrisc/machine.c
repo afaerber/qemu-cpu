@@ -20,28 +20,21 @@
 #include "hw/hw.h"
 #include "hw/boards.h"
 
-static const VMStateDescription vmstate_cpu = {
+const VMStateDescription vmstate_openrisc_cpu = {
     .name = "cpu",
+    .version_id = 1,
+    .minimum_version_id = 1,
+    .minimum_version_id_old = 1,
     .fields = (VMStateField[]) {
-        VMSTATE_UINT32_ARRAY(gpr, CPUOpenRISCState, 32),
-        VMSTATE_UINT32(sr, CPUOpenRISCState),
-        VMSTATE_UINT32(epcr, CPUOpenRISCState),
-        VMSTATE_UINT32(eear, CPUOpenRISCState),
-        VMSTATE_UINT32(esr, CPUOpenRISCState),
-        VMSTATE_UINT32(fpcsr, CPUOpenRISCState),
-        VMSTATE_UINT32(pc, CPUOpenRISCState),
-        VMSTATE_UINT32(npc, CPUOpenRISCState),
-        VMSTATE_UINT32(ppc, CPUOpenRISCState),
+        VMSTATE_UINT32_ARRAY(env.gpr, OpenRISCCPU, 32),
+        VMSTATE_UINT32(env.sr, OpenRISCCPU),
+        VMSTATE_UINT32(env.epcr, OpenRISCCPU),
+        VMSTATE_UINT32(env.eear, OpenRISCCPU),
+        VMSTATE_UINT32(env.esr, OpenRISCCPU),
+        VMSTATE_UINT32(env.fpcsr, OpenRISCCPU),
+        VMSTATE_UINT32(env.pc, OpenRISCCPU),
+        VMSTATE_UINT32(env.npc, OpenRISCCPU),
+        VMSTATE_UINT32(env.ppc, OpenRISCCPU),
         VMSTATE_END_OF_LIST()
     }
 };
-
-void cpu_save(QEMUFile *f, void *opaque)
-{
-    vmstate_save_state(f, &vmstate_cpu, opaque);
-}
-
-int cpu_load(QEMUFile *f, void *opaque, int version_id)
-{
-    return vmstate_load_state(f, &vmstate_cpu, opaque, version_id);
-}

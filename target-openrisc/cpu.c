@@ -146,6 +146,9 @@ static void openrisc_cpu_class_init(ObjectClass *oc, void *data)
     cc->reset = openrisc_cpu_reset;
 
     cc->class_by_name = openrisc_cpu_class_by_name;
+#ifndef CONFIG_USER_ONLY
+    cc->vmsd = &vmstate_openrisc_cpu;
+#endif
 }
 
 static void cpu_register(const OpenRISCCPUInfo *info)
