@@ -81,6 +81,10 @@ static void lm32_cpu_class_init(ObjectClass *oc, void *data)
 
     lcc->parent_reset = cc->reset;
     cc->reset = lm32_cpu_reset;
+
+#ifndef CONFIG_USER_ONLY
+    cc->vmsd = &vmstate_lm32_cpu;
+#endif
 }
 
 static const TypeInfo lm32_cpu_type_info = {
