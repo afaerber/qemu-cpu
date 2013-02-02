@@ -357,7 +357,11 @@ int cpu_openrisc_signal_handler(int host_signum, void *pinfo, void *puc);
 #define cpu_handle_mmu_fault cpu_openrisc_handle_mmu_fault
 #define cpu_signal_handler cpu_openrisc_signal_handler
 
-#ifndef CONFIG_USER_ONLY
+#ifdef CONFIG_USER_ONLY
+#define vmstate_openrisc_cpu vmstate_dummy
+#else
+extern const struct VMStateDescription vmstate_openrisc_cpu;
+
 /* hw/openrisc_pic.c */
 void cpu_openrisc_pic_init(OpenRISCCPU *cpu);
 

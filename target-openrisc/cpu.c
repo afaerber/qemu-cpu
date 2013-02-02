@@ -19,6 +19,7 @@
 
 #include "cpu.h"
 #include "qemu-common.h"
+#include "migration/vmstate.h"
 
 /* CPUClass::reset() */
 static void openrisc_cpu_reset(CPUState *s)
@@ -148,6 +149,7 @@ static void openrisc_cpu_class_init(ObjectClass *oc, void *data)
     cc->reset = openrisc_cpu_reset;
 
     cc->class_by_name = openrisc_cpu_class_by_name;
+    cc->vmsd = &vmstate_openrisc_cpu;
 }
 
 static void cpu_register(const OpenRISCCPUInfo *info)
