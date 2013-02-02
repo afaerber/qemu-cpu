@@ -80,5 +80,7 @@ static inline PowerPCCPU *ppc_env_get_cpu(CPUPPCState *env)
 
 PowerPCCPUClass *ppc_cpu_class_by_pvr(uint32_t pvr);
 
+void ppc_cpu_do_interrupt(CPUState *cpu);
+
 
 #endif

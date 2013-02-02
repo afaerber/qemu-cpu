@@ -97,6 +97,8 @@ static void cris_cpu_class_init(ObjectClass *oc, void *data)
 
     ccc->parent_reset = cc->reset;
     cc->reset = cris_cpu_reset;
+
+    cc->do_interrupt = cris_cpu_do_interrupt;
 }
 
 static const TypeInfo cris_cpu_type_info = {

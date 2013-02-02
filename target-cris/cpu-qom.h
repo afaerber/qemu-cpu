@@ -68,5 +68,7 @@ static inline CRISCPU *cris_env_get_cpu(CPUCRISState *env)
 
 #define ENV_GET_CPU(e) CPU(cris_env_get_cpu(e))
 
+void cris_cpu_do_interrupt(CPUState *cpu);
+
 
 #endif

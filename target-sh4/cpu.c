@@ -98,6 +98,7 @@ static void superh_cpu_class_init(ObjectClass *oc, void *data)
     scc->parent_reset = cc->reset;
     cc->reset = superh_cpu_reset;
 
+    cc->do_interrupt = superh_cpu_do_interrupt;
     dc->vmsd = &vmstate_sh_cpu;
 }
 

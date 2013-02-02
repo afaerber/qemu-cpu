@@ -74,5 +74,11 @@ static inline X86CPU *x86_env_get_cpu(CPUX86State *env)
 
 #define ENV_GET_CPU(e) CPU(x86_env_get_cpu(e))
 
+/**
+ * x86_cpu_do_interrupt:
+ * @cpu: vCPU the interrupt is to be handled by.
+ */
+void x86_cpu_do_interrupt(CPUState *cpu);
+
 
 #endif

@@ -44,6 +44,7 @@ typedef struct CPUState CPUState;
  * @class_by_name: Callback to map -cpu command line model name to an
  * instantiatable CPU type.
  * @reset: Callback to reset the #CPUState to its initial state.
+ * @do_interrupt: Callback for interrupt handling.
  *
  * Represents a CPU family or model.
  */
@@ -55,6 +56,7 @@ typedef struct CPUClass {
     ObjectClass *(*class_by_name)(const char *cpu_model);
 
     void (*reset)(CPUState *cpu);
+    void (*do_interrupt)(CPUState *cpu);
 } CPUClass;
 
 struct KVMState;

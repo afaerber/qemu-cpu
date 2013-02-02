@@ -58,5 +58,7 @@ static inline UniCore32CPU *uc32_env_get_cpu(CPUUniCore32State *env)
 
 #define ENV_GET_CPU(e) CPU(uc32_env_get_cpu(e))
 
+void uc32_cpu_do_interrupt(CPUState *cpu);
+
 
 #endif

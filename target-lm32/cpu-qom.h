@@ -69,5 +69,7 @@ static inline LM32CPU *lm32_env_get_cpu(CPULM32State *env)
 
 #define ENV_GET_CPU(e) CPU(lm32_env_get_cpu(e))
 
+void lm32_cpu_do_interrupt(CPUState *cpu);
+
 
 #endif

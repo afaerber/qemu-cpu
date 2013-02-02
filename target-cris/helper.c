@@ -36,8 +36,11 @@
 
 #if defined(CONFIG_USER_ONLY)
 
-void do_interrupt(CPUCRISState *env)
+void cris_cpu_do_interrupt(CPUState *cs)
 {
+    CRISCPU *cpu = CRIS_CPU(cs);
+    CPUCRISState *env = &cpu->env;
+
     env->exception_index = -1;
     env->pregs[PR_ERP] = env->pc;
 }
@@ -162,9 +165,10 @@ static void do_interruptv10(CPUCRISState *env)
                   env->pregs[PR_ERP]);
 }
 
-void do_interrupt(CPUCRISState *env)
+void cris_cpu_do_interrupt(CPUState *cs)
 {
-    D(CPUState *cpu = CPU(cris_env_get_cpu(env)));
+    CRISCPU *cpu = CRIS_CPU(cs);
+    CPUCRISState *env = &cpu->env;
     int ex_vec = -1;
 
     if (env->pregs[PR_VR] < 32) {
@@ -173,7 +177,7 @@ void do_interrupt(CPUCRISState *env)
 
     D_LOG("exception index=%d interrupt_req=%d\n",
           env->exception_index,
-          cpu->interrupt_request);
+          cs->interrupt_request);
 
     switch (env->exception_index) {
     case EXCP_BREAK:
