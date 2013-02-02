@@ -2239,6 +2239,8 @@ static void x86_cpu_common_class_init(ObjectClass *oc, void *data)
 
     xcc->parent_reset = cc->reset;
     cc->reset = x86_cpu_reset;
+
+    cc->vmsd = &vmstate_x86_cpu;
 }
 
 static const TypeInfo x86_cpu_type_info = {

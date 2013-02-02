@@ -74,5 +74,11 @@ static inline X86CPU *x86_env_get_cpu(CPUX86State *env)
 
 #define ENV_GET_CPU(e) CPU(x86_env_get_cpu(e))
 
+#ifdef CONFIG_USER_ONLY
+#define vmstate_x86_cpu vmstate_dummy
+#else
+extern const struct VMStateDescription vmstate_x86_cpu;
+#endif
+
 
 #endif
