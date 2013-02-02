@@ -69,5 +69,11 @@ static inline LM32CPU *lm32_env_get_cpu(CPULM32State *env)
 
 #define ENV_GET_CPU(e) CPU(lm32_env_get_cpu(e))
 
+#ifdef CONFIG_USER_ONLY
+#define vmstate_lm32_cpu vmstate_dummy
+#else
+extern const struct VMStateDescription vmstate_lm32_cpu;
+#endif
+
 
 #endif
