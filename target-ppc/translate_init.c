@@ -7234,7 +7234,6 @@ enum {
     CPU_POWERPC_601_v2             = 0x00010002,
     CPU_POWERPC_602                = 0x00050100,
     CPU_POWERPC_603                = 0x00030100,
-#define CPU_POWERPC_603E             CPU_POWERPC_603E_v41
     CPU_POWERPC_603E_v11           = 0x00060101,
     CPU_POWERPC_603E_v12           = 0x00060102,
     CPU_POWERPC_603E_v13           = 0x00060103,
@@ -8610,8 +8609,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("602",           CPU_POWERPC_602,                    602)
     /* PowerPC 603                                                           */
     POWERPC_DEF("603",           CPU_POWERPC_603,                    603)
-    /* PowerPC 603e (aka PID6)                                               */
-    POWERPC_DEF("603e",          CPU_POWERPC_603E,                   603E)
     /* PowerPC 603e v1.1                                                     */
     POWERPC_DEF("603e_v1.1",     CPU_POWERPC_603E_v11,               603E)
     /* PowerPC 603e v1.2                                                     */
@@ -9117,6 +9114,8 @@ static const PowerPCCPUAlias ppc_cpu_aliases[] = {
     { "e500", "e500v2_v22" },
     /* Code name for PowerPC 603 */
     { "Vanilla", "603" },
+    /* PowerPC 603e (aka PID6) */
+    { "603e", "603e_v4.1" },
     /* Code name for PowerPC 603e */
     { "Stretch", "603e" },
     /* Code name for PowerPC 603ev */
