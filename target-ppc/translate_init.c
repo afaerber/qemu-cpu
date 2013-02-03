@@ -7252,7 +7252,6 @@ enum {
 #define CPU_POWERPC_603R             CPU_POWERPC_603E7t
     /* XXX: missing 0x00040303 (604) */
     CPU_POWERPC_604                = 0x00040103,
-#define CPU_POWERPC_604E             CPU_POWERPC_604E_v24
     /* XXX: missing 0x00091203 */
     /* XXX: missing 0x00092110 */
     /* XXX: missing 0x00092120 */
@@ -8645,8 +8644,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("603r",          CPU_POWERPC_603R,                   603E)
     /* PowerPC 604                                                           */
     POWERPC_DEF("604",           CPU_POWERPC_604,                    604)
-    /* PowerPC 604e (aka PID9)                                               */
-    POWERPC_DEF("604e",          CPU_POWERPC_604E,                   604E)
     /* PowerPC 604e v1.0                                                     */
     POWERPC_DEF("604e_v1.0",     CPU_POWERPC_604E_v10,               604E)
     /* PowerPC 604e v2.2                                                     */
@@ -9126,6 +9123,8 @@ static const PowerPCCPUAlias ppc_cpu_aliases[] = {
     { "Vaillant", "603e7v" },
     /* Code name for PowerPC 603r */
     { "Goldeneye", "603r" },
+    /* PowerPC 604e (aka PID9) */
+    { "604e", "604e_v2.4" },
     /* Code name for PowerPC 604e */
     { "Sirocco", "604e" },
     /* Code name for PowerPC 604r */
