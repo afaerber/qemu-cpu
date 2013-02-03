@@ -6854,8 +6854,6 @@ enum {
     CPU_POWERPC_XIPCHIP            = xxx,
 #endif
     /* PowerPC 403 family */
-    /* Generic PowerPC 403 */
-#define CPU_POWERPC_403              CPU_POWERPC_403GC
     /* PowerPC 403 microcontrollers */
     CPU_POWERPC_403GA              = 0x00200011,
     CPU_POWERPC_403GB              = 0x00200100,
@@ -6865,8 +6863,6 @@ enum {
     CPU_POWERPC_403GP              = xxx,
 #endif
     /* PowerPC 405 family */
-    /* Generic PowerPC 405 */
-#define CPU_POWERPC_405              CPU_POWERPC_405D4
     /* PowerPC 405 cores */
 #if 0
     CPU_POWERPC_405A3              = xxx,
@@ -6908,7 +6904,6 @@ enum {
 #endif
     /* PowerPC 405 microcontrolers */
     /* XXX: missing 0x200108a0 */
-#define CPU_POWERPC_405CR            CPU_POWERPC_405CRc
     CPU_POWERPC_405CRa             = 0x40110041,
     CPU_POWERPC_405CRb             = 0x401100C5,
     CPU_POWERPC_405CRc             = 0x40110145,
@@ -6920,7 +6915,6 @@ enum {
 #if 0
     CPU_POWERPC_405FX              = xxx,
 #endif
-#define CPU_POWERPC_405GP            CPU_POWERPC_405GPd
     CPU_POWERPC_405GPa             = 0x40110000,
     CPU_POWERPC_405GPb             = 0x40110040,
     CPU_POWERPC_405GPc             = 0x40110082,
@@ -6981,9 +6975,7 @@ enum {
 #endif
     /* Xilinx cores */
     CPU_POWERPC_X2VP4              = 0x20010820,
-#define CPU_POWERPC_X2VP7            CPU_POWERPC_X2VP4
     CPU_POWERPC_X2VP20             = 0x20010860,
-#define CPU_POWERPC_X2VP50           CPU_POWERPC_X2VP20
 #if 0
     CPU_POWERPC_ZL10310            = xxx,
 #endif
@@ -7703,8 +7695,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("Xipchip",       CPU_POWERPC_XIPCHIP,                401)
 #endif
     /* PowerPC 403 family                                                    */
-    /* Generic PowerPC 403                                                   */
-    POWERPC_DEF("403",           CPU_POWERPC_403,                    403)
     /* PowerPC 403 microcontrolers                                           */
     /* PowerPC 403 GA                                                        */
     POWERPC_DEF("403GA",         CPU_POWERPC_403GA,                  403)
@@ -7719,8 +7709,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("403GP",         CPU_POWERPC_403GP,                  403)
 #endif
     /* PowerPC 405 family                                                    */
-    /* Generic PowerPC 405                                                   */
-    POWERPC_DEF("405",           CPU_POWERPC_405,                    405)
     /* PowerPC 405 cores                                                     */
 #if defined (TODO)
     /* PowerPC 405 A3                                                        */
@@ -7775,8 +7763,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("405F6",         CPU_POWERPC_405F6,                  405)
 #endif
     /* PowerPC 405 microcontrolers                                           */
-    /* PowerPC 405 CR                                                        */
-    POWERPC_DEF("405CR",         CPU_POWERPC_405CR,                  405)
     /* PowerPC 405 CRa                                                       */
     POWERPC_DEF("405CRa",        CPU_POWERPC_405CRa,                 405)
     /* PowerPC 405 CRb                                                       */
@@ -7795,8 +7781,6 @@ static const ppc_def_t ppc_defs[] = {
     /* PowerPC 405 FX                                                        */
     POWERPC_DEF("405FX",         CPU_POWERPC_405FX,                  405)
 #endif
-    /* PowerPC 405 GP                                                        */
-    POWERPC_DEF("405GP",         CPU_POWERPC_405GP,                  405)
     /* PowerPC 405 GPa                                                       */
     POWERPC_DEF("405GPa",        CPU_POWERPC_405GPa,                 405)
     /* PowerPC 405 GPb                                                       */
@@ -7882,9 +7866,7 @@ static const ppc_def_t ppc_defs[] = {
 #endif
     /* Xilinx PowerPC 405 cores                                              */
     POWERPC_DEF("x2vp4",         CPU_POWERPC_X2VP4,                  405)
-    POWERPC_DEF("x2vp7",         CPU_POWERPC_X2VP7,                  405)
     POWERPC_DEF("x2vp20",        CPU_POWERPC_X2VP20,                 405)
-    POWERPC_DEF("x2vp50",        CPU_POWERPC_X2VP50,                 405)
 #if defined (TODO)
     /* Zarlink ZL10310                                                       */
     POWERPC_DEF("zl10310",       CPU_POWERPC_ZL10310,                405)
@@ -9162,6 +9144,16 @@ typedef struct PowerPCCPUAlias {
 } PowerPCCPUAlias;
 
 static const PowerPCCPUAlias ppc_cpu_aliases[] = {
+    /* Generic PowerPC 403 */
+    { "403", "403GC" },
+    /* Generic PowerPC 405 */
+    { "405", "405D4" },
+    /* PowerPC 405 CR */
+    { "405CR", "405CRc" },
+    /* PowerPC 405 GP */
+    { "405GP", "405GPd" },
+    { "x2vp7", "x2vp4" },
+    { "x2vp50", "x2vp20" },
     /* Codename for MPC5xx core */
     { "RCPU", "MPC5xx" },
     /* MPC5xx microcontrollers */
