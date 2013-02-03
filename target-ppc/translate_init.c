@@ -7332,7 +7332,6 @@ enum {
 #endif
     /* PowerPC 74xx cores (aka G4) */
     /* XXX: missing 0x000C1101 */
-#define CPU_POWERPC_7400             CPU_POWERPC_7400_v29
     CPU_POWERPC_7400_v10           = 0x000C0100,
     CPU_POWERPC_7400_v11           = 0x000C0101,
     CPU_POWERPC_7400_v20           = 0x000C0200,
@@ -8832,8 +8831,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("755p",          CPU_POWERPC_7x5P,                   755)
 #endif
     /* PowerPC 74xx family                                                   */
-    /* PowerPC 7400 (G4)                                                     */
-    POWERPC_DEF("7400",          CPU_POWERPC_7400,                   7400)
     /* PowerPC 7400 v1.0 (G4)                                                */
     POWERPC_DEF("7400_v1.0",     CPU_POWERPC_7400_v10,               7400)
     /* PowerPC 7400 v1.1 (G4)                                                */
@@ -9173,6 +9170,8 @@ static const PowerPCCPUAlias ppc_cpu_aliases[] = {
     { "LoneStar", "750l" },
     /* Code name for PowerPC 745/755 */
     { "Goldfinger", "755" },
+    /* PowerPC 7400 (G4) */
+    { "7400", "7400_v2.9" },
     /* Code name for PowerPC 7400 */
     { "Max", "7400" },
     /* PowerPC 74xx is also well known as G4 */
