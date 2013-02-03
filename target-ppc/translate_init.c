@@ -8085,10 +8085,6 @@ static const ppc_def_t ppc_defs[] = {
     /* Generic MPC5xx core                                                   */
     POWERPC_DEF("MPC5xx",        CPU_POWERPC_MPC5xx,                 MPC5xx)
 #endif
-#if defined(TODO_USER_ONLY)
-    /* Codename for MPC5xx core                                              */
-    POWERPC_DEF("RCPU",          CPU_POWERPC_MPC5xx,                 MPC5xx)
-#endif
     /* MPC5xx microcontrollers                                               */
 #if defined(TODO_USER_ONLY)
     /* MGT560                                                                */
@@ -8146,10 +8142,6 @@ static const ppc_def_t ppc_defs[] = {
 #if defined(TODO_USER_ONLY)
     /* Generic MPC8xx core                                                   */
     POWERPC_DEF("MPC8xx",        CPU_POWERPC_MPC8xx,                 MPC8xx)
-#endif
-#if defined(TODO_USER_ONLY)
-    /* Codename for MPC8xx core                                              */
-    POWERPC_DEF("PowerQUICC",    CPU_POWERPC_MPC8xx,                 MPC8xx)
 #endif
     /* MPC8xx microcontrollers                                               */
 #if defined(TODO_USER_ONLY)
@@ -8218,8 +8210,6 @@ static const ppc_def_t ppc_defs[] = {
                     CPU_POWERPC_MPC52xx,      POWERPC_SVR_52xx,      G2LE)
     /* Generic MPC82xx core                                                  */
     POWERPC_DEF("MPC82xx",       CPU_POWERPC_MPC82xx,                G2)
-    /* Codename for MPC82xx                                                  */
-    POWERPC_DEF("PowerQUICC-II", CPU_POWERPC_MPC82xx,                G2)
     /* PowerPC G2 core                                                       */
     POWERPC_DEF("G2",            CPU_POWERPC_G2,                     G2)
     /* PowerPC G2 H4 core                                                    */
@@ -8614,8 +8604,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF_SVR("MPC8379E",
                     CPU_POWERPC_MPC837x,      POWERPC_SVR_8379E,     e300)
     /* e500 family                                                           */
-    /* PowerPC e500 core                                                     */
-    POWERPC_DEF("e500",          CPU_POWERPC_e500v2_v22,             e500v2)
     /* PowerPC e500v1 core                                                   */
     POWERPC_DEF("e500v1",        CPU_POWERPC_e500v1,                 e500v1)
     /* PowerPC e500 v1.0 core                                                */
@@ -8870,12 +8858,8 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("602",           CPU_POWERPC_602,                    602)
     /* PowerPC 603                                                           */
     POWERPC_DEF("603",           CPU_POWERPC_603,                    603)
-    /* Code name for PowerPC 603                                             */
-    POWERPC_DEF("Vanilla",       CPU_POWERPC_603,                    603)
     /* PowerPC 603e (aka PID6)                                               */
     POWERPC_DEF("603e",          CPU_POWERPC_603E,                   603E)
-    /* Code name for PowerPC 603e                                            */
-    POWERPC_DEF("Stretch",       CPU_POWERPC_603E,                   603E)
     /* PowerPC 603e v1.1                                                     */
     POWERPC_DEF("603e_v1.1",     CPU_POWERPC_603E_v11,               603E)
     /* PowerPC 603e v1.2                                                     */
@@ -8898,8 +8882,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("603e7t",        CPU_POWERPC_603E7t,                 603E)
     /* PowerPC 603e7v                                                        */
     POWERPC_DEF("603e7v",        CPU_POWERPC_603E7v,                 603E)
-    /* Code name for PowerPC 603ev                                           */
-    POWERPC_DEF("Vaillant",      CPU_POWERPC_603E7v,                 603E)
     /* PowerPC 603e7v1                                                       */
     POWERPC_DEF("603e7v1",       CPU_POWERPC_603E7v1,                603E)
     /* PowerPC 603e7v2                                                       */
@@ -8908,14 +8890,10 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("603p",          CPU_POWERPC_603P,                   603E)
     /* PowerPC 603r (aka PID7t)                                              */
     POWERPC_DEF("603r",          CPU_POWERPC_603R,                   603E)
-    /* Code name for PowerPC 603r                                            */
-    POWERPC_DEF("Goldeneye",     CPU_POWERPC_603R,                   603E)
     /* PowerPC 604                                                           */
     POWERPC_DEF("604",           CPU_POWERPC_604,                    604)
     /* PowerPC 604e (aka PID9)                                               */
     POWERPC_DEF("604e",          CPU_POWERPC_604E,                   604E)
-    /* Code name for PowerPC 604e                                            */
-    POWERPC_DEF("Sirocco",       CPU_POWERPC_604E,                   604E)
     /* PowerPC 604e v1.0                                                     */
     POWERPC_DEF("604e_v1.0",     CPU_POWERPC_604E_v10,               604E)
     /* PowerPC 604e v2.2                                                     */
@@ -8924,8 +8902,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("604e_v2.4",     CPU_POWERPC_604E_v24,               604E)
     /* PowerPC 604r (aka PIDA)                                               */
     POWERPC_DEF("604r",          CPU_POWERPC_604R,                   604E)
-    /* Code name for PowerPC 604r                                            */
-    POWERPC_DEF("Mach5",         CPU_POWERPC_604R,                   604E)
 #if defined(TODO)
     /* PowerPC 604ev                                                         */
     POWERPC_DEF("604ev",         CPU_POWERPC_604EV,                  604E)
@@ -8933,14 +8909,8 @@ static const ppc_def_t ppc_defs[] = {
     /* PowerPC 7xx family                                                    */
     /* Generic PowerPC 740 (G3)                                              */
     POWERPC_DEF("740",           CPU_POWERPC_7x0,                    740)
-    /* Code name for PowerPC 740                                             */
-    POWERPC_DEF("Arthur",        CPU_POWERPC_7x0,                    740)
     /* Generic PowerPC 750 (G3)                                              */
     POWERPC_DEF("750",           CPU_POWERPC_7x0,                    750)
-    /* Code name for PowerPC 750                                             */
-    POWERPC_DEF("Typhoon",       CPU_POWERPC_7x0,                    750)
-    /* PowerPC 740/750 is also known as G3                                   */
-    POWERPC_DEF("G3",            CPU_POWERPC_7x0,                    750)
     /* PowerPC 740 v1.0 (G3)                                                 */
     POWERPC_DEF("740_v1.0",      CPU_POWERPC_7x0_v10,                740)
     /* PowerPC 750 v1.0 (G3)                                                 */
@@ -8973,8 +8943,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("740p",          CPU_POWERPC_7x0P,                   740)
     /* PowerPC 750P (G3)                                                     */
     POWERPC_DEF("750p",          CPU_POWERPC_7x0P,                   750)
-    /* Code name for PowerPC 740P/750P (G3)                                  */
-    POWERPC_DEF("Conan/Doyle",   CPU_POWERPC_7x0P,                   750)
     /* PowerPC 750CL (G3 embedded)                                           */
     POWERPC_DEF("750cl",         CPU_POWERPC_750CL,                  750cl)
     /* PowerPC 750CL v1.0                                                    */
@@ -9037,8 +9005,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("750gx_v1.2",    CPU_POWERPC_750GX_v12,              750gx)
     /* PowerPC 750L (G3 embedded)                                            */
     POWERPC_DEF("750l",          CPU_POWERPC_750L,                   750)
-    /* Code name for PowerPC 750L (G3 embedded)                              */
-    POWERPC_DEF("LoneStar",      CPU_POWERPC_750L,                   750)
     /* PowerPC 750L v2.0 (G3 embedded)                                       */
     POWERPC_DEF("750l_v2.0",     CPU_POWERPC_750L_v20,               750)
     /* PowerPC 750L v2.1 (G3 embedded)                                       */
@@ -9053,8 +9019,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("745",           CPU_POWERPC_7x5,                    745)
     /* Generic PowerPC 755                                                   */
     POWERPC_DEF("755",           CPU_POWERPC_7x5,                    755)
-    /* Code name for PowerPC 745/755                                         */
-    POWERPC_DEF("Goldfinger",    CPU_POWERPC_7x5,                    755)
     /* PowerPC 745 v1.0                                                      */
     POWERPC_DEF("745_v1.0",      CPU_POWERPC_7x5_v10,                745)
     /* PowerPC 755 v1.0                                                      */
@@ -9108,10 +9072,6 @@ static const ppc_def_t ppc_defs[] = {
     /* PowerPC 74xx family                                                   */
     /* PowerPC 7400 (G4)                                                     */
     POWERPC_DEF("7400",          CPU_POWERPC_7400,                   7400)
-    /* Code name for PowerPC 7400                                            */
-    POWERPC_DEF("Max",           CPU_POWERPC_7400,                   7400)
-    /* PowerPC 74xx is also well known as G4                                 */
-    POWERPC_DEF("G4",            CPU_POWERPC_7400,                   7400)
     /* PowerPC 7400 v1.0 (G4)                                                */
     POWERPC_DEF("7400_v1.0",     CPU_POWERPC_7400_v10,               7400)
     /* PowerPC 7400 v1.1 (G4)                                                */
@@ -9132,8 +9092,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("7400_v2.9",     CPU_POWERPC_7400_v29,               7400)
     /* PowerPC 7410 (G4)                                                     */
     POWERPC_DEF("7410",          CPU_POWERPC_7410,                   7410)
-    /* Code name for PowerPC 7410                                            */
-    POWERPC_DEF("Nitro",         CPU_POWERPC_7410,                   7410)
     /* PowerPC 7410 v1.0 (G4)                                                */
     POWERPC_DEF("7410_v1.0",     CPU_POWERPC_7410_v10,               7410)
     /* PowerPC 7410 v1.1 (G4)                                                */
@@ -9156,8 +9114,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("7448_v2.1",     CPU_POWERPC_7448_v21,               7400)
     /* PowerPC 7450 (G4)                                                     */
     POWERPC_DEF("7450",          CPU_POWERPC_7450,                   7450)
-    /* Code name for PowerPC 7450                                            */
-    POWERPC_DEF("Vger",          CPU_POWERPC_7450,                   7450)
     /* PowerPC 7450 v1.0 (G4)                                                */
     POWERPC_DEF("7450_v1.0",     CPU_POWERPC_7450_v10,               7450)
     /* PowerPC 7450 v1.1 (G4)                                                */
@@ -9186,8 +9142,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("7445",          CPU_POWERPC_74x5,                   7445)
     /* PowerPC 7455 (G4)                                                     */
     POWERPC_DEF("7455",          CPU_POWERPC_74x5,                   7455)
-    /* Code name for PowerPC 7445/7455                                       */
-    POWERPC_DEF("Apollo6",       CPU_POWERPC_74x5,                   7455)
     /* PowerPC 7445 v1.0 (G4)                                                */
     POWERPC_DEF("7445_v1.0",     CPU_POWERPC_74x5_v10,               7445)
     /* PowerPC 7455 v1.0 (G4)                                                */
@@ -9212,8 +9166,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("7447",          CPU_POWERPC_74x7,                   7445)
     /* PowerPC 7457 (G4)                                                     */
     POWERPC_DEF("7457",          CPU_POWERPC_74x7,                   7455)
-    /* Code name for PowerPC 7447/7457                                       */
-    POWERPC_DEF("Apollo7",       CPU_POWERPC_74x7,                   7455)
     /* PowerPC 7447 v1.0 (G4)                                                */
     POWERPC_DEF("7447_v1.0",     CPU_POWERPC_74x7_v10,               7445)
     /* PowerPC 7457 v1.0 (G4)                                                */
@@ -9232,8 +9184,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("7447A_v1.0",    CPU_POWERPC_74x7A_v10,              7445)
     /* PowerPC 7457A v1.0 (G4)                                               */
     POWERPC_DEF("7457A_v1.0",    CPU_POWERPC_74x7A_v10,              7455)
-    /* Code name for PowerPC 7447A/7457A                                     */
-    POWERPC_DEF("Apollo7PM",     CPU_POWERPC_74x7A_v10,              7455)
     /* PowerPC 7447A v1.1 (G4)                                               */
     POWERPC_DEF("7447A_v1.1",    CPU_POWERPC_74x7A_v11,              7445)
     /* PowerPC 7457A v1.1 (G4)                                               */
@@ -9246,20 +9196,13 @@ static const ppc_def_t ppc_defs[] = {
 #if defined (TARGET_PPC64)
     /* PowerPC 620                                                           */
     POWERPC_DEF("620",           CPU_POWERPC_620,                    620)
-    /* Code name for PowerPC 620                                             */
-    POWERPC_DEF("Trident",       CPU_POWERPC_620,                    620)
 #if defined (TODO)
     /* PowerPC 630 (POWER3)                                                  */
     POWERPC_DEF("630",           CPU_POWERPC_630,                    630)
-    POWERPC_DEF("POWER3",        CPU_POWERPC_630,                    630)
-    /* Code names for POWER3                                                 */
-    POWERPC_DEF("Boxer",         CPU_POWERPC_630,                    630)
-    POWERPC_DEF("Dino",          CPU_POWERPC_630,                    630)
 #endif
 #if defined (TODO)
     /* PowerPC 631 (Power 3+)                                                */
     POWERPC_DEF("631",           CPU_POWERPC_631,                    631)
-    POWERPC_DEF("POWER3+",       CPU_POWERPC_631,                    631)
 #endif
 #if defined (TODO)
     /* POWER4                                                                */
@@ -9347,42 +9290,28 @@ static const ppc_def_t ppc_defs[] = {
      */
     /* What about A10 & A30 ? */
     POWERPC_DEF("RS64",          CPU_POWERPC_RS64,                   RS64)
-    POWERPC_DEF("Apache",        CPU_POWERPC_RS64,                   RS64)
-    POWERPC_DEF("A35",           CPU_POWERPC_RS64,                   RS64)
 #endif
 #if defined (TODO)
     /* RS64-II (NorthStar/A50)                                               */
     POWERPC_DEF("RS64-II",       CPU_POWERPC_RS64II,                 RS64)
-    POWERPC_DEF("NorthStar",     CPU_POWERPC_RS64II,                 RS64)
-    POWERPC_DEF("A50",           CPU_POWERPC_RS64II,                 RS64)
 #endif
 #if defined (TODO)
     /* RS64-III (Pulsar)                                                     */
     POWERPC_DEF("RS64-III",      CPU_POWERPC_RS64III,                RS64)
-    POWERPC_DEF("Pulsar",        CPU_POWERPC_RS64III,                RS64)
 #endif
 #if defined (TODO)
     /* RS64-IV (IceStar/IStar/SStar)                                         */
     POWERPC_DEF("RS64-IV",       CPU_POWERPC_RS64IV,                 RS64)
-    POWERPC_DEF("IceStar",       CPU_POWERPC_RS64IV,                 RS64)
-    POWERPC_DEF("IStar",         CPU_POWERPC_RS64IV,                 RS64)
-    POWERPC_DEF("SStar",         CPU_POWERPC_RS64IV,                 RS64)
 #endif
 #endif /* defined (TARGET_PPC64) */
     /* POWER                                                                 */
 #if defined (TODO)
     /* Original POWER                                                        */
     POWERPC_DEF("POWER",         CPU_POWERPC_POWER,                  POWER)
-    POWERPC_DEF("RIOS",          CPU_POWERPC_POWER,                  POWER)
-    POWERPC_DEF("RSC",           CPU_POWERPC_POWER,                  POWER)
-    POWERPC_DEF("RSC3308",       CPU_POWERPC_POWER,                  POWER)
-    POWERPC_DEF("RSC4608",       CPU_POWERPC_POWER,                  POWER)
 #endif
 #if defined (TODO)
     /* POWER2                                                                */
     POWERPC_DEF("POWER2",        CPU_POWERPC_POWER2,                 POWER)
-    POWERPC_DEF("RSC2",          CPU_POWERPC_POWER2,                 POWER)
-    POWERPC_DEF("P2SC",          CPU_POWERPC_POWER2,                 POWER)
 #endif
     /* PA semi cores                                                         */
 #if defined (TODO)
@@ -9395,8 +9324,85 @@ static const ppc_def_t ppc_defs[] = {
 #endif
     POWERPC_DEF("ppc32",         CPU_POWERPC_PPC32,                  PPC32)
     POWERPC_DEF("ppc",           CPU_POWERPC_DEFAULT,                DEFAULT)
-    /* Fallback                                                              */
-    POWERPC_DEF("default",       CPU_POWERPC_DEFAULT,                DEFAULT)
+};
+
+typedef struct PowerPCCPUAlias {
+    const char *alias;
+    const char *model;
+} PowerPCCPUAlias;
+
+static const PowerPCCPUAlias ppc_cpu_aliases[] = {
+    /* Codename for MPC5xx core */
+    { "RCPU", "MPC5xx" },
+    /* Codename for MPC8xx core */
+    { "PowerQUICC", "MPC8xx" },
+    /* Codename for MPC82xx */
+    { "PowerQUICC-II", "MPC82xx" },
+    /* PowerPC e500 core */
+    { "e500", "e500v2_v22" },
+    /* Code name for PowerPC 603 */
+    { "Vanilla", "603" },
+    /* Code name for PowerPC 603e */
+    { "Stretch", "603e" },
+    /* Code name for PowerPC 603ev */
+    { "Vaillant", "603e7v" },
+    /* Code name for PowerPC 603r */
+    { "Goldeneye", "603r" },
+    /* Code name for PowerPC 604e */
+    { "Sirocco", "604e" },
+    /* Code name for PowerPC 604r */
+    { "Mach5", "604r" },
+    /* Code name for PowerPC 740 */
+    { "Arthur", "740" },
+    /* Code name for PowerPC 750 */
+    { "Typhoon", "750" },
+    /* PowerPC 740/750 is also known as G3 */
+    { "G3",      "750" },
+    /* Code name for PowerPC 740P/750P (G3) */
+    { "Conan/Doyle", "750p" },
+    /* Code name for PowerPC 750L (G3 embedded) */
+    { "LoneStar", "750l" },
+    /* Code name for PowerPC 745/755 */
+    { "Goldfinger", "755" },
+    /* Code name for PowerPC 7400 */
+    { "Max", "7400" },
+    /* PowerPC 74xx is also well known as G4 */
+    { "G4",  "7400" },
+    /* Code name for PowerPC 7410 */
+    { "Nitro", "7410" },
+    /* Code name for PowerPC 7450 */
+    { "Vger", "7450" },
+    /* Code name for PowerPC 7445/7455 */
+    { "Apollo6", "7455" },
+    /* Code name for PowerPC 7447/7457 */
+    { "Apollo7", "7457" },
+    /* Code name for PowerPC 7447A/7457A */
+    { "Apollo7PM", "7457A_v1.0" },
+#if defined(TARGET_PPC64)
+    /* Code name for PowerPC 620 */
+    { "Trident", "620" },
+    { "POWER3", "630" },
+    /* Code names for POWER3 */
+    { "Boxer", "POWER3" },
+    { "Dino",  "POWER3" },
+    { "POWER3+", "631" },
+    { "Apache", "RS64" },
+    { "A35",    "RS64" },
+    { "NorthStar", "RS64-II" },
+    { "A50",       "RS64-II" },
+    { "Pulsar", "RS64-III" },
+    { "IceStar", "RS64-IV" },
+    { "IStar",   "RS64-IV" },
+    { "SStar",   "RS64-IV" },
+#endif
+    { "RIOS",    "POWER" },
+    { "RSC",     "POWER" },
+    { "RSC3308", "POWER" },
+    { "RSC4608", "POWER" },
+    { "RSC2", "POWER2" },
+    { "P2SC", "POWER2" },
+    /* Fallback */
+    { "default", "ppc" },
 };
 
 /*****************************************************************************/
@@ -10323,6 +10329,12 @@ static ObjectClass *ppc_cpu_class_by_name(const char *name)
         }
     }
 
+    for (i = 0; i < ARRAY_SIZE(ppc_cpu_aliases); i++) {
+        if (strcmp(ppc_cpu_aliases[i].alias, name) == 0) {
+            return ppc_cpu_class_by_name(ppc_cpu_aliases[i].model);
+        }
+    }
+
     list = object_class_get_list(TYPE_POWERPC_CPU, false);
     item = g_slist_find_custom(list, name, ppc_cpu_compare_class_name);
     if (item != NULL) {
@@ -10408,11 +10420,23 @@ void ppc_cpu_list(FILE *f, fprintf_function cpu_fprintf)
         .cpu_fprintf = cpu_fprintf,
     };
     GSList *list;
+    int i;
 
     list = object_class_get_list(TYPE_POWERPC_CPU, false);
     list = g_slist_sort(list, ppc_cpu_list_compare);
     g_slist_foreach(list, ppc_cpu_list_entry, &s);
     g_slist_free(list);
+
+    cpu_fprintf(f, "\n");
+    for (i = 0; i < ARRAY_SIZE(ppc_cpu_aliases); i++) {
+        ObjectClass *oc = ppc_cpu_class_by_name(ppc_cpu_aliases[i].model);
+        if (oc == NULL) {
+            /* Hide aliases that point to a TODO or TODO_USER_ONLY model */
+            continue;
+        }
+        cpu_fprintf(f, "PowerPC %-16s\n",
+                    ppc_cpu_aliases[i].alias);
+    }
 }
 
 static void ppc_cpu_defs_entry(gpointer data, gpointer user_data)
