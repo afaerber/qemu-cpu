@@ -7267,7 +7267,6 @@ enum {
 #endif
     /* PowerPC 740/750 cores (aka G3) */
     /* XXX: missing 0x00084202 */
-#define CPU_POWERPC_7x0              CPU_POWERPC_7x0_v31
     CPU_POWERPC_7x0_v10            = 0x00080100,
     CPU_POWERPC_7x0_v20            = 0x00080200,
     CPU_POWERPC_7x0_v21            = 0x00080201,
@@ -8661,10 +8660,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("604ev",         CPU_POWERPC_604EV,                  604E)
 #endif
     /* PowerPC 7xx family                                                    */
-    /* Generic PowerPC 740 (G3)                                              */
-    POWERPC_DEF("740",           CPU_POWERPC_7x0,                    740)
-    /* Generic PowerPC 750 (G3)                                              */
-    POWERPC_DEF("750",           CPU_POWERPC_7x0,                    750)
     /* PowerPC 740 v1.0 (G3)                                                 */
     POWERPC_DEF("740_v1.0",      CPU_POWERPC_7x0_v10,                740)
     /* PowerPC 750 v1.0 (G3)                                                 */
@@ -9135,8 +9130,12 @@ static const PowerPCCPUAlias ppc_cpu_aliases[] = {
     { "Sirocco", "604e" },
     /* Code name for PowerPC 604r */
     { "Mach5", "604r" },
+    /* Generic PowerPC 740 (G3) */
+    { "740", "740_v3.1" },
     /* Code name for PowerPC 740 */
     { "Arthur", "740" },
+    /* Generic PowerPC 750 (G3) */
+    { "750", "750_v3.1" },
     /* Code name for PowerPC 750 */
     { "Typhoon", "750" },
     /* PowerPC 740/750 is also known as G3 */
