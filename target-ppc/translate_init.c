@@ -7079,7 +7079,6 @@ enum {
 #define CPU_POWERPC_MPC8280          CPU_POWERPC_G2LEgp3
     /* e200 family */
     /* e200 cores */
-#define CPU_POWERPC_e200             CPU_POWERPC_e200z6
 #if 0
     CPU_POWERPC_e200z0             = xxx,
 #endif
@@ -8026,8 +8025,6 @@ static const ppc_def_t ppc_defs[] = {
     /* MPC8280                                                               */
     POWERPC_DEF("MPC8280",       CPU_POWERPC_MPC8280,                G2LE)
     /* e200 family                                                           */
-    /* Generic PowerPC e200 core                                             */
-    POWERPC_DEF("e200",          CPU_POWERPC_e200,                   e200)
     /* Generic MPC55xx core                                                  */
 #if defined (TODO)
     POWERPC_DEF_SVR("MPC55xx",
@@ -8991,6 +8988,8 @@ static const PowerPCCPUAlias ppc_cpu_aliases[] = {
     { "MPC885", "MPC8xx" },
     /* Codename for MPC82xx */
     { "PowerQUICC-II", "MPC82xx" },
+    /* Generic PowerPC e200 core */
+    { "e200", "e200z6" },
     /* Generic PowerPC e300 core */
     { "e300", "e300c3" },
     /* MPC8347 */
