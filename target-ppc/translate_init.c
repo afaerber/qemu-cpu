@@ -7248,7 +7248,6 @@ enum {
     CPU_POWERPC_603E7v2            = 0x00070201,
     CPU_POWERPC_603E7              = 0x00070200,
     CPU_POWERPC_603P               = 0x00070000,
-#define CPU_POWERPC_603R             CPU_POWERPC_603E7t
     /* XXX: missing 0x00040303 (604) */
     CPU_POWERPC_604                = 0x00040103,
     /* XXX: missing 0x00091203 */
@@ -8637,8 +8636,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("603e7v2",       CPU_POWERPC_603E7v2,                603E)
     /* PowerPC 603p (aka PID7v)                                              */
     POWERPC_DEF("603p",          CPU_POWERPC_603P,                   603E)
-    /* PowerPC 603r (aka PID7t)                                              */
-    POWERPC_DEF("603r",          CPU_POWERPC_603R,                   603E)
     /* PowerPC 604                                                           */
     POWERPC_DEF("604",           CPU_POWERPC_604,                    604)
     /* PowerPC 604e v1.0                                                     */
@@ -9120,6 +9117,8 @@ static const PowerPCCPUAlias ppc_cpu_aliases[] = {
     { "Stretch", "603e" },
     /* Code name for PowerPC 603ev */
     { "Vaillant", "603e7v" },
+    /* PowerPC 603r (aka PID7t) */
+    { "603r", "603e7t" },
     /* Code name for PowerPC 603r */
     { "Goldeneye", "603r" },
     /* PowerPC 604e (aka PID9) */
