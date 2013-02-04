@@ -6893,7 +6893,6 @@ enum {
     CPU_POWERPC_405GPb             = 0x40110040,
     CPU_POWERPC_405GPc             = 0x40110082,
     CPU_POWERPC_405GPd             = 0x401100C4,
-#define CPU_POWERPC_405GPe           CPU_POWERPC_405CRc
     CPU_POWERPC_405GPR             = 0x50910951,
 #if 0
     CPU_POWERPC_405H               = xxx,
@@ -7660,8 +7659,6 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("405GPc",        CPU_POWERPC_405GPc,                 405)
     /* PowerPC 405 GPd                                                       */
     POWERPC_DEF("405GPd",        CPU_POWERPC_405GPd,                 405)
-    /* PowerPC 405 GPe                                                       */
-    POWERPC_DEF("405GPe",        CPU_POWERPC_405GPe,                 405)
     /* PowerPC 405 GPR                                                       */
     POWERPC_DEF("405GPR",        CPU_POWERPC_405GPR,                 405)
 #if defined(TODO)
@@ -8811,6 +8808,7 @@ static const PowerPCCPUAlias ppc_cpu_aliases[] = {
     { "405CR", "405CRc" },
     /* PowerPC 405 GP */
     { "405GP", "405GPd" },
+    { "405GPe", "405CRc " },
     { "x2vp7", "x2vp4" },
     { "x2vp50", "x2vp20" },
     /* PowerPC 440 EP */
