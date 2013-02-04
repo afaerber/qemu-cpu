@@ -7121,7 +7121,6 @@ enum {
 #define CPU_POWERPC_MPC5567          CPU_POWERPC_e200z6
     /* e300 family */
     /* e300 cores */
-#define CPU_POWERPC_e300             CPU_POWERPC_e300c3
     CPU_POWERPC_e300c1             = 0x00830010,
     CPU_POWERPC_e300c2             = 0x00840010,
     CPU_POWERPC_e300c3             = 0x00850010,
@@ -8162,8 +8161,6 @@ static const ppc_def_t ppc_defs[] = {
                     CPU_POWERPC_MPC5567,      POWERPC_SVR_5567,      e200)
 #endif
     /* e300 family                                                           */
-    /* Generic PowerPC e300 core                                             */
-    POWERPC_DEF("e300",          CPU_POWERPC_e300,                   e300)
     /* PowerPC e300c1 core                                                   */
     POWERPC_DEF("e300c1",        CPU_POWERPC_e300c1,                 e300)
     /* PowerPC e300c2 core                                                   */
@@ -8994,6 +8991,8 @@ static const PowerPCCPUAlias ppc_cpu_aliases[] = {
     { "MPC885", "MPC8xx" },
     /* Codename for MPC82xx */
     { "PowerQUICC-II", "MPC82xx" },
+    /* Generic PowerPC e300 core */
+    { "e300", "e300c3" },
     /* MPC8347 */
     { "MPC8347", "MPC8347T" },
     /* MPC8347A */
