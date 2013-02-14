@@ -64,6 +64,22 @@ qemu_log_vprintf(const char *fmt, va_list va)
  */
 void GCC_FMT_ATTR(2, 3) qemu_log_mask(int mask, const char *fmt, ...);
 
+/**
+ * qemu_log_mask_vprintf:
+ * @mask: The loglevel mask.
+ * @fmt: The format string.
+ * @va: The list of arguments to insert into the log.
+ *
+ * Equivalent of qemu_log_mask().
+ */
+static inline void GCC_FMT_ATTR(2, 0)
+qemu_log_mask_vprintf(int mask, const char *fmt, va_list va)
+{
+    if ((qemu_loglevel & mask) && qemu_logfile) {
+        vfprintf(qemu_logfile, fmt, va);
+    }
+}
+
 
 /* Special cases: */
 
