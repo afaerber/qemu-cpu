@@ -33,6 +33,7 @@
 
 /* Include definitions for instructions classes and implementations flags */
 //#define PPC_DEBUG_DISAS
+#undef PPC_DUMP_CPU
 //#define DO_PPC_STATISTICS
 
 #ifdef PPC_DEBUG_DISAS

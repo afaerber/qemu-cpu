@@ -30,7 +30,6 @@
 #include "sysemu/arch_init.h"
 #include "sysemu/cpus.h"
 
-//#define PPC_DUMP_CPU
 //#define PPC_DEBUG_SPR
 //#define PPC_DUMP_SPR_ACCESSES
 #if defined(CONFIG_USER_ONLY)
