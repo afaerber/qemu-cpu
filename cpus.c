@@ -1005,16 +1005,15 @@ void cpu_resume(CPUState *cpu)
     qemu_cpu_kick(cpu);
 }
 
+static void resume_one_vcpu(CPUState *cpu, void *data)
+{
+    cpu_resume(cpu);
+}
+
 void resume_all_vcpus(void)
 {
-    CPUArchState *penv = first_cpu;
-
     qemu_clock_enable(vm_clock, true);
-    while (penv) {
-        CPUState *pcpu = ENV_GET_CPU(penv);
-        cpu_resume(pcpu);
-        penv = penv->next_cpu;
-    }
+    qemu_for_each_cpu(resume_one_vcpu, NULL);
 }
 
 static void qemu_tcg_init_vcpu(CPUState *cpu)
