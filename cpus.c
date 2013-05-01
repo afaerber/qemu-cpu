@@ -962,39 +962,39 @@ static int all_vcpus_paused(void)
     return 1;
 }
 
+static void pause_one_vcpu(CPUState *cpu, void *data)
+{
+    cpu->stop = true;
+    qemu_cpu_kick(cpu);
+}
+
+static void stop_one_vcpu(CPUState *cpu, void *data)
+{
+    cpu->stop = false;
+    cpu->stopped = true;
+}
+
+static void kick_one_vcpu(CPUState *cpu, void *data)
+{
+    qemu_cpu_kick(cpu);
+}
+
 void pause_all_vcpus(void)
 {
-    CPUArchState *penv = first_cpu;
-
     qemu_clock_enable(vm_clock, false);
-    while (penv) {
-        CPUState *pcpu = ENV_GET_CPU(penv);
-        pcpu->stop = true;
-        qemu_cpu_kick(pcpu);
-        penv = penv->next_cpu;
-    }
+    qemu_for_each_cpu(pause_one_vcpu, NULL);
 
     if (qemu_in_vcpu_thread()) {
         cpu_stop_current();
         if (!kvm_enabled()) {
-            penv = first_cpu;
-            while (penv) {
-                CPUState *pcpu = ENV_GET_CPU(penv);
-                pcpu->stop = false;
-                pcpu->stopped = true;
-                penv = penv->next_cpu;
-            }
+            qemu_for_each_cpu(stop_one_vcpu, NULL);
             return;
         }
     }
 
     while (!all_vcpus_paused()) {
         qemu_cond_wait(&qemu_pause_cond, &qemu_global_mutex);
-        penv = first_cpu;
-        while (penv) {
-            qemu_cpu_kick(ENV_GET_CPU(penv));
-            penv = penv->next_cpu;
-        }
+        qemu_for_each_cpu(kick_one_vcpu, NULL);
     }
 }
 
