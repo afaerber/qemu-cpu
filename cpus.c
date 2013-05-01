@@ -405,13 +405,14 @@ void hw_error(const char *fmt, ...)
     abort();
 }
 
+static void cpu_synchronize_one_state(CPUState *cpu, void *data)
+{
+    cpu_synchronize_state(cpu);
+}
+
 void cpu_synchronize_all_states(void)
 {
-    CPUArchState *cpu;
-
-    for (cpu = first_cpu; cpu; cpu = cpu->next_cpu) {
-        cpu_synchronize_state(cpu);
-    }
+    qemu_for_each_cpu(cpu_synchronize_one_state, NULL);
 }
 
 void cpu_synchronize_all_post_reset(void)
@@ -1219,7 +1220,7 @@ CpuInfoList *qmp_query_cpus(Error **errp)
         CPUState *cpu = ENV_GET_CPU(env);
         CpuInfoList *info;
 
-        cpu_synchronize_state(env);
+        cpu_synchronize_state(cpu);
 
         info = g_malloc0(sizeof(*info));
         info->value = g_malloc0(sizeof(*info->value));
