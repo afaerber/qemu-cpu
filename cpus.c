@@ -386,21 +386,22 @@ void configure_icount(const char *option)
 }
 
 /***********************************************************/
+
+static void hw_one_error(CPUState *cpu, void *data)
+{
+    fprintf(stderr, "CPU #%d:\n", cpu->cpu_index);
+    cpu_dump_state(cpu->env_ptr, stderr, fprintf, CPU_DUMP_FPU);
+}
+
 void hw_error(const char *fmt, ...)
 {
     va_list ap;
-    CPUArchState *env;
-    CPUState *cpu;
 
     va_start(ap, fmt);
     fprintf(stderr, "qemu: hardware error: ");
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        cpu = ENV_GET_CPU(env);
-        fprintf(stderr, "CPU #%d:\n", cpu->cpu_index);
-        cpu_dump_state(env, stderr, fprintf, CPU_DUMP_FPU);
-    }
+    qemu_for_each_cpu(hw_one_error, NULL);
     va_end(ap);
     abort();
 }
