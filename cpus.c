@@ -425,13 +425,14 @@ void cpu_synchronize_all_post_reset(void)
     qemu_for_each_cpu(cpu_synchronize_one_post_reset, NULL);
 }
 
+static void cpu_synchronize_one_post_init(CPUState *cpu, void *data)
+{
+    cpu_synchronize_post_init(cpu);
+}
+
 void cpu_synchronize_all_post_init(void)
 {
-    CPUArchState *cpu;
-
-    for (cpu = first_cpu; cpu; cpu = cpu->next_cpu) {
-        cpu_synchronize_post_init(ENV_GET_CPU(cpu));
-    }
+    qemu_for_each_cpu(cpu_synchronize_one_post_init, NULL);
 }
 
 bool cpu_is_stopped(CPUState *cpu)
