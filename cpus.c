@@ -1188,20 +1188,20 @@ static void tcg_exec_all(void)
     exit_request = 0;
 }
 
-void set_numa_modes(void)
+static void set_one_numa_mode(CPUState *cpu, void *data)
 {
-    CPUArchState *env;
-    CPUState *cpu;
     int i;
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        cpu = ENV_GET_CPU(env);
-        for (i = 0; i < nb_numa_nodes; i++) {
-            if (test_bit(cpu->cpu_index, node_cpumask[i])) {
-                cpu->numa_node = i;
-            }
+    for (i = 0; i < nb_numa_nodes; i++) {
+        if (test_bit(cpu->cpu_index, node_cpumask[i])) {
+            cpu->numa_node = i;
         }
     }
+}
+
+void set_numa_modes(void)
+{
+    qemu_for_each_cpu(set_one_numa_mode, NULL);
 }
 
 void list_cpus(FILE *f, fprintf_function cpu_fprintf, const char *optarg)
