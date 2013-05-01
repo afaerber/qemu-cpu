@@ -703,10 +703,13 @@ static void qemu_wait_io_event_common(CPUState *cpu)
     cpu->thread_kicked = false;
 }
 
+static void qemu_wait_one_io_event_common(CPUState *cpu, void *data)
+{
+    qemu_wait_io_event_common(cpu);
+}
+
 static void qemu_tcg_wait_io_event(void)
 {
-    CPUArchState *env;
-
     while (all_cpu_threads_idle()) {
        /* Start accounting real time to the virtual clock if the CPUs
           are idle.  */
@@ -718,9 +721,7 @@ static void qemu_tcg_wait_io_event(void)
         qemu_cond_wait(&qemu_io_proceeded_cond, &qemu_global_mutex);
     }
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        qemu_wait_io_event_common(ENV_GET_CPU(env));
-    }
+    qemu_for_each_cpu(qemu_wait_one_io_event_common, NULL);
 }
 
 static void qemu_kvm_wait_io_event(CPUArchState *env)
@@ -825,7 +826,6 @@ static void tcg_signal_cpu_creation(CPUState *cpu, void *data)
 static void *qemu_tcg_cpu_thread_fn(void *arg)
 {
     CPUState *cpu = arg;
-    CPUArchState *env;
 
     qemu_tcg_init_cpu_signals();
     qemu_thread_get_self(cpu->thread);
@@ -839,9 +839,7 @@ static void *qemu_tcg_cpu_thread_fn(void *arg)
         qemu_cond_wait(tcg_halt_cond, &qemu_global_mutex);
 
         /* process any pending work */
-        for (env = first_cpu; env != NULL; env = env->next_cpu) {
-            qemu_wait_io_event_common(ENV_GET_CPU(env));
-        }
+        qemu_for_each_cpu(qemu_wait_one_io_event_common, NULL);
     }
 
     while (1) {
