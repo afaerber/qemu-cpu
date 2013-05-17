@@ -15,36 +15,6 @@
 #include "exec/cpu-all.h"
 #include "sysemu/memory_mapping.h"
 
-static void memory_mapping_list_add_mapping_sorted(MemoryMappingList *list,
-                                                   MemoryMapping *mapping)
-{
-    MemoryMapping *p;
-
-    QTAILQ_FOREACH(p, &list->head, next) {
-        if (p->phys_addr >= mapping->phys_addr) {
-            QTAILQ_INSERT_BEFORE(p, mapping, next);
-            return;
-        }
-    }
-    QTAILQ_INSERT_TAIL(&list->head, mapping, next);
-}
-
-static void create_new_memory_mapping(MemoryMappingList *list,
-                                      hwaddr phys_addr,
-                                      hwaddr virt_addr,
-                                      ram_addr_t length)
-{
-    MemoryMapping *memory_mapping;
-
-    memory_mapping = g_malloc(sizeof(MemoryMapping));
-    memory_mapping->phys_addr = phys_addr;
-    memory_mapping->virt_addr = virt_addr;
-    memory_mapping->length = length;
-    list->last_mapping = memory_mapping;
-    list->num++;
-    memory_mapping_list_add_mapping_sorted(list, memory_mapping);
-}
-
 static inline bool mapping_contiguous(MemoryMapping *map,
                                       hwaddr phys_addr,
                                       hwaddr virt_addr)
@@ -145,26 +115,6 @@ void memory_mapping_list_add_merge_sorted(MemoryMappingList *list,
     create_new_memory_mapping(list, phys_addr, virt_addr, length);
 }
 
-void memory_mapping_list_free(MemoryMappingList *list)
-{
-    MemoryMapping *p, *q;
-
-    QTAILQ_FOREACH_SAFE(p, &list->head, next, q) {
-        QTAILQ_REMOVE(&list->head, p, next);
-        g_free(p);
-    }
-
-    list->num = 0;
-    list->last_mapping = NULL;
-}
-
-void memory_mapping_list_init(MemoryMappingList *list)
-{
-    list->num = 0;
-    list->last_mapping = NULL;
-    QTAILQ_INIT(&list->head);
-}
-
 static CPUArchState *find_paging_enabled_cpu(CPUArchState *start_cpu)
 {
     CPUArchState *env;
@@ -209,38 +159,8 @@ int qemu_get_guest_memory_mapping(MemoryMappingList *list)
     return 0;
 }
 
-void qemu_get_guest_simple_memory_mapping(MemoryMappingList *list)
+bool memory_mapping_allowed(void)
 {
-    RAMBlock *block;
-
-    QTAILQ_FOREACH(block, &ram_list.blocks, next) {
-        create_new_memory_mapping(list, block->offset, 0, block->length);
-    }
+    return true;
 }
 
-void memory_mapping_filter(MemoryMappingList *list, int64_t begin,
-                           int64_t length)
-{
-    MemoryMapping *cur, *next;
-
-    QTAILQ_FOREACH_SAFE(cur, &list->head, next, next) {
-        if (cur->phys_addr >= begin + length ||
-            cur->phys_addr + cur->length <= begin) {
-            QTAILQ_REMOVE(&list->head, cur, next);
-            list->num--;
-            continue;
-        }
-
-        if (cur->phys_addr < begin) {
-            cur->length -= begin - cur->phys_addr;
-            if (cur->virt_addr) {
-                cur->virt_addr += begin - cur->phys_addr;
-            }
-            cur->phys_addr = begin;
-        }
-
-        if (cur->phys_addr + cur->length > begin + length) {
-            cur->length -= cur->phys_addr + cur->length - begin - length;
-        }
-    }
-}

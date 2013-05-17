@@ -756,7 +756,10 @@ static int dump_init(DumpState *s, int fd, bool paging, bool has_filter,
     /* get memory mapping */
     memory_mapping_list_init(&s->list);
     if (paging) {
-        qemu_get_guest_memory_mapping(&s->list);
+        ret = qemu_get_guest_memory_mapping(&s->list);
+        if (ret < 0) {
+            goto cleanup;
+        }
     } else {
         qemu_get_guest_simple_memory_mapping(&s->list);
     }
@@ -825,6 +828,12 @@ void qmp_dump_guest_memory(bool paging, const char *file, bool has_begin,
     int fd = -1;
     DumpState *s;
     int ret;
+
+    if (paging && !memory_mapping_allowed()) {
+        error_setg(errp,
+                   "Option paging is not supported for current architecture");
+        return;
+    }
 
     if (has_begin && !has_length) {
         error_set(errp, QERR_MISSING_PARAMETER, "length");

@@ -20,14 +20,7 @@ int qemu_get_guest_memory_mapping(MemoryMappingList *list)
     return -2;
 }
 
-int cpu_get_memory_mapping(MemoryMappingList *list,
-					                                          CPUArchState *env)
+bool memory_mapping_allowed(void)
 {
-    return -1;
+    return false;
 }
-
-bool cpu_paging_enabled(CPUArchState *env)
-{
-    return true;
-}
-

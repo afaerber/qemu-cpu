@@ -38,6 +38,15 @@ bool cpu_paging_enabled(CPUArchState *env);
  * memory mapping's list. The region's virtual address starts with virt_addr,
  * and is contiguous. The list is sorted by phys_addr.
  */
+
+void memory_mapping_list_add_mapping_sorted(MemoryMappingList *list,
+                                            MemoryMapping *mapping);
+
+void create_new_memory_mapping(MemoryMappingList *list,
+                               hwaddr phys_addr,
+                               hwaddr virt_addr,
+                               ram_addr_t length);
+
 void memory_mapping_list_add_merge_sorted(MemoryMappingList *list,
                                           hwaddr phys_addr,
                                           hwaddr virt_addr,
@@ -60,5 +69,6 @@ void qemu_get_guest_simple_memory_mapping(MemoryMappingList *list);
 
 void memory_mapping_filter(MemoryMappingList *list, int64_t begin,
                            int64_t length);
+bool memory_mapping_allowed(void);
 
 #endif
