@@ -11,8 +11,9 @@
  *
  */
 
-#include "cpu.h"
-#include "exec/cpu-all.h"
+#include "qemu-common.h"
+#include "exec/cpu-common.h"
+#include "qom/cpu.h"
 #include "sysemu/memory_mapping.h"
 
 int qemu_get_guest_memory_mapping(MemoryMappingList *list)

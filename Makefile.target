@@ -63,7 +63,6 @@ all: $(PROGS) stap
 CONFIG_NO_PCI = $(if $(subst n,,$(CONFIG_PCI)),n,y)
 CONFIG_NO_KVM = $(if $(subst n,,$(CONFIG_KVM)),n,y)
 CONFIG_NO_XEN = $(if $(subst n,,$(CONFIG_XEN)),n,y)
-CONFIG_NO_GET_MEMORY_MAPPING = $(if $(subst n,,$(CONFIG_HAVE_GET_MEMORY_MAPPING)),n,y)
 
 #########################################################
 # cpu emulator library
@@ -112,7 +111,6 @@ obj-$(CONFIG_KVM) += kvm-all.o
 obj-y += memory.o savevm.o cputlb.o
 obj-$(CONFIG_HAVE_GET_MEMORY_MAPPING) += memory_mapping.o
 obj-y += dump.o memory_mapping_common.o
-obj-$(CONFIG_NO_GET_MEMORY_MAPPING) += memory_mapping-stub.o
 LIBS+=$(libs_softmmu)
 
 # xen support

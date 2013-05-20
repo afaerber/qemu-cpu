@@ -10,6 +10,7 @@ stub-obj-y += fdset-remove-fd.o
 stub-obj-y += get-fd.o
 stub-obj-y += get-vm-name.o
 stub-obj-y += iothread-lock.o
+stub-obj-y += memory_mapping.o
 stub-obj-y += migr-blocker.o
 stub-obj-y += mon-is-qmp.o
 stub-obj-y += mon-printf.o
