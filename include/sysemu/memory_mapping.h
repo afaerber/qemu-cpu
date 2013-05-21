@@ -31,7 +31,7 @@ typedef struct MemoryMappingList {
 } MemoryMappingList;
 
 int cpu_get_memory_mapping(MemoryMappingList *list, CPUState *cpu);
-bool cpu_paging_enabled(CPUArchState *env);
+bool cpu_paging_enabled(CPUState *cpu);
 
 /*
  * add or merge the memory region [phys_addr, phys_addr + length) into the

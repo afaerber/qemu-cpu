@@ -242,7 +242,7 @@ int cpu_get_memory_mapping(MemoryMappingList *list, CPUState *cs)
     X86CPU *cpu = X86_CPU(cs);
     CPUX86State *env = &cpu->env;
 
-    if (!cpu_paging_enabled(env)) {
+    if (!cpu_paging_enabled(cs)) {
         /* paging is disabled */
         return 0;
     }
@@ -274,7 +274,10 @@ int cpu_get_memory_mapping(MemoryMappingList *list, CPUState *cs)
     return 0;
 }
 
-bool cpu_paging_enabled(CPUArchState *env)
+bool cpu_paging_enabled(CPUState *cs)
 {
+    X86CPU *cpu = X86_CPU(cs);
+    CPUX86State *env = &cpu->env;
+
     return env->cr[0] & CR0_PG_MASK;
 }
