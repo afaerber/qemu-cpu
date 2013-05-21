@@ -30,7 +30,7 @@ typedef struct MemoryMappingList {
     QTAILQ_HEAD(, MemoryMapping) head;
 } MemoryMappingList;
 
-int cpu_get_memory_mapping(MemoryMappingList *list, CPUArchState *env);
+int cpu_get_memory_mapping(MemoryMappingList *list, CPUState *cpu);
 bool cpu_paging_enabled(CPUArchState *env);
 
 /*

@@ -237,8 +237,11 @@ static void walk_pml4e(MemoryMappingList *list,
 }
 #endif
 
-int cpu_get_memory_mapping(MemoryMappingList *list, CPUArchState *env)
+int cpu_get_memory_mapping(MemoryMappingList *list, CPUState *cs)
 {
+    X86CPU *cpu = X86_CPU(cs);
+    CPUX86State *env = &cpu->env;
+
     if (!cpu_paging_enabled(env)) {
         /* paging is disabled */
         return 0;
