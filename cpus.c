@@ -388,7 +388,7 @@ void configure_icount(const char *option)
 static void hw_one_error(CPUState *cpu, void *data)
 {
     fprintf(stderr, "CPU #%d:\n", cpu->cpu_index);
-    cpu_dump_state(cpu->env_ptr, stderr, fprintf, CPU_DUMP_FPU);
+    cpu_dump_state(cpu, stderr, fprintf, CPU_DUMP_FPU);
 }
 
 void hw_error(const char *fmt, ...)
