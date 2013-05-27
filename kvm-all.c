@@ -1891,12 +1891,22 @@ int kvm_update_guest_debug(CPUArchState *env, unsigned long reinject_trap)
     return data.err;
 }
 
+static void kvm_update_guest_debug_one(CPUState *cpu, void *data)
+{
+    int *perr = data;
+    CPUArchState *env = cpu->env_ptr;
+
+    if (*perr) {
+        return;
+    }
+    *perr = kvm_update_guest_debug(env, 0);
+}
+
 int kvm_insert_breakpoint(CPUArchState *current_env, target_ulong addr,
                           target_ulong len, int type)
 {
     CPUState *current_cpu = ENV_GET_CPU(current_env);
     struct kvm_sw_breakpoint *bp;
-    CPUArchState *env;
     int err;
 
     if (type == GDB_BREAKPOINT_SW) {
@@ -1928,11 +1938,10 @@ int kvm_insert_breakpoint(CPUArchState *current_env, target_ulong addr,
         }
     }
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        err = kvm_update_guest_debug(env, 0);
-        if (err) {
-            return err;
-        }
+    err = 0;
+    qemu_for_each_cpu(kvm_update_guest_debug_one, &err);
+    if (err) {
+        return err;
     }
     return 0;
 }
@@ -1942,7 +1951,6 @@ int kvm_remove_breakpoint(CPUArchState *current_env, target_ulong addr,
 {
     CPUState *current_cpu = ENV_GET_CPU(current_env);
     struct kvm_sw_breakpoint *bp;
-    CPUArchState *env;
     int err;
 
     if (type == GDB_BREAKPOINT_SW) {
@@ -1970,11 +1978,10 @@ int kvm_remove_breakpoint(CPUArchState *current_env, target_ulong addr,
         }
     }
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        err = kvm_update_guest_debug(env, 0);
-        if (err) {
-            return err;
-        }
+    err = 0;
+    qemu_for_each_cpu(kvm_update_guest_debug_one, &err);
+    if (err) {
+        return err;
     }
     return 0;
 }
@@ -1986,6 +1993,7 @@ void kvm_remove_all_breakpoints(CPUArchState *current_env)
     KVMState *s = current_cpu->kvm_state;
     CPUArchState *env;
     CPUState *cpu;
+    int err;
 
     QTAILQ_FOREACH_SAFE(bp, &s->kvm_sw_breakpoints, entry, next) {
         if (kvm_arch_remove_sw_breakpoint(current_cpu, bp) != 0) {
@@ -2002,9 +2010,8 @@ void kvm_remove_all_breakpoints(CPUArchState *current_env)
     }
     kvm_arch_remove_all_hw_breakpoints();
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        kvm_update_guest_debug(env, 0);
-    }
+    err = 0;
+    qemu_for_each_cpu(kvm_update_guest_debug_one, &err);
 }
 
 #else /* !KVM_CAP_SET_GUEST_DEBUG */
