@@ -982,21 +982,28 @@ void helper_msgclr(CPUPPCState *env, target_ulong rb)
     env->pending_interrupts &= ~(1 << irq);
 }
 
+static void helper_msgsnd_one(CPUState *cs, void *data)
+{
+    target_ulong *rb = data;
+    int irq = dbell2irq(*rb);
+    int pir = *rb & DBELL_PIRTAG_MASK;
+    PowerPCCPU *cpu = POWERPC_CPU(cs);
+    CPUPPCState *env = &cpu->env;
+
+    if ((*rb & DBELL_BRDCAST) || (env->spr[SPR_BOOKE_PIR] == pir)) {
+        env->pending_interrupts |= 1 << irq;
+        cpu_interrupt(cs, CPU_INTERRUPT_HARD);
+    }
+}
+
 void helper_msgsnd(target_ulong rb)
 {
     int irq = dbell2irq(rb);
-    int pir = rb & DBELL_PIRTAG_MASK;
-    CPUPPCState *cenv;
 
     if (irq < 0) {
         return;
     }
 
-    for (cenv = first_cpu; cenv != NULL; cenv = cenv->next_cpu) {
-        if ((rb & DBELL_BRDCAST) || (cenv->spr[SPR_BOOKE_PIR] == pir)) {
-            cenv->pending_interrupts |= 1 << irq;
-            cpu_interrupt(CPU(ppc_env_get_cpu(cenv)), CPU_INTERRUPT_HARD);
-        }
-    }
+    qemu_for_each_cpu(helper_msgsnd_one, &rb);
 }
 #endif
