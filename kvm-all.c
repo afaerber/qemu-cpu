@@ -1986,24 +1986,36 @@ int kvm_remove_breakpoint(CPUArchState *current_env, target_ulong addr,
     return 0;
 }
 
+typedef struct KVMRemoveBreakpointData {
+    struct kvm_sw_breakpoint *bp;
+    bool removed;
+} KVMRemoveBreakpointData;
+
+static void kvm_remove_all_breakpoints_one(CPUState *cpu, void *data)
+{
+    KVMRemoveBreakpointData *s = data;
+
+    if (s->removed) {
+        return;
+    }
+    s->removed = kvm_arch_remove_sw_breakpoint(cpu, s->bp) == 0;
+}
+
 void kvm_remove_all_breakpoints(CPUArchState *current_env)
 {
     CPUState *current_cpu = ENV_GET_CPU(current_env);
     struct kvm_sw_breakpoint *bp, *next;
     KVMState *s = current_cpu->kvm_state;
-    CPUArchState *env;
-    CPUState *cpu;
     int err;
 
     QTAILQ_FOREACH_SAFE(bp, &s->kvm_sw_breakpoints, entry, next) {
         if (kvm_arch_remove_sw_breakpoint(current_cpu, bp) != 0) {
             /* Try harder to find a CPU that currently sees the breakpoint. */
-            for (env = first_cpu; env != NULL; env = env->next_cpu) {
-                cpu = ENV_GET_CPU(env);
-                if (kvm_arch_remove_sw_breakpoint(cpu, bp) == 0) {
-                    break;
-                }
-            }
+            KVMRemoveBreakpointData data = {
+                .bp = bp,
+                .removed = false,
+            };
+            qemu_for_each_cpu(kvm_remove_all_breakpoints_one, &data);
         }
         QTAILQ_REMOVE(&s->kvm_sw_breakpoints, bp, entry);
         g_free(bp);
