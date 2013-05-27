@@ -183,18 +183,23 @@ int cpu_get_pic_interrupt(CPUX86State *env)
     return intno;
 }
 
+static void pic_irq_request_apic_one(CPUState *cs, void *data)
+{
+    int *level = data;
+    X86CPU *cpu = X86_CPU(cs);
+
+    if (apic_accept_pic_intr(cpu->env.apic_state)) {
+        apic_deliver_pic_intr(cpu->env.apic_state, *level);
+    }
+}
+
 static void pic_irq_request(void *opaque, int irq, int level)
 {
     CPUX86State *env = first_cpu;
 
     DPRINTF("pic_irqs: %s irq %d\n", level? "raise" : "lower", irq);
     if (env->apic_state) {
-        while (env) {
-            if (apic_accept_pic_intr(env->apic_state)) {
-                apic_deliver_pic_intr(env->apic_state, level);
-            }
-            env = env->next_cpu;
-        }
+        qemu_for_each_cpu(pic_irq_request_apic_one, &level);
     } else {
         CPUState *cs = CPU(x86_env_get_cpu(env));
         if (level) {
