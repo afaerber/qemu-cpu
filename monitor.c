@@ -1803,21 +1803,32 @@ static void do_info_mtree(Monitor *mon, const QDict *qdict)
     mtree_info((fprintf_function)monitor_printf, mon);
 }
 
+typedef struct DoInfoNUMAData {
+    Monitor *mon;
+    int numa_node;
+} DoInfoNUMAData;
+
+static void do_info_numa_one(CPUState *cpu, void *data)
+{
+    DoInfoNUMAData *s = data;
+
+    if (cpu->numa_node == s->numa_node) {
+        monitor_printf(s->mon, " %d", cpu->cpu_index);
+    }
+}
+
 static void do_info_numa(Monitor *mon, const QDict *qdict)
 {
     int i;
-    CPUArchState *env;
-    CPUState *cpu;
+    DoInfoNUMAData s = {
+        .mon = mon,
+    };
 
     monitor_printf(mon, "%d nodes\n", nb_numa_nodes);
     for (i = 0; i < nb_numa_nodes; i++) {
         monitor_printf(mon, "node %d cpus:", i);
-        for (env = first_cpu; env != NULL; env = env->next_cpu) {
-            cpu = ENV_GET_CPU(env);
-            if (cpu->numa_node == i) {
-                monitor_printf(mon, " %d", cpu->cpu_index);
-            }
-        }
+        s.numa_node = i;
+        qemu_for_each_cpu(do_info_numa_one, &s);
         monitor_printf(mon, "\n");
         monitor_printf(mon, "node %d size: %" PRId64 " MB\n", i,
             node_mem[i] >> 20);
