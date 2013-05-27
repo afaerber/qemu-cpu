@@ -1694,21 +1694,24 @@ target_ulong helper_emt(void)
     return 0;
 }
 
+static void helper_dvpe_one(CPUState *cs, void *data)
+{
+    MIPSCPU *self_cpu = data;
+    MIPSCPU *cpu = MIPS_CPU(cs);
+
+    if (cpu == self_cpu) {
+        return;
+    }
+    cpu->env.mvp->CP0_MVPControl &= ~(1 << CP0MVPCo_EVP);
+    mips_vpe_sleep(cpu);
+}
+
 target_ulong helper_dvpe(CPUMIPSState *env)
 {
-    CPUMIPSState *other_cpu_env = first_cpu;
     target_ulong prev = env->mvp->CP0_MVPControl;
 
-    do {
-        /* Turn off all VPEs except the one executing the dvpe.  */
-        if (other_cpu_env != env) {
-            MIPSCPU *other_cpu = mips_env_get_cpu(other_cpu_env);
-
-            other_cpu_env->mvp->CP0_MVPControl &= ~(1 << CP0MVPCo_EVP);
-            mips_vpe_sleep(other_cpu);
-        }
-        other_cpu_env = other_cpu_env->next_cpu;
-    } while (other_cpu_env);
+    /* Turn off all VPEs except the one executing the dvpe.  */
+    qemu_for_each_cpu(helper_dvpe_one, mips_env_get_cpu(env));
     return prev;
 }
 
