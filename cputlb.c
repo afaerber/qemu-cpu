@@ -173,22 +173,35 @@ static inline void tlb_update_dirty(CPUTLBEntry *tlb_entry)
     }
 }
 
-void cpu_tlb_reset_dirty_all(ram_addr_t start1, ram_addr_t length)
+typedef struct CPUTLBResetDirtyData {
+    ram_addr_t start1;
+    ram_addr_t length;
+} CPUTLBResetDirtyData;
+
+static void cpu_tlb_reset_dirty_one(CPUState *cpu, void *data)
 {
-    CPUArchState *env;
+    CPUTLBResetDirtyData *s = data;
+    CPUArchState *env = cpu->env_ptr;
+    int mmu_idx;
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        int mmu_idx;
+    for (mmu_idx = 0; mmu_idx < NB_MMU_MODES; mmu_idx++) {
+        unsigned int i;
 
-        for (mmu_idx = 0; mmu_idx < NB_MMU_MODES; mmu_idx++) {
-            unsigned int i;
-
-            for (i = 0; i < CPU_TLB_SIZE; i++) {
-                tlb_reset_dirty_range(&env->tlb_table[mmu_idx][i],
-                                      start1, length);
-            }
+        for (i = 0; i < CPU_TLB_SIZE; i++) {
+            tlb_reset_dirty_range(&env->tlb_table[mmu_idx][i],
+                                  s->start1, s->length);
         }
     }
+}
+
+void cpu_tlb_reset_dirty_all(ram_addr_t start1, ram_addr_t length)
+{
+    CPUTLBResetDirtyData s = {
+        .start1 = start1,
+        .length = length,
+    };
+
+    qemu_for_each_cpu(cpu_tlb_reset_dirty_one, &s);
 }
 
 static inline void tlb_set_dirty1(CPUTLBEntry *tlb_entry, target_ulong vaddr)
