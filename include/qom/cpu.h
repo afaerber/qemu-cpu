@@ -407,4 +407,12 @@ void cpu_exit(CPUState *cpu);
  */
 void cpu_resume(CPUState *cpu);
 
+/**
+ * qemu_init_vcpu:
+ * @cpu: The vCPU to initialize.
+ *
+ * Initializes a vCPU.
+ */
+void qemu_init_vcpu(CPUState *cpu);
+
 #endif
