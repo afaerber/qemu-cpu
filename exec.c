@@ -1705,16 +1705,19 @@ static void core_begin(MemoryListener *listener)
     phys_section_watch = dummy_section(&io_mem_watch);
 }
 
+static void tcg_commit_one(CPUState *cpu, void *data)
+{
+    CPUArchState *env = cpu->env_ptr;
+
+    tlb_flush(env, 1);
+}
+
 static void tcg_commit(MemoryListener *listener)
 {
-    CPUArchState *env;
-
     /* since each CPU stores ram addresses in its TLB cache, we must
        reset the modified entries */
     /* XXX: slow ! */
-    for(env = first_cpu; env != NULL; env = env->next_cpu) {
-        tlb_flush(env, 1);
-    }
+    qemu_for_each_cpu(tcg_commit_one, NULL);
 }
 
 static void core_log_global_start(MemoryListener *listener)
