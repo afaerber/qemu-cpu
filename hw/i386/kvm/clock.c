@@ -61,13 +61,25 @@ static int kvmclock_post_load(void *opaque, int version_id)
     return kvm_vm_ioctl(kvm_state, KVM_SET_CLOCK, &data);
 }
 
+static void kvmclock_vm_state_change_one(CPUState *cs, void *data)
+{
+    int *ret = data;
+
+    if (*ret) {
+        return;
+    }
+    *ret = kvm_vcpu_ioctl(cs, KVM_KVMCLOCK_CTRL, 0);
+    if (*ret != -EINVAL) {
+        fprintf(stderr, "%s: %s\n", __func__, strerror(-*ret));
+    }
+}
+
 static void kvmclock_vm_state_change(void *opaque, int running,
                                      RunState state)
 {
     KVMClockState *s = opaque;
-    CPUArchState *penv = first_cpu;
     int cap_clock_ctrl = kvm_check_extension(kvm_state, KVM_CAP_KVMCLOCK_CTRL);
-    int ret;
+    int ret = 0;
 
     if (running) {
         s->clock_valid = false;
@@ -75,15 +87,7 @@ static void kvmclock_vm_state_change(void *opaque, int running,
         if (!cap_clock_ctrl) {
             return;
         }
-        for (penv = first_cpu; penv != NULL; penv = penv->next_cpu) {
-            ret = kvm_vcpu_ioctl(ENV_GET_CPU(penv), KVM_KVMCLOCK_CTRL, 0);
-            if (ret) {
-                if (ret != -EINVAL) {
-                    fprintf(stderr, "%s: %s\n", __func__, strerror(-ret));
-                }
-                return;
-            }
-        }
+        qemu_for_each_cpu(kvmclock_vm_state_change_one, &ret);
     }
 }
 
