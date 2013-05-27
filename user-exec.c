@@ -94,7 +94,7 @@ static inline int handle_cpu_signal(uintptr_t pc, unsigned long address,
     }
 
     /* see if it is an MMU fault */
-    ret = cpu_handle_mmu_fault(cpu_single_env, address, is_write,
+    ret = cpu_handle_mmu_fault(cpu_single_cpu->env_ptr, address, is_write,
                                MMU_USER_IDX);
     if (ret < 0) {
         return 0; /* not an MMU fault */
@@ -103,12 +103,12 @@ static inline int handle_cpu_signal(uintptr_t pc, unsigned long address,
         return 1; /* the MMU fault was handled without causing real CPU fault */
     }
     /* now we have a real cpu fault */
-    cpu_restore_state(cpu_single_env, pc);
+    cpu_restore_state(cpu_single_cpu->env_ptr, pc);
 
     /* we restore the process signal mask as the sigreturn should
        do it (XXX: use sigsetjmp) */
     sigprocmask(SIG_SETMASK, old_set, NULL);
-    exception_action(cpu_single_env);
+    exception_action(cpu_single_cpu->env_ptr);
 
     /* never comes here */
     return 1;

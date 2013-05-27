@@ -40,8 +40,6 @@
 #define TARGET_PHYS_ADDR_SPACE_BITS 62
 #define TARGET_VIRT_ADDR_SPACE_BITS 64
 
-#include "exec/cpu-all.h"
-
 #include "fpu/softfloat.h"
 
 #define NB_MMU_MODES 3
@@ -151,6 +149,7 @@ typedef struct CPUS390XState {
 } CPUS390XState;
 
 #include "cpu-qom.h"
+#include "exec/cpu-all.h"
 
 #if defined(CONFIG_USER_ONLY)
 static inline void cpu_clone_regs(CPUS390XState *env, target_ulong newsp)

@@ -155,8 +155,8 @@ static inline void cpu_set_tls(CPUUniCore32State *env, target_ulong newtls)
     env->regs[16] = newtls;
 }
 
-#include "exec/cpu-all.h"
 #include "cpu-qom.h"
+#include "exec/cpu-all.h"
 #include "exec/exec-all.h"
 
 static inline void cpu_pc_from_tb(CPUUniCore32State *env, TranslationBlock *tb)
