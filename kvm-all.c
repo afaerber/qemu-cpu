@@ -1979,9 +1979,8 @@ int kvm_remove_breakpoint(CPUArchState *current_env, target_ulong addr,
     return 0;
 }
 
-void kvm_remove_all_breakpoints(CPUArchState *current_env)
+void kvm_remove_all_breakpoints(CPUState *current_cpu)
 {
-    CPUState *current_cpu = ENV_GET_CPU(current_env);
     struct kvm_sw_breakpoint *bp, *next;
     KVMState *s = current_cpu->kvm_state;
     CPUArchState *env;
@@ -2026,7 +2025,7 @@ int kvm_remove_breakpoint(CPUArchState *current_env, target_ulong addr,
     return -EINVAL;
 }
 
-void kvm_remove_all_breakpoints(CPUArchState *current_env)
+void kvm_remove_all_breakpoints(CPUState *current_cpu)
 {
 }
 #endif /* !KVM_CAP_SET_GUEST_DEBUG */

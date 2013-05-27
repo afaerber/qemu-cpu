@@ -163,7 +163,7 @@ int kvm_insert_breakpoint(CPUArchState *current_env, target_ulong addr,
                           target_ulong len, int type);
 int kvm_remove_breakpoint(CPUArchState *current_env, target_ulong addr,
                           target_ulong len, int type);
-void kvm_remove_all_breakpoints(CPUArchState *current_env);
+void kvm_remove_all_breakpoints(CPUState *current_cpu);
 int kvm_update_guest_debug(CPUArchState *env, unsigned long reinject_trap);
 #ifndef _WIN32
 int kvm_set_signal_mask(CPUState *cpu, const sigset_t *sigset);
