@@ -128,53 +128,68 @@ int spapr_allocate_irq_block(int num, bool lsi)
     return first;
 }
 
+typedef struct SPAPRFixupCPUDT {
+    void *fdt;
+    sPAPREnvironment *spapr;
+    int smt;
+    int ret;
+} SPAPRFixupCPUDT;
+
+static void spapr_fixup_one_cpu_dt(CPUState *cs, void *data)
+{
+    SPAPRFixupCPUDT *s = data;
+    char cpu_model[32];
+    int offset;
+    uint32_t associativity[] = { cpu_to_be32(0x5),
+                                 cpu_to_be32(0x0),
+                                 cpu_to_be32(0x0),
+                                 cpu_to_be32(0x0),
+                                 cpu_to_be32(cs->numa_node),
+                                 cpu_to_be32(cs->cpu_index) };
+    uint32_t pft_size_prop[] = { 0, cpu_to_be32(s->spapr->htab_shift) };
+
+    if (s->ret) {
+        return;
+    }
+
+    if ((cs->cpu_index % s->smt) != 0) {
+        return;
+    }
+
+    snprintf(cpu_model, 32, "/cpus/%s@%x", s->spapr->cpu_model,
+             cs->cpu_index);
+
+    offset = fdt_path_offset(s->fdt, cpu_model);
+    if (offset < 0) {
+        s->ret = offset;
+        return;
+    }
+
+    if (nb_numa_nodes > 1) {
+        s->ret = fdt_setprop(s->fdt, offset, "ibm,associativity",
+                             associativity, sizeof(associativity));
+        if (s->ret < 0) {
+            return;
+        }
+    }
+
+    s->ret = fdt_setprop(s->fdt, offset, "ibm,pft-size",
+                         pft_size_prop, sizeof(pft_size_prop));
+}
+
 static int spapr_fixup_cpu_dt(void *fdt, sPAPREnvironment *spapr)
 {
-    int ret = 0, offset;
-    CPUPPCState *env;
-    CPUState *cpu;
-    char cpu_model[32];
-    int smt = kvmppc_smt_threads();
-    uint32_t pft_size_prop[] = {0, cpu_to_be32(spapr->htab_shift)};
+    SPAPRFixupCPUDT s = {
+        .fdt = fdt,
+        .spapr = spapr,
+        .smt = kvmppc_smt_threads(),
+        .ret = 0,
+    };
 
     assert(spapr->cpu_model);
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        cpu = CPU(ppc_env_get_cpu(env));
-        uint32_t associativity[] = {cpu_to_be32(0x5),
-                                    cpu_to_be32(0x0),
-                                    cpu_to_be32(0x0),
-                                    cpu_to_be32(0x0),
-                                    cpu_to_be32(cpu->numa_node),
-                                    cpu_to_be32(cpu->cpu_index)};
-
-        if ((cpu->cpu_index % smt) != 0) {
-            continue;
-        }
-
-        snprintf(cpu_model, 32, "/cpus/%s@%x", spapr->cpu_model,
-                 cpu->cpu_index);
-
-        offset = fdt_path_offset(fdt, cpu_model);
-        if (offset < 0) {
-            return offset;
-        }
-
-        if (nb_numa_nodes > 1) {
-            ret = fdt_setprop(fdt, offset, "ibm,associativity", associativity,
-                              sizeof(associativity));
-            if (ret < 0) {
-                return ret;
-            }
-        }
-
-        ret = fdt_setprop(fdt, offset, "ibm,pft-size",
-                          pft_size_prop, sizeof(pft_size_prop));
-        if (ret < 0) {
-            return ret;
-        }
-    }
-    return ret;
+    qemu_for_each_cpu(spapr_fixup_one_cpu_dt, &s);
+    return s.ret;
 }
 
 
