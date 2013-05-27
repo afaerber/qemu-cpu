@@ -675,12 +675,17 @@ static void page_flush_tb(void)
     }
 }
 
+static void tb_flush_memset_one_tb_jmp_cache(CPUState *cpu, void *data)
+{
+    CPUArchState *env = cpu->env_ptr;
+
+    memset(env->tb_jmp_cache, 0, TB_JMP_CACHE_SIZE * sizeof(void *));
+}
+
 /* flush all the translation blocks */
 /* XXX: tb_flush is currently not thread safe */
 void tb_flush(CPUArchState *env1)
 {
-    CPUArchState *env;
-
 #if defined(DEBUG_FLUSH)
     printf("qemu: flush code_size=%ld nb_tbs=%d avg_tb_size=%ld\n",
            (unsigned long)(tcg_ctx.code_gen_ptr - tcg_ctx.code_gen_buffer),
@@ -694,9 +699,7 @@ void tb_flush(CPUArchState *env1)
     }
     tcg_ctx.tb_ctx.nb_tbs = 0;
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        memset(env->tb_jmp_cache, 0, TB_JMP_CACHE_SIZE * sizeof(void *));
-    }
+    qemu_for_each_cpu(tb_flush_memset_one_tb_jmp_cache, NULL);
 
     memset(tcg_ctx.tb_ctx.tb_phys_hash, 0,
             CODE_GEN_PHYS_HASH_SIZE * sizeof(void *));
