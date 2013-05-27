@@ -144,25 +144,24 @@ static inline void exclusive_idle(void)
     }
 }
 
+static void start_exclusive_stop_one(CPUState *cpu, void *data)
+{
+    if (cpu->running) {
+        pending_cpus++;
+        cpu_exit(cpu);
+    }
+}
+
 /* Start an exclusive operation.
    Must only be called from outside cpu_arm_exec.   */
 static inline void start_exclusive(void)
 {
-    CPUArchState *other;
-    CPUState *other_cpu;
-
     pthread_mutex_lock(&exclusive_lock);
     exclusive_idle();
 
     pending_cpus = 1;
     /* Make all other cpus stop executing.  */
-    for (other = first_cpu; other; other = other->next_cpu) {
-        other_cpu = ENV_GET_CPU(other);
-        if (other_cpu->running) {
-            pending_cpus++;
-            cpu_exit(other_cpu);
-        }
-    }
+    qemu_for_each_cpu(start_exclusive_stop_one, NULL);
     if (pending_cpus > 1) {
         pthread_cond_wait(&exclusive_cond, &exclusive_lock);
     }
