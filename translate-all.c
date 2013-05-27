@@ -819,14 +819,31 @@ static inline void tb_reset_jump(TranslationBlock *tb, int n)
     tb_set_jmp_target(tb, n, (uintptr_t)(tb->tc_ptr + tb->tb_next_offset[n]));
 }
 
+typedef struct TBPhysInvalidateRemoveData {
+    TranslationBlock *tb;
+    unsigned int h;
+} TBPhysInvalidateRemoveData;
+
+static void tb_phys_invalidate_remove_one(CPUState *cpu, void *data)
+{
+    TBPhysInvalidateRemoveData *s = data;
+    CPUArchState *env = cpu->env_ptr;
+
+    if (env->tb_jmp_cache[s->h] == s->tb) {
+        env->tb_jmp_cache[s->h] = NULL;
+    }
+}
+
 /* invalidate one TB */
 void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr)
 {
-    CPUArchState *env;
     PageDesc *p;
     unsigned int h, n1;
     tb_page_addr_t phys_pc;
     TranslationBlock *tb1, *tb2;
+    TBPhysInvalidateRemoveData rm_data = {
+        .tb = tb,
+    };
 
     /* remove the TB from the hash list */
     phys_pc = tb->page_addr[0] + (tb->pc & ~TARGET_PAGE_MASK);
@@ -848,12 +865,8 @@ void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr)
     tcg_ctx.tb_ctx.tb_invalidated_flag = 1;
 
     /* remove the TB from the hash list */
-    h = tb_jmp_cache_hash_func(tb->pc);
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        if (env->tb_jmp_cache[h] == tb) {
-            env->tb_jmp_cache[h] = NULL;
-        }
-    }
+    rm_data.h = tb_jmp_cache_hash_func(tb->pc);
+    qemu_for_each_cpu(tb_phys_invalidate_remove_one, &rm_data);
 
     /* suppress this TB from the two jump lists */
     tb_jmp_remove(tb, 0);
