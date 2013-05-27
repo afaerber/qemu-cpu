@@ -2624,11 +2624,21 @@ static void fill_thread_info(struct elf_note_info *info, const CPUArchState *env
     info->notes_size += note_size(&ets->notes[0]);
 }
 
+static void fill_note_info_for_thread(CPUState *cpu, void *data)
+{
+    struct elf_note_info *info = data;
+    CPUArchState *env = cpu->env_ptr;
+
+    if (env == thread_env) {
+        return;
+    }
+    fill_thread_info(info, env);
+}
+
 static int fill_note_info(struct elf_note_info *info,
                           long signr, const CPUArchState *env)
 {
 #define NUMNOTES 3
-    CPUArchState *cpu = NULL;
     TaskState *ts = (TaskState *)env->opaque;
     int i;
 
@@ -2666,11 +2676,7 @@ static int fill_note_info(struct elf_note_info *info,
 
     /* read and fill status of all threads */
     cpu_list_lock();
-    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
-        if (cpu == thread_env)
-            continue;
-        fill_thread_info(info, cpu);
-    }
+    qemu_for_each_cpu(fill_note_info_for_thread, info);
     cpu_list_unlock();
 
     return (0);
