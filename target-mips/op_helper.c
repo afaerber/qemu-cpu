@@ -1715,23 +1715,29 @@ target_ulong helper_dvpe(CPUMIPSState *env)
     return prev;
 }
 
+static void helper_evpe_one(CPUState *cs, void *data)
+{
+    MIPSCPU *self_cpu = data;
+    MIPSCPU *cpu = MIPS_CPU(cs);
+
+    if (cpu == self_cpu) {
+        return;
+    }
+    /* If the VPE is WFI, don't disturb its sleep.  */
+    if (mips_vpe_is_wfi(cpu)) {
+        return;
+    }
+    /* Enable the VPE.  */
+    cpu->env.mvp->CP0_MVPControl |= (1 << CP0MVPCo_EVP);
+    /* And wake it up.  */
+    mips_vpe_wake(cpu);
+}
+
 target_ulong helper_evpe(CPUMIPSState *env)
 {
-    CPUMIPSState *other_cpu_env = first_cpu;
     target_ulong prev = env->mvp->CP0_MVPControl;
 
-    do {
-        MIPSCPU *other_cpu = mips_env_get_cpu(other_cpu_env);
-
-        if (other_cpu_env != env
-            /* If the VPE is WFI, don't disturb its sleep.  */
-            && !mips_vpe_is_wfi(other_cpu)) {
-            /* Enable the VPE.  */
-            other_cpu_env->mvp->CP0_MVPControl |= (1 << CP0MVPCo_EVP);
-            mips_vpe_wake(other_cpu); /* And wake it up.  */
-        }
-        other_cpu_env = other_cpu_env->next_cpu;
-    } while (other_cpu_env);
+    qemu_for_each_cpu(helper_evpe_one, mips_env_get_cpu(env));
     return prev;
 }
 #endif /* !CONFIG_USER_ONLY */
