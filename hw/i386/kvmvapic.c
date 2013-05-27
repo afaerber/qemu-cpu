@@ -485,19 +485,21 @@ static void vapic_do_enable_tpr_reporting(void *data)
     apic_enable_tpr_access_reporting(info->apic, info->enable);
 }
 
+static void vapic_enable_tpr_reporting_one(CPUState *cs, void *data)
+{
+    bool *enable = data;
+    X86CPU *cpu = X86_CPU(cs);
+    VAPICEnableTPRReporting info = {
+        .enable = *enable,
+    };
+
+    info.apic = cpu->env.apic_state;
+    run_on_cpu(cs, vapic_do_enable_tpr_reporting, &info);
+}
+
 static void vapic_enable_tpr_reporting(bool enable)
 {
-    VAPICEnableTPRReporting info = {
-        .enable = enable,
-    };
-    X86CPU *cpu;
-    CPUX86State *env;
-
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        cpu = x86_env_get_cpu(env);
-        info.apic = env->apic_state;
-        run_on_cpu(CPU(cpu), vapic_do_enable_tpr_reporting, &info);
-    }
+    qemu_for_each_cpu(vapic_enable_tpr_reporting_one, &enable);
 }
 
 static void vapic_reset(DeviceState *dev)
