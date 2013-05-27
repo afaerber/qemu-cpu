@@ -1184,6 +1184,23 @@ static void do_inject_x86_mce(void *data)
     }
 }
 
+typedef struct InjectMCEBroadcastData {
+    X86CPU *self_cpu;
+    MCEInjectionParams *params;
+} InjectMCEBroadcastData;
+
+static void x86_cpu_inject_mce_broadcast_one(CPUState *cs, void *data)
+{
+    InjectMCEBroadcastData *s = data;
+    X86CPU *cpu = X86_CPU(cs);
+
+    if (cpu == s->self_cpu) {
+        return;
+    }
+    s->params->cpu = cpu;
+    run_on_cpu(cs, do_inject_x86_mce, &s->params);
+}
+
 void cpu_x86_inject_mce(Monitor *mon, X86CPU *cpu, int bank,
                         uint64_t status, uint64_t mcg_status, uint64_t addr,
                         uint64_t misc, int flags)
@@ -1200,7 +1217,6 @@ void cpu_x86_inject_mce(Monitor *mon, X86CPU *cpu, int bank,
         .flags = flags,
     };
     unsigned bank_num = cenv->mcg_cap & 0xff;
-    CPUX86State *env;
 
     if (!cenv->mcg_cap) {
         monitor_printf(mon, "MCE injection not supported\n");
@@ -1222,18 +1238,16 @@ void cpu_x86_inject_mce(Monitor *mon, X86CPU *cpu, int bank,
 
     run_on_cpu(CPU(cpu), do_inject_x86_mce, &params);
     if (flags & MCE_INJECT_BROADCAST) {
+        InjectMCEBroadcastData s = {
+            .self_cpu = cpu,
+            .params = &params,
+        };
         params.bank = 1;
         params.status = MCI_STATUS_VAL | MCI_STATUS_UC;
         params.mcg_status = MCG_STATUS_MCIP | MCG_STATUS_RIPV;
         params.addr = 0;
         params.misc = 0;
-        for (env = first_cpu; env != NULL; env = env->next_cpu) {
-            if (cenv == env) {
-                continue;
-            }
-            params.cpu = x86_env_get_cpu(env);
-            run_on_cpu(CPU(cpu), do_inject_x86_mce, &params);
-        }
+        qemu_for_each_cpu(x86_cpu_inject_mce_broadcast_one, &s);
     }
 }
 
