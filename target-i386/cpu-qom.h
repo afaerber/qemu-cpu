@@ -98,4 +98,6 @@ int x86_cpu_write_elf64_qemunote(WriteCoreDumpFunction f, CPUState *cpu,
 int x86_cpu_write_elf32_qemunote(WriteCoreDumpFunction f, CPUState *cpu,
                                  void *opaque);
 
+int x86_cpu_get_memory_mapping(CPUState *cpu, MemoryMappingList *list);
+
 #endif

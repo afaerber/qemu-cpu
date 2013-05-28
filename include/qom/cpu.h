@@ -23,6 +23,7 @@
 #include <signal.h>
 #include "hw/qdev-core.h"
 #include "qemu/thread.h"
+#include "qemu/typedefs.h"
 
 typedef int (*WriteCoreDumpFunction)(void *buf, size_t size, void *opaque);
 
@@ -49,6 +50,7 @@ typedef struct CPUState CPUState;
  * @do_interrupt: Callback for interrupt handling.
  * @get_arch_id: Callback for getting architecture-dependent CPU ID.
  * @get_paging_enabled: Callback for inquiring whether paging is enabled.
+ * @get_memory_mapping: Callback for obtaining the memory mappings.
  * @vmsd: State description for migration.
  *
  * Represents a CPU family or model.
@@ -64,6 +66,7 @@ typedef struct CPUClass {
     void (*do_interrupt)(CPUState *cpu);
     int64_t (*get_arch_id)(CPUState *cpu);
     bool (*get_paging_enabled)(CPUState *cpu);
+    int (*get_memory_mapping)(CPUState *cpu, MemoryMappingList *list);
 
     const struct VMStateDescription *vmsd;
     int (*write_elf64_note)(WriteCoreDumpFunction f, CPUState *cpu,
@@ -146,6 +149,14 @@ struct CPUState {
  * Returns: %true if paging is enabled, %false otherwise.
  */
 bool cpu_paging_enabled(CPUState *cpu);
+
+/**
+ * @cpu: The CPU whose memory mappings are to be obtained.
+ * @list: Where to write the memory mappings to.
+ *
+ * Returns: 0 if successful.
+ */
+int cpu_get_memory_mapping(CPUState *cpu, MemoryMappingList *list);
 
 /**
  * cpu_write_elf64_note:

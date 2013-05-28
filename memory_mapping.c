@@ -188,7 +188,7 @@ int qemu_get_guest_memory_mapping(MemoryMappingList *list)
     first_paging_enabled_cpu = find_paging_enabled_cpu(first_cpu);
     if (first_paging_enabled_cpu) {
         for (env = first_paging_enabled_cpu; env != NULL; env = env->next_cpu) {
-            ret = cpu_get_memory_mapping(list, env);
+            ret = cpu_get_memory_mapping(ENV_GET_CPU(env), list);
             if (ret < 0) {
                 return -1;
             }
