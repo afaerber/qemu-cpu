@@ -273,29 +273,62 @@ static inline int cpu_index(CPUState *cpu)
     return cpu->cpu_index + 1;
 }
 
-static int write_elf64_notes(DumpState *s)
-{
-    CPUArchState *env;
-    CPUState *cpu;
+typedef struct WriteELFNoteData {
+    DumpState *state;
     int ret;
-    int id;
+} WriteELFNoteData;
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        cpu = ENV_GET_CPU(env);
-        id = cpu_index(cpu);
-        ret = cpu_write_elf64_note(fd_write_vmcore, cpu, id, s);
-        if (ret < 0) {
-            dump_error(s, "dump: failed to write elf notes.\n");
-            return -1;
-        }
+static void write_one_elf64_note(CPUState *cpu, void *data)
+{
+    WriteELFNoteData *d = data;
+    int id;
+    int ret;
+
+    if (d->ret != 0) {
+        return;
     }
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        ret = cpu_write_elf64_qemunote(fd_write_vmcore, cpu, s);
-        if (ret < 0) {
-            dump_error(s, "dump: failed to write CPU status.\n");
-            return -1;
-        }
+    id = cpu_index(cpu);
+    ret = cpu_write_elf64_note(fd_write_vmcore, cpu, id, d->state);
+    if (ret < 0) {
+        dump_error(d->state, "dump: failed to write elf notes.\n");
+        d->ret = -1;
+        return;
+    }
+}
+
+static void write_one_elf64_qemunote(CPUState *cpu, void *data)
+{
+    WriteELFNoteData *d = data;
+    int ret;
+
+    if (d->ret != 0) {
+        return;
+    }
+
+    ret = cpu_write_elf64_qemunote(fd_write_vmcore, cpu, d->state);
+    if (ret < 0) {
+        dump_error(d->state, "dump: failed to write CPU status.\n");
+        d->ret = -1;
+        return;
+    }
+}
+
+static int write_elf64_notes(DumpState *s)
+{
+    WriteELFNoteData data = {
+        .state = s,
+        .ret = 0,
+    };
+
+    qemu_for_each_cpu(write_one_elf64_note, &data);
+    if (data.ret != 0) {
+        return data.ret;
+    }
+
+    qemu_for_each_cpu(write_one_elf64_qemunote, &data);
+    if (data.ret != 0) {
+        return data.ret;
     }
 
     return 0;
@@ -325,29 +358,57 @@ static int write_elf32_note(DumpState *s)
     return 0;
 }
 
-static int write_elf32_notes(DumpState *s)
+static void write_one_elf32_note(CPUState *cpu, void *data)
 {
-    CPUArchState *env;
-    CPUState *cpu;
-    int ret;
+    WriteELFNoteData *d = data;
     int id;
+    int ret;
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        cpu = ENV_GET_CPU(env);
-        id = cpu_index(cpu);
-        ret = cpu_write_elf32_note(fd_write_vmcore, cpu, id, s);
-        if (ret < 0) {
-            dump_error(s, "dump: failed to write elf notes.\n");
-            return -1;
-        }
+    if (d->ret != 0) {
+        return;
     }
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        ret = cpu_write_elf32_qemunote(fd_write_vmcore, cpu, s);
-        if (ret < 0) {
-            dump_error(s, "dump: failed to write CPU status.\n");
-            return -1;
-        }
+    id = cpu_index(cpu);
+    ret = cpu_write_elf32_note(fd_write_vmcore, cpu, id, d->state);
+    if (ret < 0) {
+        dump_error(d->state, "dump: failed to write elf notes.\n");
+        d->ret = -1;
+        return;
+    }
+}
+
+static void write_one_elf32_qemunote(CPUState *cpu, void *data)
+{
+    WriteELFNoteData *d = data;
+    int ret;
+
+    if (d->ret != 0) {
+        return;
+    }
+
+    ret = cpu_write_elf32_qemunote(fd_write_vmcore, cpu, d->state);
+    if (ret < 0) {
+        dump_error(d->state, "dump: failed to write CPU status.\n");
+        d->ret = -1;
+        return;
+    }
+}
+
+static int write_elf32_notes(DumpState *s)
+{
+    WriteELFNoteData data = {
+        .state = s,
+        .ret = 0,
+    };
+
+    qemu_for_each_cpu(write_one_elf32_note, &data);
+    if (data.ret != 0) {
+        return data.ret;
+    }
+
+    qemu_for_each_cpu(write_one_elf32_qemunote, &data);
+    if (data.ret != 0) {
+        return data.ret;
     }
 
     return 0;
