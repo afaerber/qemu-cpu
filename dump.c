@@ -702,10 +702,16 @@ static ram_addr_t get_start_block(DumpState *s)
     return -1;
 }
 
+static void count_one_cpu(CPUState *cpu, void *data)
+{
+    int *nr = data;
+
+    *nr = *nr + 1;
+}
+
 static int dump_init(DumpState *s, int fd, bool paging, bool has_filter,
                      int64_t begin, int64_t length, Error **errp)
 {
-    CPUArchState *env;
     int nr_cpus;
     Error *err = NULL;
     int ret;
@@ -738,9 +744,7 @@ static int dump_init(DumpState *s, int fd, bool paging, bool has_filter,
      */
     cpu_synchronize_all_states();
     nr_cpus = 0;
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        nr_cpus++;
-    }
+    qemu_for_each_cpu(count_one_cpu, &nr_cpus);
 
     ret = cpu_get_dump_info(&s->dump_info);
     if (ret < 0) {
