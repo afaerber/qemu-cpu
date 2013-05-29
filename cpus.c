@@ -77,16 +77,24 @@ static bool cpu_thread_is_idle(CPUState *cpu)
     return true;
 }
 
+static void one_cpu_thread_idle(CPUState *cpu, void *data)
+{
+    bool *all_idle = data;
+
+    if (!*all_idle) {
+        return;
+    }
+    if (!cpu_thread_is_idle(cpu)) {
+        *all_idle = false;
+    }
+}
+
 static bool all_cpu_threads_idle(void)
 {
-    CPUArchState *env;
+    bool ret = true;
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        if (!cpu_thread_is_idle(ENV_GET_CPU(env))) {
-            return false;
-        }
-    }
-    return true;
+    qemu_for_each_cpu(one_cpu_thread_idle, &ret);
+    return ret;
 }
 
 /***********************************************************/
