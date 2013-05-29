@@ -1205,49 +1205,60 @@ void list_cpus(FILE *f, fprintf_function cpu_fprintf, const char *optarg)
 #endif
 }
 
-CpuInfoList *qmp_query_cpus(Error **errp)
+typedef struct QMPQueryCPUs {
+    CpuInfoList *head;
+    CpuInfoList *cur_item;
+} QMPQueryCPUs;
+
+static void qmp_query_one_cpu(CPUState *cpu, void *data)
 {
-    CpuInfoList *head = NULL, *cur_item = NULL;
-    CPUArchState *env;
+    QMPQueryCPUs *s = data;
+    CPUArchState *env = cpu->env_ptr;
+    CpuInfoList *info;
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        CPUState *cpu = ENV_GET_CPU(env);
-        CpuInfoList *info;
+    cpu_synchronize_state(cpu);
 
-        cpu_synchronize_state(cpu);
-
-        info = g_malloc0(sizeof(*info));
-        info->value = g_malloc0(sizeof(*info->value));
-        info->value->CPU = cpu->cpu_index;
-        info->value->current = (env == first_cpu);
-        info->value->halted = cpu->halted;
-        info->value->thread_id = cpu->thread_id;
+    info = g_malloc0(sizeof(*info));
+    info->value = g_malloc0(sizeof(*info->value));
+    info->value->CPU = cpu->cpu_index;
+    info->value->current = (env == first_cpu);
+    info->value->halted = cpu->halted;
+    info->value->thread_id = cpu->thread_id;
 #if defined(TARGET_I386)
-        info->value->has_pc = true;
-        info->value->pc = env->eip + env->segs[R_CS].base;
+    info->value->has_pc = true;
+    info->value->pc = env->eip + env->segs[R_CS].base;
 #elif defined(TARGET_PPC)
-        info->value->has_nip = true;
-        info->value->nip = env->nip;
+    info->value->has_nip = true;
+    info->value->nip = env->nip;
 #elif defined(TARGET_SPARC)
-        info->value->has_pc = true;
-        info->value->pc = env->pc;
-        info->value->has_npc = true;
-        info->value->npc = env->npc;
+    info->value->has_pc = true;
+    info->value->pc = env->pc;
+    info->value->has_npc = true;
+    info->value->npc = env->npc;
 #elif defined(TARGET_MIPS)
-        info->value->has_PC = true;
-        info->value->PC = env->active_tc.PC;
+    info->value->has_PC = true;
+    info->value->PC = env->active_tc.PC;
 #endif
 
-        /* XXX: waiting for the qapi to support GSList */
-        if (!cur_item) {
-            head = cur_item = info;
-        } else {
-            cur_item->next = info;
-            cur_item = info;
-        }
+    /* XXX: waiting for the qapi to support GSList */
+    if (s->cur_item == NULL) {
+        s->head = s->cur_item = info;
+    } else {
+        s->cur_item->next = info;
+        s->cur_item = info;
     }
+}
 
-    return head;
+CpuInfoList *qmp_query_cpus(Error **errp)
+{
+    QMPQueryCPUs s = {
+        .head = NULL,
+        .cur_item = NULL,
+    };
+
+    qemu_for_each_cpu(qmp_query_one_cpu, &s);
+
+    return s.head;
 }
 
 void qmp_memsave(int64_t addr, int64_t size, const char *filename,
