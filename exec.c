@@ -70,7 +70,7 @@ static MemoryRegion io_mem_unassigned, io_mem_subpage_ram;
 
 #endif
 
-CPUArchState *first_cpu;
+CPUState *first_cpu;
 /* current CPU in the current thread. It is only valid inside
    cpu_exec() */
 DEFINE_TLS(CPUState *,cpu_single_cpu);
@@ -289,11 +289,12 @@ CPUState *qemu_get_cpu(int index)
 
 void qemu_for_each_cpu(void (*func)(CPUState *cpu, void *data), void *data)
 {
-    CPUArchState *env = first_cpu;
+    CPUState *cpu;
 
-    while (env) {
-        func(ENV_GET_CPU(env), data);
-        env = env->next_cpu;
+    cpu = first_cpu;
+    while (cpu) {
+        func(cpu, data);
+        cpu = cpu->next_cpu;
     }
 }
 
@@ -301,17 +302,17 @@ void cpu_exec_init(CPUArchState *env)
 {
     CPUState *cpu = ENV_GET_CPU(env);
     CPUClass *cc = CPU_GET_CLASS(cpu);
-    CPUArchState **penv;
+    CPUState **pcpu;
     int cpu_index;
 
 #if defined(CONFIG_USER_ONLY)
     cpu_list_lock();
 #endif
-    env->next_cpu = NULL;
-    penv = &first_cpu;
+    cpu->next_cpu = NULL;
+    pcpu = &first_cpu;
     cpu_index = 0;
-    while (*penv != NULL) {
-        penv = &(*penv)->next_cpu;
+    while (*pcpu != NULL) {
+        pcpu = &(*pcpu)->next_cpu;
         cpu_index++;
     }
     cpu->cpu_index = cpu_index;
@@ -321,7 +322,7 @@ void cpu_exec_init(CPUArchState *env)
 #ifndef CONFIG_USER_ONLY
     cpu->thread_id = qemu_get_thread_id();
 #endif
-    *penv = env;
+    *pcpu = cpu;
 #if defined(CONFIG_USER_ONLY)
     cpu_list_unlock();
 #endif
@@ -560,7 +561,7 @@ void cpu_abort(CPUArchState *env, const char *fmt, ...)
 CPUArchState *cpu_copy(CPUArchState *env)
 {
     CPUArchState *new_env = cpu_init(env->cpu_model_str);
-    CPUArchState *next_cpu = new_env->next_cpu;
+    CPUState *next_cpu = ENV_GET_CPU(new_env)->next_cpu;
 #if defined(TARGET_HAS_ICE)
     CPUBreakpoint *bp;
     CPUWatchpoint *wp;
@@ -569,7 +570,7 @@ CPUArchState *cpu_copy(CPUArchState *env)
     memcpy(new_env, env, sizeof(CPUArchState));
 
     /* Preserve chaining. */
-    new_env->next_cpu = next_cpu;
+    ENV_GET_CPU(new_env)->next_cpu = next_cpu;
 
     /* Clone all break/watchpoints.
        Note: Once we support ptrace with hw-debug register access, make sure

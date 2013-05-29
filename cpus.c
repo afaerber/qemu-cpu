@@ -60,7 +60,7 @@
 
 #endif /* CONFIG_LINUX */
 
-static CPUArchState *next_cpu;
+static CPUState *next_cpu;
 
 static bool cpu_thread_is_idle(CPUState *cpu)
 {
@@ -836,7 +836,7 @@ static void *qemu_tcg_cpu_thread_fn(void *arg)
     qemu_cond_signal(&qemu_cpu_cond);
 
     /* wait for initial kick-off after machine start */
-    while (ENV_GET_CPU(first_cpu)->stopped) {
+    while (first_cpu->stopped) {
         qemu_cond_wait(tcg_halt_cond, &qemu_global_mutex);
 
         /* process any pending work */
@@ -933,7 +933,7 @@ void qemu_mutex_lock_iothread(void)
     } else {
         iothread_requesting_mutex = true;
         if (qemu_mutex_trylock(&qemu_global_mutex)) {
-            qemu_cpu_kick_thread(ENV_GET_CPU(first_cpu));
+            qemu_cpu_kick_thread(first_cpu);
             qemu_mutex_lock(&qemu_global_mutex);
         }
         iothread_requesting_mutex = false;
@@ -1162,8 +1162,8 @@ static void tcg_exec_all(void)
         next_cpu = first_cpu;
     }
     for (; next_cpu != NULL && !exit_request; next_cpu = next_cpu->next_cpu) {
-        CPUArchState *env = next_cpu;
-        CPUState *cpu = ENV_GET_CPU(env);
+        CPUState *cpu = next_cpu;
+        CPUArchState *env = cpu->env_ptr;
 
         qemu_clock_enable(vm_clock,
                           (env->singlestep_enabled & SSTEP_NOTIMER) == 0);
@@ -1213,7 +1213,10 @@ typedef struct QMPQueryCPUs {
 static void qmp_query_one_cpu(CPUState *cpu, void *data)
 {
     QMPQueryCPUs *s = data;
+#if defined(TARGET_I386) || defined(TARGET_PPC) || defined(TARGET_SPARC) || \
+    defined(TARGET_MIPS)
     CPUArchState *env = cpu->env_ptr;
+#endif
     CpuInfoList *info;
 
     cpu_synchronize_state(cpu);
@@ -1221,7 +1224,7 @@ static void qmp_query_one_cpu(CPUState *cpu, void *data)
     info = g_malloc0(sizeof(*info));
     info->value = g_malloc0(sizeof(*info->value));
     info->value->CPU = cpu->cpu_index;
-    info->value->current = (env == first_cpu);
+    info->value->current = (cpu == first_cpu);
     info->value->halted = cpu->halted;
     info->value->thread_id = cpu->thread_id;
 #if defined(TARGET_I386)

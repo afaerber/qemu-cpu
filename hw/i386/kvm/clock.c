@@ -132,9 +132,11 @@ static const TypeInfo kvmclock_info = {
 /* Note: Must be called after VCPU initialization. */
 void kvmclock_create(void)
 {
+    X86CPU *cpu = X86_CPU(first_cpu);
+
     if (kvm_enabled() &&
-        first_cpu->features[FEAT_KVM] & ((1ULL << KVM_FEATURE_CLOCKSOURCE) |
-                                         (1ULL << KVM_FEATURE_CLOCKSOURCE2))) {
+        cpu->env.features[FEAT_KVM] & ((1ULL << KVM_FEATURE_CLOCKSOURCE) |
+                                       (1ULL << KVM_FEATURE_CLOCKSOURCE2))) {
         sysbus_create_simple("kvmclock", -1, NULL);
     }
 }

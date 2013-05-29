@@ -120,8 +120,8 @@ void fork_end(int child)
     if (child) {
         /* Child processes created by fork() only have a single thread.
            Discard information about the parent threads.  */
-        first_cpu = thread_env;
-        thread_env->next_cpu = NULL;
+        first_cpu = ENV_GET_CPU(thread_env);
+        first_cpu->next_cpu = NULL;
         pending_cpus = 0;
         pthread_mutex_init(&exclusive_lock, NULL);
         pthread_mutex_init(&cpu_list_mutex, NULL);

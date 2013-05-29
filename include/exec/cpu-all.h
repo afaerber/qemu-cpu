@@ -356,7 +356,7 @@ CPUArchState *cpu_copy(CPUArchState *env);
 
 void QEMU_NORETURN cpu_abort(CPUArchState *env, const char *fmt, ...)
     GCC_FMT_ATTR(2, 3);
-extern CPUArchState *first_cpu;
+extern CPUState *first_cpu;
 DECLARE_TLS(CPUState *,cpu_single_cpu);
 #define cpu_single_cpu tls_var(cpu_single_cpu)
 

@@ -1836,6 +1836,7 @@ static const char *get_feature_xml(const char *p, const char **newp)
         /* Generate the XML description for this CPU.  */
         if (!target_xml[0]) {
             GDBRegisterState *r;
+            CPUArchState *env = first_cpu->env_ptr;
 
             snprintf(target_xml, sizeof(target_xml),
                      "<?xml version=\"1.0\"?>"
@@ -1844,7 +1845,7 @@ static const char *get_feature_xml(const char *p, const char **newp)
                      "<xi:include href=\"%s\"/>",
                      GDB_CORE_XML);
 
-            for (r = first_cpu->gdb_regs; r; r = r->next) {
+            for (r = env->gdb_regs; r; r = r->next) {
                 pstrcat(target_xml, sizeof(target_xml), "<xi:include href=\"");
                 pstrcat(target_xml, sizeof(target_xml), r->xml);
                 pstrcat(target_xml, sizeof(target_xml), "\"/>");
@@ -2438,7 +2439,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
             put_packet(s, "QC1");
             break;
         } else if (strcmp(p,"fThreadInfo") == 0) {
-            s->query_cpu = first_cpu;
+            s->query_cpu = first_cpu->env_ptr;
             goto report_cpuinfo;
         } else if (strcmp(p,"sThreadInfo") == 0) {
         report_cpuinfo:
@@ -2446,7 +2447,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
                 snprintf(buf, sizeof(buf), "m%x",
                          cpu_index(ENV_GET_CPU(s->query_cpu)));
                 put_packet(s, buf);
-                s->query_cpu = s->query_cpu->next_cpu;
+                s->query_cpu = ENV_GET_CPU(s->query_cpu)->next_cpu->env_ptr;
             } else
                 put_packet(s, "l");
             break;
@@ -2913,8 +2914,8 @@ static void gdb_accept(void)
     socket_set_nodelay(fd);
 
     s = g_malloc0(sizeof(GDBState));
-    s->c_cpu = first_cpu;
-    s->g_cpu = first_cpu;
+    s->c_cpu = first_cpu->env_ptr;
+    s->g_cpu = first_cpu->env_ptr;
     s->fd = fd;
     gdb_has_xml = 0;
 
@@ -3098,8 +3099,8 @@ int gdbserver_start(const char *device)
         mon_chr = s->mon_chr;
         memset(s, 0, sizeof(GDBState));
     }
-    s->c_cpu = first_cpu;
-    s->g_cpu = first_cpu;
+    s->c_cpu = first_cpu->env_ptr;
+    s->g_cpu = first_cpu->env_ptr;
     s->chr = chr;
     s->state = chr ? RS_IDLE : RS_INACTIVE;
     s->mon_chr = mon_chr;

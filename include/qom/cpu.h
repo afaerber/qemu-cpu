@@ -113,6 +113,7 @@ struct kvm_run;
  *           CPU and return to its top level loop.
  * @env_ptr: Pointer to subclass-specific CPUArchState field.
  * @current_tb: Currently executing TB.
+ * @next_cpu: Next CPU sharing TB cache.
  * @kvm_fd: vCPU file descriptor for KVM.
  *
  * State of one CPU core or thread.
@@ -145,6 +146,7 @@ struct CPUState {
 
     void *env_ptr; /* CPUArchState */
     struct TranslationBlock *current_tb;
+    CPUState *next_cpu;
 
     int kvm_fd;
     bool kvm_vcpu_dirty;

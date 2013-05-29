@@ -720,8 +720,9 @@ static int vapic_init(SysBusDevice *dev)
 static void do_vapic_enable(void *data)
 {
     VAPICROMState *s = data;
+    X86CPU *cpu = X86_CPU(first_cpu);
 
-    vapic_enable(s, first_cpu);
+    vapic_enable(s, &cpu->env);
 }
 
 static int vapic_post_load(void *opaque, int version_id)
@@ -744,7 +745,7 @@ static int vapic_post_load(void *opaque, int version_id)
     }
     if (s->state == VAPIC_ACTIVE) {
         if (smp_cpus == 1) {
-            run_on_cpu(ENV_GET_CPU(first_cpu), do_vapic_enable, s);
+            run_on_cpu(first_cpu, do_vapic_enable, s);
         } else {
             zero = g_malloc0(s->rom_state.vapic_size);
             cpu_physical_memory_rw(s->vapic_paddr, zero,

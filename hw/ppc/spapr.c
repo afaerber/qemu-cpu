@@ -661,7 +661,7 @@ static void spapr_reset_htab(sPAPREnvironment *spapr)
 
 static void ppc_spapr_reset(void)
 {
-    CPUState *first_cpu_cpu;
+    PowerPCCPU *first_ppc_cpu;
 
     /* Reset the hash table & recalc the RMA */
     spapr_reset_htab(spapr);
@@ -673,11 +673,11 @@ static void ppc_spapr_reset(void)
                        spapr->rtas_size);
 
     /* Set up the entry state */
-    first_cpu_cpu = ENV_GET_CPU(first_cpu);
-    first_cpu->gpr[3] = spapr->fdt_addr;
-    first_cpu->gpr[5] = 0;
-    first_cpu_cpu->halted = 0;
-    first_cpu->nip = spapr->entry_point;
+    first_ppc_cpu = POWERPC_CPU(first_cpu);
+    first_ppc_cpu->env.gpr[3] = spapr->fdt_addr;
+    first_ppc_cpu->env.gpr[5] = 0;
+    first_cpu->halted = 0;
+    first_ppc_cpu->env.nip = spapr->entry_point;
 
 }
 
