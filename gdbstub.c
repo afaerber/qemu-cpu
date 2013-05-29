@@ -1944,10 +1944,46 @@ static const int xlat_gdb_type[] = {
 };
 #endif
 
+typedef struct GDBBreakpointAddRemoveData {
+    target_ulong addr;
+    target_ulong len;
+    int type;
+    int ret;
+} GDBBreakpointAddRemoveData;
+
+static void gdb_breakpoint_insert_one(CPUState *cpu, void *data)
+{
+    GDBBreakpointAddRemoveData *s = data;
+    CPUArchState *env = cpu->env_ptr;
+
+    if (s->ret) {
+        return;
+    }
+    s->ret = cpu_breakpoint_insert(env, s->addr, BP_GDB, NULL);
+}
+
+#ifndef CONFIG_USER_ONLY
+static void gdb_watchpoint_insert_one(CPUState *cpu, void *data)
+{
+    GDBBreakpointAddRemoveData *s = data;
+    CPUArchState *env = cpu->env_ptr;
+
+    if (s->ret) {
+        return;
+    }
+    s->ret = cpu_watchpoint_insert(env, s->addr, s->len,
+                                   xlat_gdb_type[s->type], NULL);
+}
+#endif
+
 static int gdb_breakpoint_insert(target_ulong addr, target_ulong len, int type)
 {
-    CPUArchState *env;
-    int err = 0;
+    GDBBreakpointAddRemoveData s = {
+       .addr = addr,
+       .len = len,
+       .type = type,
+       .ret = 0,
+    };
 
     if (kvm_enabled())
         return kvm_insert_breakpoint(gdbserver_state->c_cpu, addr, len, type);
@@ -1955,33 +1991,53 @@ static int gdb_breakpoint_insert(target_ulong addr, target_ulong len, int type)
     switch (type) {
     case GDB_BREAKPOINT_SW:
     case GDB_BREAKPOINT_HW:
-        for (env = first_cpu; env != NULL; env = env->next_cpu) {
-            err = cpu_breakpoint_insert(env, addr, BP_GDB, NULL);
-            if (err)
-                break;
-        }
-        return err;
+        qemu_for_each_cpu(gdb_breakpoint_insert_one, &s);
+        return s.ret;
 #ifndef CONFIG_USER_ONLY
     case GDB_WATCHPOINT_WRITE:
     case GDB_WATCHPOINT_READ:
     case GDB_WATCHPOINT_ACCESS:
-        for (env = first_cpu; env != NULL; env = env->next_cpu) {
-            err = cpu_watchpoint_insert(env, addr, len, xlat_gdb_type[type],
-                                        NULL);
-            if (err)
-                break;
-        }
-        return err;
+        qemu_for_each_cpu(gdb_watchpoint_insert_one, &s);
+        return s.ret;
 #endif
     default:
         return -ENOSYS;
     }
 }
 
+static void gdb_breakpoint_remove_one(CPUState *cpu, void *data)
+{
+    GDBBreakpointAddRemoveData *s = data;
+    CPUArchState *env = cpu->env_ptr;
+
+    if (s->ret) {
+        return;
+    }
+    s->ret = cpu_breakpoint_remove(env, s->addr, BP_GDB);
+}
+
+#ifndef CONFIG_USER_ONLY
+static void gdb_watchpoint_remove_one(CPUState *cpu, void *data)
+{
+    GDBBreakpointAddRemoveData *s = data;
+    CPUArchState *env = cpu->env_ptr;
+
+    if (s->ret) {
+        return;
+    }
+    s->ret = cpu_watchpoint_remove(env, s->addr, s->len,
+                                   xlat_gdb_type[s->type]);
+}
+#endif
+
 static int gdb_breakpoint_remove(target_ulong addr, target_ulong len, int type)
 {
-    CPUArchState *env;
-    int err = 0;
+    GDBBreakpointAddRemoveData s = {
+        .addr = addr,
+        .len = len,
+        .type = type,
+        .ret = 0,
+    };
 
     if (kvm_enabled())
         return kvm_remove_breakpoint(gdbserver_state->c_cpu, addr, len, type);
@@ -1989,22 +2045,14 @@ static int gdb_breakpoint_remove(target_ulong addr, target_ulong len, int type)
     switch (type) {
     case GDB_BREAKPOINT_SW:
     case GDB_BREAKPOINT_HW:
-        for (env = first_cpu; env != NULL; env = env->next_cpu) {
-            err = cpu_breakpoint_remove(env, addr, BP_GDB);
-            if (err)
-                break;
-        }
-        return err;
+        qemu_for_each_cpu(gdb_breakpoint_remove_one, &s);
+        return s.ret;
 #ifndef CONFIG_USER_ONLY
     case GDB_WATCHPOINT_WRITE:
     case GDB_WATCHPOINT_READ:
     case GDB_WATCHPOINT_ACCESS:
-        for (env = first_cpu; env != NULL; env = env->next_cpu) {
-            err = cpu_watchpoint_remove(env, addr, len, xlat_gdb_type[type]);
-            if (err)
-                break;
-        }
-        return err;
+        qemu_for_each_cpu(gdb_watchpoint_remove_one, &s);
+        return s.ret;
 #endif
     default:
         return -ENOSYS;
