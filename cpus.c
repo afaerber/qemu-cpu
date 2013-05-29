@@ -946,19 +946,21 @@ void qemu_mutex_unlock_iothread(void)
     qemu_mutex_unlock(&qemu_global_mutex);
 }
 
-static int all_vcpus_paused(void)
+static void one_vcpu_paused(CPUState *cpu, void *data)
 {
-    CPUArchState *penv = first_cpu;
+    bool *all_paused = data;
 
-    while (penv) {
-        CPUState *pcpu = ENV_GET_CPU(penv);
-        if (!pcpu->stopped) {
-            return 0;
-        }
-        penv = penv->next_cpu;
+    if (!cpu->stopped) {
+        *all_paused = false;
     }
+}
 
-    return 1;
+static bool all_vcpus_paused(void)
+{
+    bool ret = true;
+
+    qemu_for_each_cpu(one_vcpu_paused, &ret);
+    return ret;
 }
 
 static void pause_one_vcpu(CPUState *cpu, void *data)
