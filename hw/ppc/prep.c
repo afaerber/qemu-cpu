@@ -594,8 +594,9 @@ static void ppc_prep_init(QEMUMachineInitArgs *args)
     /* PCI -> ISA bridge */
     pci = pci_create_simple(pci_bus, PCI_DEVFN(1, 0), "i82378");
     cpu_exit_irq = qemu_allocate_irqs(cpu_request_exit, NULL, 1);
+    cpu = POWERPC_CPU(first_cpu);
     qdev_connect_gpio_out(&pci->qdev, 0,
-                          first_cpu->irq_inputs[PPC6xx_INPUT_INT]);
+                          cpu->env.irq_inputs[PPC6xx_INPUT_INT]);
     qdev_connect_gpio_out(&pci->qdev, 1, *cpu_exit_irq);
     sysbus_connect_irq(&pcihost->busdev, 0, qdev_get_gpio_in(&pci->qdev, 9));
     sysbus_connect_irq(&pcihost->busdev, 1, qdev_get_gpio_in(&pci->qdev, 11));
@@ -640,7 +641,8 @@ static void ppc_prep_init(QEMUMachineInitArgs *args)
     }
     isa_create_simple(isa_bus, "i8042");
 
-    sysctrl->reset_irq = first_cpu->irq_inputs[PPC6xx_INPUT_HRESET];
+    cpu = POWERPC_CPU(first_cpu);
+    sysctrl->reset_irq = cpu->env.irq_inputs[PPC6xx_INPUT_HRESET];
     /* System control ports */
     register_ioport_read(0x0092, 0x01, 1, &PREP_io_800_readb, sysctrl);
     register_ioport_write(0x0092, 0x01, 1, &PREP_io_800_writeb, sysctrl);
