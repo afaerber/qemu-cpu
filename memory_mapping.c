@@ -165,36 +165,48 @@ void memory_mapping_list_init(MemoryMappingList *list)
     QTAILQ_INIT(&list->head);
 }
 
-static CPUArchState *find_paging_enabled_cpu(CPUArchState *start_cpu)
+static void find_paging_enabled_cpu(CPUState *cpu, void *data)
 {
-    CPUArchState *env;
+    bool *ret = data;
 
-    for (env = start_cpu; env != NULL; env = env->next_cpu) {
-        if (cpu_paging_enabled(ENV_GET_CPU(env))) {
-            return env;
-        }
+    if (*ret) {
+        return;
     }
-
-    return NULL;
+    *ret = cpu_paging_enabled(cpu);
 }
 
-int qemu_get_guest_memory_mapping(MemoryMappingList *list)
+typedef struct GetGuestMemoryMappingData {
+    MemoryMappingList *list;
+    Error *err;
+} GetGuestMemoryMappingData;
+
+static void qemu_get_one_guest_memory_mapping(CPUState *cpu, void *data)
 {
-    CPUArchState *env, *first_paging_enabled_cpu;
+    GetGuestMemoryMappingData *s = data;
+
+    if (s->err != NULL || !cpu_paging_enabled(cpu)) {
+        return;
+    }
+    cpu_get_memory_mapping(cpu, s->list, &s->err);
+}
+
+void qemu_get_guest_memory_mapping(MemoryMappingList *list, Error **errp)
+{
+    GetGuestMemoryMappingData s = {
+        .list = list,
+        .err = NULL,
+    };
+    bool paging_enabled = false;
     RAMBlock *block;
     ram_addr_t offset, length;
 
-    first_paging_enabled_cpu = find_paging_enabled_cpu(first_cpu);
-    if (first_paging_enabled_cpu) {
-        for (env = first_paging_enabled_cpu; env != NULL; env = env->next_cpu) {
-            Error *err = NULL;
-            cpu_get_memory_mapping(ENV_GET_CPU(env), list, &err);
-            if (err) {
-                error_free(err);
-                return -1;
-            }
+    qemu_for_each_cpu(find_paging_enabled_cpu, &paging_enabled);
+    if (paging_enabled) {
+        qemu_for_each_cpu(qemu_get_one_guest_memory_mapping, &s);
+        if (s.err != NULL) {
+            error_propagate(errp, s.err);
         }
-        return 0;
+        return;
     }
 
     /*
@@ -206,8 +218,6 @@ int qemu_get_guest_memory_mapping(MemoryMappingList *list)
         length = block->length;
         create_new_memory_mapping(list, offset, offset, length);
     }
-
-    return 0;
 }
 
 void qemu_get_guest_simple_memory_mapping(MemoryMappingList *list)
