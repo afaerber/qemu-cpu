@@ -1933,7 +1933,9 @@ int kvm_insert_breakpoint(CPUArchState *env, target_ulong addr,
         }
     }
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
+    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+        CPUArchState *env = cpu->env_ptr;
+
         err = kvm_update_guest_debug(env, 0);
         if (err) {
             return err;
@@ -1974,7 +1976,9 @@ int kvm_remove_breakpoint(CPUArchState *env, target_ulong addr,
         }
     }
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
+    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+        CPUArchState *env = cpu->env_ptr;
+
         err = kvm_update_guest_debug(env, 0);
         if (err) {
             return err;
@@ -1987,13 +1991,11 @@ void kvm_remove_all_breakpoints(CPUState *cpu)
 {
     struct kvm_sw_breakpoint *bp, *next;
     KVMState *s = cpu->kvm_state;
-    CPUArchState *env;
 
     QTAILQ_FOREACH_SAFE(bp, &s->kvm_sw_breakpoints, entry, next) {
         if (kvm_arch_remove_sw_breakpoint(cpu, bp) != 0) {
             /* Try harder to find a CPU that currently sees the breakpoint. */
-            for (env = first_cpu; env != NULL; env = env->next_cpu) {
-                cpu = ENV_GET_CPU(env);
+            for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
                 if (kvm_arch_remove_sw_breakpoint(cpu, bp) == 0) {
                     break;
                 }
@@ -2004,7 +2006,9 @@ void kvm_remove_all_breakpoints(CPUState *cpu)
     }
     kvm_arch_remove_all_hw_breakpoints();
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
+    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+        CPUArchState *env = cpu->env_ptr;
+
         kvm_update_guest_debug(env, 0);
     }
 }
