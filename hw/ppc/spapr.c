@@ -237,6 +237,113 @@ static size_t create_page_sizes_prop(CPUPPCState *env, uint32_t *prop,
     } while (0)
 
 
+typedef struct SPAPRCreateFDTSkelData {
+    void *fdt;
+    int smt;
+} SPAPRCreateFDTSkelData;
+
+static void spapr_create_fdt_skel_cpu(CPUState *cs, void *data)
+{
+    SPAPRCreateFDTSkelData *s = data;
+    PowerPCCPU *cpu = POWERPC_CPU(cs);
+    CPUPPCState *env = &cpu->env;
+    PowerPCCPUClass *pcc = POWERPC_CPU_GET_CLASS(cs);
+    int index = cs->cpu_index;
+    uint32_t servers_prop[smp_threads];
+    uint32_t gservers_prop[smp_threads * 2];
+    char *nodename;
+    uint32_t segs[] = { cpu_to_be32(28), cpu_to_be32(40),
+                        0xffffffff, 0xffffffff };
+    uint32_t tbfreq = kvm_enabled() ? kvmppc_get_tbfreq() : TIMEBASE_FREQ;
+    uint32_t cpufreq = kvm_enabled() ? kvmppc_get_clockfreq() : 1000000000;
+    uint32_t page_sizes_prop[64];
+    size_t page_sizes_prop_size;
+    int i;
+
+    if ((index % s->smt) != 0) {
+        return;
+    }
+
+    nodename = g_strdup_printf("%s@%x", spapr->cpu_model, index);
+
+    _FDT((fdt_begin_node(s->fdt, nodename)));
+
+    g_free(nodename);
+
+    _FDT((fdt_property_cell(s->fdt, "reg", index)));
+    _FDT((fdt_property_string(s->fdt, "device_type", "cpu")));
+
+    _FDT((fdt_property_cell(s->fdt, "cpu-version", env->spr[SPR_PVR])));
+    _FDT((fdt_property_cell(s->fdt, "d-cache-block-size",
+                            env->dcache_line_size)));
+    _FDT((fdt_property_cell(s->fdt, "d-cache-line-size",
+                            env->dcache_line_size)));
+    _FDT((fdt_property_cell(s->fdt, "i-cache-block-size",
+                            env->icache_line_size)));
+    _FDT((fdt_property_cell(s->fdt, "i-cache-line-size",
+                            env->icache_line_size)));
+
+    if (pcc->l1_dcache_size) {
+        _FDT((fdt_property_cell(s->fdt, "d-cache-size", pcc->l1_dcache_size)));
+    } else {
+        fprintf(stderr, "Warning: Unknown L1 dcache size for cpu\n");
+    }
+    if (pcc->l1_icache_size) {
+        _FDT((fdt_property_cell(s->fdt, "i-cache-size", pcc->l1_icache_size)));
+    } else {
+        fprintf(stderr, "Warning: Unknown L1 icache size for cpu\n");
+    }
+
+    _FDT((fdt_property_cell(s->fdt, "timebase-frequency", tbfreq)));
+    _FDT((fdt_property_cell(s->fdt, "clock-frequency", cpufreq)));
+    _FDT((fdt_property_cell(s->fdt, "ibm,slb-size", env->slb_nr)));
+    _FDT((fdt_property_string(s->fdt, "status", "okay")));
+    _FDT((fdt_property(s->fdt, "64-bit", NULL, 0)));
+
+    /* Build interrupt servers and gservers properties */
+    for (i = 0; i < smp_threads; i++) {
+        servers_prop[i] = cpu_to_be32(index + i);
+        /* Hack, direct the group queues back to cpu 0 */
+        gservers_prop[i * 2] = cpu_to_be32(index + i);
+        gservers_prop[i * 2 + 1] = 0;
+    }
+    _FDT((fdt_property(s->fdt, "ibm,ppc-interrupt-server#s",
+                       servers_prop, sizeof(servers_prop))));
+    _FDT((fdt_property(s->fdt, "ibm,ppc-interrupt-gserver#s",
+                       gservers_prop, sizeof(gservers_prop))));
+
+    if (env->mmu_model & POWERPC_MMU_1TSEG) {
+        _FDT((fdt_property(s->fdt, "ibm,processor-segment-sizes",
+                           segs, sizeof(segs))));
+    }
+
+    /* Advertise VMX/VSX (vector extensions) if available
+     *   0 / no property == no vector extensions
+     *   1               == VMX / Altivec available
+     *   2               == VSX available */
+    if (env->insns_flags & PPC_ALTIVEC) {
+        uint32_t vmx = (env->insns_flags2 & PPC2_VSX) ? 2 : 1;
+
+        _FDT((fdt_property_cell(s->fdt, "ibm,vmx", vmx)));
+    }
+
+    /* Advertise DFP (Decimal Floating Point) if available
+     *   0 / no property == no DFP
+     *   1               == DFP available */
+    if (env->insns_flags2 & PPC2_DFP) {
+        _FDT((fdt_property_cell(s->fdt, "ibm,dfp", 1)));
+    }
+
+    page_sizes_prop_size = create_page_sizes_prop(env, page_sizes_prop,
+                                                  sizeof(page_sizes_prop));
+    if (page_sizes_prop_size) {
+        _FDT((fdt_property(s->fdt, "ibm,segment-page-sizes",
+                           page_sizes_prop, page_sizes_prop_size)));
+    }
+
+    _FDT((fdt_end_node(s->fdt)));
+}
+
 static void *spapr_create_fdt_skel(const char *cpu_model,
                                    hwaddr initrd_base,
                                    hwaddr initrd_size,
@@ -246,7 +353,6 @@ static void *spapr_create_fdt_skel(const char *cpu_model,
                                    uint32_t epow_irq)
 {
     void *fdt;
-    CPUPPCState *env;
     uint32_t start_prop = cpu_to_be32(initrd_base);
     uint32_t end_prop = cpu_to_be32(initrd_base + initrd_size);
     char hypertas_prop[] = "hcall-pft\0hcall-term\0hcall-dabr\0hcall-interrupt"
@@ -255,8 +361,11 @@ static void *spapr_create_fdt_skel(const char *cpu_model,
     uint32_t refpoints[] = {cpu_to_be32(0x4), cpu_to_be32(0x4)};
     uint32_t interrupt_server_ranges_prop[] = {0, cpu_to_be32(smp_cpus)};
     char *modelname;
-    int i, smt = kvmppc_smt_threads();
+    int i;
     unsigned char vec5[] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x80};
+    SPAPRCreateFDTSkelData data = {
+        .smt = kvmppc_smt_threads(),
+    };
 
     fdt = g_malloc0(FDT_MAX_SIZE);
     _FDT((fdt_create(fdt, FDT_MAX_SIZE)));
@@ -319,103 +428,8 @@ static void *spapr_create_fdt_skel(const char *cpu_model,
     /* This is needed during FDT finalization */
     spapr->cpu_model = g_strdup(modelname);
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        CPUState *cpu = CPU(ppc_env_get_cpu(env));
-        PowerPCCPUClass *pcc = POWERPC_CPU_GET_CLASS(cpu);
-        int index = cpu->cpu_index;
-        uint32_t servers_prop[smp_threads];
-        uint32_t gservers_prop[smp_threads * 2];
-        char *nodename;
-        uint32_t segs[] = {cpu_to_be32(28), cpu_to_be32(40),
-                           0xffffffff, 0xffffffff};
-        uint32_t tbfreq = kvm_enabled() ? kvmppc_get_tbfreq() : TIMEBASE_FREQ;
-        uint32_t cpufreq = kvm_enabled() ? kvmppc_get_clockfreq() : 1000000000;
-        uint32_t page_sizes_prop[64];
-        size_t page_sizes_prop_size;
-
-        if ((index % smt) != 0) {
-            continue;
-        }
-
-        nodename = g_strdup_printf("%s@%x", modelname, index);
-
-        _FDT((fdt_begin_node(fdt, nodename)));
-
-        g_free(nodename);
-
-        _FDT((fdt_property_cell(fdt, "reg", index)));
-        _FDT((fdt_property_string(fdt, "device_type", "cpu")));
-
-        _FDT((fdt_property_cell(fdt, "cpu-version", env->spr[SPR_PVR])));
-        _FDT((fdt_property_cell(fdt, "d-cache-block-size",
-                                env->dcache_line_size)));
-        _FDT((fdt_property_cell(fdt, "d-cache-line-size",
-                                env->dcache_line_size)));
-        _FDT((fdt_property_cell(fdt, "i-cache-block-size",
-                                env->icache_line_size)));
-        _FDT((fdt_property_cell(fdt, "i-cache-line-size",
-                                env->icache_line_size)));
-
-        if (pcc->l1_dcache_size) {
-            _FDT((fdt_property_cell(fdt, "d-cache-size", pcc->l1_dcache_size)));
-        } else {
-            fprintf(stderr, "Warning: Unknown L1 dcache size for cpu\n");
-        }
-        if (pcc->l1_icache_size) {
-            _FDT((fdt_property_cell(fdt, "i-cache-size", pcc->l1_icache_size)));
-        } else {
-            fprintf(stderr, "Warning: Unknown L1 icache size for cpu\n");
-        }
-
-        _FDT((fdt_property_cell(fdt, "timebase-frequency", tbfreq)));
-        _FDT((fdt_property_cell(fdt, "clock-frequency", cpufreq)));
-        _FDT((fdt_property_cell(fdt, "ibm,slb-size", env->slb_nr)));
-        _FDT((fdt_property_string(fdt, "status", "okay")));
-        _FDT((fdt_property(fdt, "64-bit", NULL, 0)));
-
-        /* Build interrupt servers and gservers properties */
-        for (i = 0; i < smp_threads; i++) {
-            servers_prop[i] = cpu_to_be32(index + i);
-            /* Hack, direct the group queues back to cpu 0 */
-            gservers_prop[i*2] = cpu_to_be32(index + i);
-            gservers_prop[i*2 + 1] = 0;
-        }
-        _FDT((fdt_property(fdt, "ibm,ppc-interrupt-server#s",
-                           servers_prop, sizeof(servers_prop))));
-        _FDT((fdt_property(fdt, "ibm,ppc-interrupt-gserver#s",
-                           gservers_prop, sizeof(gservers_prop))));
-
-        if (env->mmu_model & POWERPC_MMU_1TSEG) {
-            _FDT((fdt_property(fdt, "ibm,processor-segment-sizes",
-                               segs, sizeof(segs))));
-        }
-
-        /* Advertise VMX/VSX (vector extensions) if available
-         *   0 / no property == no vector extensions
-         *   1               == VMX / Altivec available
-         *   2               == VSX available */
-        if (env->insns_flags & PPC_ALTIVEC) {
-            uint32_t vmx = (env->insns_flags2 & PPC2_VSX) ? 2 : 1;
-
-            _FDT((fdt_property_cell(fdt, "ibm,vmx", vmx)));
-        }
-
-        /* Advertise DFP (Decimal Floating Point) if available
-         *   0 / no property == no DFP
-         *   1               == DFP available */
-        if (env->insns_flags2 & PPC2_DFP) {
-            _FDT((fdt_property_cell(fdt, "ibm,dfp", 1)));
-        }
-
-        page_sizes_prop_size = create_page_sizes_prop(env, page_sizes_prop,
-                                                      sizeof(page_sizes_prop));
-        if (page_sizes_prop_size) {
-            _FDT((fdt_property(fdt, "ibm,segment-page-sizes",
-                               page_sizes_prop, page_sizes_prop_size)));
-        }
-
-        _FDT((fdt_end_node(fdt)));
-    }
+    data.fdt = fdt;
+    qemu_for_each_cpu(spapr_create_fdt_skel_cpu, &data);
 
     g_free(modelname);
 
