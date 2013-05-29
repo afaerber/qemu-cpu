@@ -2059,21 +2059,24 @@ static int gdb_breakpoint_remove(target_ulong addr, target_ulong len, int type)
     }
 }
 
+static void gdb_breakpoint_remove_all_one(CPUState *cpu, void *data)
+{
+    CPUArchState *env = cpu->env_ptr;
+
+    cpu_breakpoint_remove_all(env, BP_GDB);
+#ifndef CONFIG_USER_ONLY
+    cpu_watchpoint_remove_all(env, BP_GDB);
+#endif
+}
+
 static void gdb_breakpoint_remove_all(void)
 {
-    CPUArchState *env;
-
     if (kvm_enabled()) {
         kvm_remove_all_breakpoints(ENV_GET_CPU(gdbserver_state->c_cpu));
         return;
     }
 
-    for (env = first_cpu; env != NULL; env = env->next_cpu) {
-        cpu_breakpoint_remove_all(env, BP_GDB);
-#ifndef CONFIG_USER_ONLY
-        cpu_watchpoint_remove_all(env, BP_GDB);
-#endif
-    }
+    qemu_for_each_cpu(gdb_breakpoint_remove_all_one, NULL);
 }
 
 static void gdb_set_cpu_pc(GDBState *s, target_ulong pc)
