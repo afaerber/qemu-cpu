@@ -262,20 +262,29 @@ static const VMStateDescription vmstate_cpu_common = {
 #define vmstate_cpu_common vmstate_dummy
 #endif
 
+typedef struct GetCPUData {
+    int index;
+    CPUState *ret;
+} GetCPUData;
+
+static void qemu_get_one_cpu(CPUState *cpu, void *data)
+{
+    GetCPUData *s = data;
+
+    if (cpu->cpu_index == s->index) {
+        s->ret = cpu;
+    }
+}
+
 CPUState *qemu_get_cpu(int index)
 {
-    CPUArchState *env = first_cpu;
-    CPUState *cpu = NULL;
+    GetCPUData s = {
+        .index = index,
+        .ret = NULL,
+    };
 
-    while (env) {
-        cpu = ENV_GET_CPU(env);
-        if (cpu->cpu_index == index) {
-            break;
-        }
-        env = env->next_cpu;
-    }
-
-    return env ? cpu : NULL;
+    qemu_for_each_cpu(qemu_get_one_cpu, &s);
+    return s.ret;
 }
 
 void qemu_for_each_cpu(void (*func)(CPUState *cpu, void *data), void *data)
