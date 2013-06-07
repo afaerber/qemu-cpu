@@ -18,6 +18,8 @@
 #define TYPE_VIRTIO_CONSOLE "virtconsole"
 #define VIRTIO_CONSOLE(obj) \
     OBJECT_CHECK(VirtConsole, (obj), TYPE_VIRTIO_CONSOLE)
+#define VIRTIO_CONSOLE_GET_PARENT_CLASS(obj) \
+    OBJECT_GET_PARENT_CLASS(obj, TYPE_VIRTIO_CONSOLE)
 
 typedef struct VirtConsole {
     VirtIOSerialPort parent_obj;
@@ -126,14 +128,18 @@ static void chr_event(void *opaque, int event)
     }
 }
 
-static int virtconsole_initfn(VirtIOSerialPort *port)
+static void virtconsole_realize(DeviceState *dev, Error **errp)
 {
-    VirtConsole *vcon = VIRTIO_CONSOLE(port);
-    VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_GET_CLASS(port);
+    VirtIOSerialPort *port = VIRTIO_SERIAL_PORT(dev);
+    VirtConsole *vcon = VIRTIO_CONSOLE(dev);
+    VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_GET_CLASS(dev);
+    ObjectClass *parent_oc = VIRTIO_CONSOLE_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
 
     if (port->id == 0 && !k->is_console) {
-        error_report("Port number 0 on virtio-serial devices reserved for virtconsole devices for backward compatibility.");
-        return -1;
+        error_setg(errp, "Port number 0 on virtio-serial devices reserved "
+                   "for virtconsole devices for backward compatibility.");
+        return;
     }
 
     if (vcon->chr) {
@@ -142,18 +148,25 @@ static int virtconsole_initfn(VirtIOSerialPort *port)
                               vcon);
     }
 
-    return 0;
+    parent_dc->realize(dev, errp);
 }
 
-static int virtconsole_exitfn(VirtIOSerialPort *port)
+static void virtconsole_unrealize(DeviceState *dev, Error **errp)
 {
-    VirtConsole *vcon = VIRTIO_CONSOLE(port);
+    VirtConsole *vcon = VIRTIO_CONSOLE(dev);
+    ObjectClass *parent_oc = VIRTIO_CONSOLE_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
+    Error *err = NULL;
+
+    parent_dc->unrealize(dev, &err);
+    if (err != NULL) {
+        error_propagate(errp, err);
+        return;
+    }
 
     if (vcon->watch) {
         g_source_remove(vcon->watch);
     }
-
-    return 0;
 }
 
 static Property virtconsole_properties[] = {
@@ -167,10 +180,10 @@ static void virtconsole_class_init(ObjectClass *klass, void *data)
     VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_CLASS(klass);
 
     k->is_console = true;
-    k->init = virtconsole_initfn;
-    k->exit = virtconsole_exitfn;
     k->have_data = flush_buf;
     k->set_guest_connected = set_guest_connected;
+    dc->realize = virtconsole_realize;
+    dc->unrealize = virtconsole_unrealize;
     dc->props = virtconsole_properties;
 }
 
@@ -191,10 +204,10 @@ static void virtserialport_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
     VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_CLASS(klass);
 
-    k->init = virtconsole_initfn;
-    k->exit = virtconsole_exitfn;
     k->have_data = flush_buf;
     k->set_guest_connected = set_guest_connected;
+    dc->realize = virtconsole_realize;
+    dc->unrealize = virtconsole_unrealize;
     dc->props = virtserialport_properties;
 }
 
