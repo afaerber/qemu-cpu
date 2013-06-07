@@ -77,19 +77,19 @@ typedef struct VirtIOSerialPort VirtIOSerialPort;
 typedef struct VirtIOSerialPortClass {
     DeviceClass parent_class;
 
-    /* Is this a device that binds with hvc in the guest? */
-    bool is_console;
-
     /*
-     * The per-port (or per-app) init function that's called when a
+     * The per-port (or per-app) realize function that's called when a
      * new device is found on the bus.
      */
-    int (*init)(VirtIOSerialPort *port);
+    DeviceRealize realize;
     /*
-     * Per-port exit function that's called when a port gets
+     * Per-port unrealize function that's called when a port gets
      * hot-unplugged or removed.
      */
-    int (*exit)(VirtIOSerialPort *port);
+    DeviceUnrealize unrealize;
+
+    /* Is this a device that binds with hvc in the guest? */
+    bool is_console;
 
     /* Callbacks for guest events */
         /* Guest opened/closed device. */
