@@ -21,10 +21,18 @@
 #define TYPE_VIRTIO_SCSI_COMMON "virtio-scsi-common"
 #define VIRTIO_SCSI_COMMON(obj) \
         OBJECT_CHECK(VirtIOSCSICommon, (obj), TYPE_VIRTIO_SCSI_COMMON)
+#define VIRTIO_SCSI_COMMON_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(VirtIOSCSICommonClass, (obj), TYPE_VIRTIO_SCSI_COMMON)
+#define VIRTIO_SCSI_COMMON_CLASS(cls) \
+        OBJECT_CHECK(VirtIOSCSICommonClass, (cls), TYPE_VIRTIO_SCSI_COMMON)
 
 #define TYPE_VIRTIO_SCSI "virtio-scsi-device"
 #define VIRTIO_SCSI(obj) \
         OBJECT_CHECK(VirtIOSCSI, (obj), TYPE_VIRTIO_SCSI)
+#define VIRTIO_SCSI_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(VirtIOSCSIClass, (obj), TYPE_VIRTIO_SCSI)
+#define VIRTIO_SCSI_CLASS(cls) \
+        OBJECT_CHECK(VirtIOSCSIClass, (cls), TYPE_VIRTIO_SCSI)
 
 
 /* The ID for virtio_scsi */
@@ -166,6 +174,15 @@ typedef struct VirtIOSCSICommon {
     VirtQueue **cmd_vqs;
 } VirtIOSCSICommon;
 
+typedef struct VirtIOSCSICommonClass {
+    /*< private >*/
+    VirtioDeviceClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VirtIOSCSICommonClass;
+
 typedef struct {
     VirtIOSCSICommon parent_obj;
 
@@ -173,6 +190,15 @@ typedef struct {
     int resetting;
     bool events_dropped;
 } VirtIOSCSI;
+
+typedef struct VirtIOSCSIClass {
+    /*< private >*/
+    VirtIOSCSICommonClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VirtIOSCSIClass;
 
 #define DEFINE_VIRTIO_SCSI_PROPERTIES(_state, _conf_field)                     \
     DEFINE_PROP_UINT32("num_queues", _state, _conf_field.num_queues, 1),       \
@@ -185,8 +211,5 @@ typedef struct {
                                                        true),                  \
     DEFINE_PROP_BIT("param_change", _state, _feature_field,                    \
                                             VIRTIO_SCSI_F_CHANGE, true)
-
-int virtio_scsi_common_init(VirtIOSCSICommon *vs);
-int virtio_scsi_common_exit(VirtIOSCSICommon *vs);
 
 #endif /* _QEMU_VIRTIO_SCSI_H */

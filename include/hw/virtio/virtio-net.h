@@ -20,6 +20,10 @@
 #define TYPE_VIRTIO_NET "virtio-net-device"
 #define VIRTIO_NET(obj) \
         OBJECT_CHECK(VirtIONet, (obj), TYPE_VIRTIO_NET)
+#define VIRTIO_NET_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(VirtIONetClass, (obj), TYPE_VIRTIO_NET)
+#define VIRTIO_NET_CLASS(cls) \
+        OBJECT_CLASS_CHECK(VirtIONetClass, (cls), TYPE_VIRTIO_NET)
 
 #define ETH_ALEN    6
 
@@ -194,6 +198,15 @@ typedef struct VirtIONet {
     char *netclient_type;
     uint64_t curr_guest_offloads;
 } VirtIONet;
+
+typedef struct VirtIONetClass {
+    /*< private >*/
+    VirtioDeviceClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VirtIONetClass;
 
 #define VIRTIO_NET_CTRL_MAC    1
  #define VIRTIO_NET_CTRL_MAC_TABLE_SET        0

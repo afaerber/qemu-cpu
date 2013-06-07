@@ -21,6 +21,10 @@
 #define TYPE_VIRTIO_BALLOON "virtio-balloon-device"
 #define VIRTIO_BALLOON(obj) \
         OBJECT_CHECK(VirtIOBalloon, (obj), TYPE_VIRTIO_BALLOON)
+#define VIRTIO_BALLOON_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(VirtIOBalloonClass, (obj), TYPE_VIRTIO_BALLOON)
+#define VIRTIO_BALLOON_CLASS(cls) \
+        OBJECT_CLASS_CHECK(VirtIOBalloonClass, (cls), TYPE_VIRTIO_BALLOON)
 
 /* from Linux's linux/virtio_balloon.h */
 
@@ -68,5 +72,14 @@ typedef struct VirtIOBalloon {
     int64_t stats_last_update;
     int64_t stats_poll_interval;
 } VirtIOBalloon;
+
+typedef struct VirtIOBalloonClass {
+    /*< private >*/
+    VirtioDeviceClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VirtIOBalloonClass;
 
 #endif

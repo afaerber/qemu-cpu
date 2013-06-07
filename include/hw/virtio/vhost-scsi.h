@@ -53,6 +53,10 @@ enum vhost_scsi_vq_list {
 #define TYPE_VHOST_SCSI "vhost-scsi"
 #define VHOST_SCSI(obj) \
         OBJECT_CHECK(VHostSCSI, (obj), TYPE_VHOST_SCSI)
+#define VHOST_SCSI_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(VHostSCSIClass, (obj), TYPE_VHOST_SCSI)
+#define VHOST_SCSI_CLASS(cls) \
+        OBJECT_CLASS_CHECK(VHostSCSIClass, (cls), TYPE_VHOST_SCSI)
 
 typedef struct VHostSCSI {
     VirtIOSCSICommon parent_obj;
@@ -61,6 +65,15 @@ typedef struct VHostSCSI {
 
     struct vhost_dev dev;
 } VHostSCSI;
+
+typedef struct VHostSCSIClass {
+    /*< private >*/
+    VirtIOSCSICommonClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VHostSCSIClass;
 
 #define DEFINE_VHOST_SCSI_PROPERTIES(_state, _conf_field) \
     DEFINE_PROP_STRING("vhostfd", _state, _conf_field.vhostfd), \

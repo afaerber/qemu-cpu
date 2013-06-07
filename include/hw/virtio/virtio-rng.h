@@ -18,6 +18,10 @@
 #define TYPE_VIRTIO_RNG "virtio-rng-device"
 #define VIRTIO_RNG(obj) \
         OBJECT_CHECK(VirtIORNG, (obj), TYPE_VIRTIO_RNG)
+#define VIRTIO_RNG_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(VirtIORNGClass, (obj), TYPE_VIRTIO_RNG)
+#define VIRTIO_RNG_CLASS(cls) \
+        OBJECT_CLASS_CHECK(VirtIORNGClass, (cls), TYPE_VIRTIO_RNG)
 
 /* The Virtio ID for the virtio rng device */
 #define VIRTIO_ID_RNG    4
@@ -45,6 +49,15 @@ typedef struct VirtIORNG {
     QEMUTimer *rate_limit_timer;
     int64_t quota_remaining;
 } VirtIORNG;
+
+typedef struct VirtIORNGClass {
+    /*< private >*/
+    VirtioDeviceClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VirtIORNGClass;
 
 /* Set a default rate limit of 2^47 bytes per minute or roughly 2TB/s.  If
    you have an entropy source capable of generating more entropy than this

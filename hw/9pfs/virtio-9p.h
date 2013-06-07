@@ -227,6 +227,15 @@ typedef struct V9fsState
     V9fsConf fsconf;
 } V9fsState;
 
+typedef struct V9fsClass {
+    /*< private >*/
+    VirtioDeviceClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+} V9fsClass;
+
+
 typedef struct V9fsStatState {
     V9fsPDU *pdu;
     size_t offset;
@@ -404,6 +413,10 @@ extern int v9fs_name_to_path(V9fsState *s, V9fsPath *dirpath,
 #define TYPE_VIRTIO_9P "virtio-9p-device"
 #define VIRTIO_9P(obj) \
         OBJECT_CHECK(V9fsState, (obj), TYPE_VIRTIO_9P)
+#define VIRTIO_9P_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(V9fsClass, (obj), TYPE_VIRTIO_9P)
+#define VIRTIO_9P_CLASS(cls) \
+        OBJECT_CLASS_CHECK(V9fsClass, (cls), TYPE_VIRTIO_9P)
 
 #define DEFINE_VIRTIO_9P_PROPERTIES(_state, _field)             \
         DEFINE_PROP_STRING("mount_tag", _state, _field.tag),    \

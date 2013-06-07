@@ -212,6 +212,15 @@ struct VirtIOSerial {
     virtio_serial_conf serial;
 };
 
+typedef struct VirtIOSerialClass {
+    /*< private >*/
+    VirtioDeviceClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VirtIOSerialClass;
+
 /* Interface to the virtio-serial bus */
 
 /*
@@ -247,6 +256,10 @@ void virtio_serial_throttle_port(VirtIOSerialPort *port, bool throttle);
 #define TYPE_VIRTIO_SERIAL "virtio-serial-device"
 #define VIRTIO_SERIAL(obj) \
         OBJECT_CHECK(VirtIOSerial, (obj), TYPE_VIRTIO_SERIAL)
+#define VIRTIO_SERIAL_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(VirtIOSerialClass, (obj), TYPE_VIRTIO_SERIAL)
+#define VIRTIO_SERIAL_CLASS(cls) \
+        OBJECT_CLASS_CHECK(VirtIOSerialClass, (cls), TYPE_VIRTIO_SERIAL)
 
 #define DEFINE_VIRTIO_SERIAL_PROPERTIES(_state, _field) \
         DEFINE_PROP_UINT32("max_ports", _state, _field.max_virtserial_ports, 31)

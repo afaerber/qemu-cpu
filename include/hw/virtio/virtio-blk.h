@@ -20,6 +20,10 @@
 #define TYPE_VIRTIO_BLK "virtio-blk-device"
 #define VIRTIO_BLK(obj) \
         OBJECT_CHECK(VirtIOBlock, (obj), TYPE_VIRTIO_BLK)
+#define VIRTIO_BLK_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(VirtIOBlockClass, (obj), TYPE_VIRTIO_BLK)
+#define VIRTIO_BLK_CLASS(cls) \
+        OBJECT_CLASS_CHECK(VirtIOBlockClass, (cls), TYPE_VIRTIO_BLK)
 
 /* from Linux's linux/virtio_blk.h */
 
@@ -128,6 +132,15 @@ typedef struct VirtIOBlock {
     struct VirtIOBlockDataPlane *dataplane;
 #endif
 } VirtIOBlock;
+
+typedef struct VirtIOBlockClass {
+    /*< private >*/
+    VirtioDeviceClass parent_class;
+    /*< public >*/
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VirtIOBlockClass;
 
 #define DEFINE_VIRTIO_BLK_FEATURES(_state, _field) \
         DEFINE_VIRTIO_COMMON_FEATURES(_state, _field)
