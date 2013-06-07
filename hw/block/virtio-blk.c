@@ -633,6 +633,9 @@ static int virtio_blk_device_init(VirtIODevice *vdev)
     DeviceState *qdev = DEVICE(vdev);
     VirtIOBlock *s = VIRTIO_BLK(vdev);
     VirtIOBlkConf *blk = &(s->blk);
+#ifdef CONFIG_VIRTIO_BLK_DATA_PLANE
+    Error *err = NULL;
+#endif
     static int virtio_blk_id;
 
     if (!blk->conf.bs) {
@@ -660,7 +663,10 @@ static int virtio_blk_device_init(VirtIODevice *vdev)
 
     s->vq = virtio_add_queue(vdev, 128, virtio_blk_handle_output);
 #ifdef CONFIG_VIRTIO_BLK_DATA_PLANE
-    if (!virtio_blk_data_plane_create(vdev, blk, &s->dataplane)) {
+    virtio_blk_data_plane_create(vdev, blk, &s->dataplane, &err);
+    if (err != NULL) {
+        error_report("%s", error_get_pretty(err));
+        error_free(err);
         virtio_cleanup(vdev);
         return -1;
     }
