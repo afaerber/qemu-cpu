@@ -589,10 +589,12 @@ static struct SCSIBusInfo virtio_scsi_scsi_info = {
     .load_request = virtio_scsi_load_request,
 };
 
-void virtio_scsi_common_realize(DeviceState *dev, Error **errp)
+static void virtio_scsi_common_realize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOSCSICommon *s = VIRTIO_SCSI_COMMON(dev);
+    ObjectClass *parent_oc = VIRTIO_SCSI_COMMON_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
     int i;
 
     virtio_init(vdev, "virtio-scsi", VIRTIO_ID_SCSI,
@@ -610,6 +612,8 @@ void virtio_scsi_common_realize(DeviceState *dev, Error **errp)
         s->cmd_vqs[i] = virtio_add_queue(vdev, VIRTIO_SCSI_VQ_SIZE,
                                          virtio_scsi_handle_cmd);
     }
+
+    parent_dc->realize(dev, errp);
 }
 
 static void virtio_scsi_device_realize(DeviceState *dev, Error **errp)
@@ -621,7 +625,7 @@ static void virtio_scsi_device_realize(DeviceState *dev, Error **errp)
     static int virtio_scsi_id;
     Error *err = NULL;
 
-    virtio_scsi_common_realize(dev, &err);
+    parent_dc->realize(dev, &err);
     if (err != NULL) {
         error_propagate(errp, err);
         return;
@@ -639,17 +643,19 @@ static void virtio_scsi_device_realize(DeviceState *dev, Error **errp)
 
     register_savevm(dev, "virtio-scsi", virtio_scsi_id++, 1,
                     virtio_scsi_save, virtio_scsi_load, s);
-
-    parent_dc->realize(dev, errp);
 }
 
-void virtio_scsi_common_unrealize(DeviceState *dev, Error **errp)
+static void virtio_scsi_common_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOSCSICommon *vs = VIRTIO_SCSI_COMMON(dev);
+    ObjectClass *parent_oc = VIRTIO_SCSI_COMMON_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
 
     g_free(vs->cmd_vqs);
     virtio_cleanup(vdev);
+
+    parent_dc->unrealize(dev, errp);
 }
 
 static void virtio_scsi_device_unrealize(DeviceState *dev, Error **errp)
@@ -659,8 +665,6 @@ static void virtio_scsi_device_unrealize(DeviceState *dev, Error **errp)
     DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
 
     unregister_savevm(dev, "virtio-scsi", s);
-
-    virtio_scsi_common_unrealize(dev, errp);
 
     parent_dc->unrealize(dev, errp);
 }
@@ -675,6 +679,8 @@ static void virtio_scsi_common_class_init(ObjectClass *klass, void *data)
     VirtioDeviceClass *vdc = VIRTIO_DEVICE_CLASS(klass);
     DeviceClass *dc = DEVICE_CLASS(klass);
 
+    dc->realize = virtio_scsi_common_realize;
+    dc->unrealize = virtio_scsi_common_unrealize;
     vdc->get_config = virtio_scsi_get_config;
     set_bit(DEVICE_CATEGORY_STORAGE, dc->categories);
 }
