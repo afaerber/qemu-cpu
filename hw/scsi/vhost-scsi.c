@@ -219,7 +219,7 @@ static void vhost_scsi_realize(DeviceState *dev, Error **errp)
         }
     }
 
-    virtio_scsi_common_realize(dev, &err);
+    parent_dc->realize(dev, &err);
     if (err != NULL) {
         error_propagate(errp, err);
         return;
@@ -240,8 +240,6 @@ static void vhost_scsi_realize(DeviceState *dev, Error **errp)
     error_setg(&s->migration_blocker,
             "vhost-scsi does not support migration");
     migrate_add_blocker(s->migration_blocker);
-
-    parent_dc->realize(dev, errp);
 }
 
 static void vhost_scsi_unrealize(DeviceState *dev, Error **errp)
@@ -258,8 +256,6 @@ static void vhost_scsi_unrealize(DeviceState *dev, Error **errp)
     vhost_scsi_set_status(vdev, 0);
 
     g_free(s->dev.vqs);
-
-    virtio_scsi_common_unrealize(dev, errp);
 
     parent_dc->unrealize(dev, errp);
 }

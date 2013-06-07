@@ -21,6 +21,8 @@
 #define TYPE_VIRTIO_SCSI_COMMON "virtio-scsi-common"
 #define VIRTIO_SCSI_COMMON(obj) \
         OBJECT_CHECK(VirtIOSCSICommon, (obj), TYPE_VIRTIO_SCSI_COMMON)
+#define VIRTIO_SCSI_COMMON_GET_PARENT_CLASS(obj) \
+        OBJECT_GET_PARENT_CLASS(obj, TYPE_VIRTIO_SCSI_COMMON)
 
 #define TYPE_VIRTIO_SCSI "virtio-scsi-device"
 #define VIRTIO_SCSI(obj) \
@@ -187,8 +189,5 @@ typedef struct {
                                                        true),                  \
     DEFINE_PROP_BIT("param_change", _state, _feature_field,                    \
                                             VIRTIO_SCSI_F_CHANGE, true)
-
-void virtio_scsi_common_realize(DeviceState *dev, Error **errp);
-void virtio_scsi_common_unrealize(DeviceState *dev, Error **errp);
 
 #endif /* _QEMU_VIRTIO_SCSI_H */
