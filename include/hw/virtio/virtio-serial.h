@@ -80,17 +80,6 @@ typedef struct VirtIOSerialPortClass {
     /* Is this a device that binds with hvc in the guest? */
     bool is_console;
 
-    /*
-     * The per-port (or per-app) init function that's called when a
-     * new device is found on the bus.
-     */
-    int (*init)(VirtIOSerialPort *port);
-    /*
-     * Per-port exit function that's called when a port gets
-     * hot-unplugged or removed.
-     */
-    int (*exit)(VirtIOSerialPort *port);
-
     /* Callbacks for guest events */
         /* Guest opened/closed device. */
     void (*set_guest_connected)(VirtIOSerialPort *port, int guest_connected);

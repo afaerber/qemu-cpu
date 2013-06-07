@@ -18,6 +18,10 @@
 #define TYPE_VIRTIO_CONSOLE "virtconsole"
 #define VIRTIO_CONSOLE(obj) \
     OBJECT_CHECK(VirtConsole, (obj), TYPE_VIRTIO_CONSOLE)
+#define VIRTIO_CONSOLE_GET_CLASS(obj) \
+    OBJECT_GET_CLASS(VirtConsoleClass, (obj), TYPE_VIRTIO_CONSOLE)
+#define VIRTIO_CONSOLE_CLASS(cls) \
+    OBJECT_CLASS_CHECK(VirtConsoleClass, (cls), TYPE_VIRTIO_CONSOLE)
 
 typedef struct VirtConsole {
     VirtIOSerialPort parent_obj;
@@ -25,6 +29,13 @@ typedef struct VirtConsole {
     CharDriverState *chr;
     guint watch;
 } VirtConsole;
+
+typedef struct VirtConsoleClass {
+    VirtIOSerialPortClass parent_class;
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+} VirtConsoleClass;
 
 /*
  * Callback function that's called from chardevs when backend becomes
@@ -126,14 +137,17 @@ static void chr_event(void *opaque, int event)
     }
 }
 
-static int virtconsole_initfn(VirtIOSerialPort *port)
+static void virtconsole_realize(DeviceState *dev, Error **errp)
 {
-    VirtConsole *vcon = VIRTIO_CONSOLE(port);
-    VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_GET_CLASS(port);
+    VirtIOSerialPort *port = VIRTIO_SERIAL_PORT(dev);
+    VirtConsole *vcon = VIRTIO_CONSOLE(dev);
+    VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_GET_CLASS(dev);
+    VirtConsoleClass *vcc = VIRTIO_CONSOLE_GET_CLASS(dev);
 
     if (port->id == 0 && !k->is_console) {
-        error_report("Port number 0 on virtio-serial devices reserved for virtconsole devices for backward compatibility.");
-        return -1;
+        error_setg(errp, "Port number 0 on virtio-serial devices reserved "
+                   "for virtconsole devices for backward compatibility.");
+        return;
     }
 
     if (vcon->chr) {
@@ -142,18 +156,24 @@ static int virtconsole_initfn(VirtIOSerialPort *port)
                               vcon);
     }
 
-    return 0;
+    vcc->parent_realize(dev, errp);
 }
 
-static int virtconsole_exitfn(VirtIOSerialPort *port)
+static void virtconsole_unrealize(DeviceState *dev, Error **errp)
 {
-    VirtConsole *vcon = VIRTIO_CONSOLE(port);
+    VirtConsole *vcon = VIRTIO_CONSOLE(dev);
+    VirtConsoleClass *vcc = VIRTIO_CONSOLE_GET_CLASS(dev);
+    Error *err = NULL;
+
+    vcc->parent_unrealize(dev, &err);
+    if (err != NULL) {
+        error_propagate(errp, err);
+        return;
+    }
 
     if (vcon->watch) {
         g_source_remove(vcon->watch);
     }
-
-    return 0;
 }
 
 static Property virtconsole_properties[] = {
@@ -161,14 +181,19 @@ static Property virtconsole_properties[] = {
     DEFINE_PROP_END_OF_LIST(),
 };
 
-static void virtconsole_class_init(ObjectClass *klass, void *data)
+static void virtconsole_class_init(ObjectClass *oc, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
-    VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_CLASS(klass);
+    DeviceClass *dc = DEVICE_CLASS(oc);
+    VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_CLASS(oc);
+    VirtConsoleClass *vcc = VIRTIO_CONSOLE_CLASS(oc);
+
+    vcc->parent_realize = dc->realize;
+    dc->realize = virtconsole_realize;
+
+    vcc->parent_unrealize = dc->unrealize;
+    dc->unrealize = virtconsole_unrealize;
 
     k->is_console = true;
-    k->init = virtconsole_initfn;
-    k->exit = virtconsole_exitfn;
     k->have_data = flush_buf;
     k->set_guest_connected = set_guest_connected;
     dc->props = virtconsole_properties;
@@ -179,6 +204,7 @@ static const TypeInfo virtconsole_info = {
     .parent        = TYPE_VIRTIO_SERIAL_PORT,
     .instance_size = sizeof(VirtConsole),
     .class_init    = virtconsole_class_init,
+    .class_size    = sizeof(VirtConsoleClass),
 };
 
 static Property virtserialport_properties[] = {
@@ -186,13 +212,18 @@ static Property virtserialport_properties[] = {
     DEFINE_PROP_END_OF_LIST(),
 };
 
-static void virtserialport_class_init(ObjectClass *klass, void *data)
+static void virtserialport_class_init(ObjectClass *oc, void *data)
 {
-    DeviceClass *dc = DEVICE_CLASS(klass);
-    VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_CLASS(klass);
+    DeviceClass *dc = DEVICE_CLASS(oc);
+    VirtIOSerialPortClass *k = VIRTIO_SERIAL_PORT_CLASS(oc);
+    VirtConsoleClass *vcc = VIRTIO_CONSOLE_CLASS(oc);
 
-    k->init = virtconsole_initfn;
-    k->exit = virtconsole_exitfn;
+    vcc->parent_realize = dc->realize;
+    dc->realize = virtconsole_realize;
+
+    vcc->parent_unrealize = dc->unrealize;
+    dc->unrealize = virtconsole_unrealize;
+
     k->have_data = flush_buf;
     k->set_guest_connected = set_guest_connected;
     dc->props = virtserialport_properties;
