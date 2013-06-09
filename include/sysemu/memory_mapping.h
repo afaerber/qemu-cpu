@@ -16,6 +16,7 @@
 
 #include "qemu/queue.h"
 #include "qemu/typedefs.h"
+#include "qom/cpu.h"
 
 /* The physical and virtual address in the memory mapping are contiguous. */
 typedef struct MemoryMapping {

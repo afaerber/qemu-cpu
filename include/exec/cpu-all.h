@@ -22,7 +22,6 @@
 #include "qemu-common.h"
 #include "qemu/tls.h"
 #include "exec/cpu-common.h"
-#include "qemu/thread.h"
 
 /* some important defines:
  *
@@ -464,33 +463,6 @@ extern ram_addr_t ram_size;
 
 /* RAM is pre-allocated and passed into qemu_ram_alloc_from_ptr */
 #define RAM_PREALLOC_MASK   (1 << 0)
-
-typedef struct RAMBlock {
-    struct MemoryRegion *mr;
-    uint8_t *host;
-    ram_addr_t offset;
-    ram_addr_t length;
-    uint32_t flags;
-    char idstr[256];
-    /* Reads can take either the iothread or the ramlist lock.
-     * Writes must take both locks.
-     */
-    QTAILQ_ENTRY(RAMBlock) next;
-#if defined(__linux__) && !defined(TARGET_S390X)
-    int fd;
-#endif
-} RAMBlock;
-
-typedef struct RAMList {
-    QemuMutex mutex;
-    /* Protected by the iothread lock.  */
-    uint8_t *phys_dirty;
-    RAMBlock *mru_block;
-    /* Protected by the ramlist lock.  */
-    QTAILQ_HEAD(, RAMBlock) blocks;
-    uint32_t version;
-} RAMList;
-extern RAMList ram_list;
 
 extern const char *mem_path;
 extern int mem_prealloc;

@@ -11,8 +11,8 @@
  *
  */
 
-#include "cpu.h"
-#include "exec/cpu-all.h"
+#include "qemu-common.h"
+#include "exec/cpu-common.h"
 #include "sysemu/memory_mapping.h"
 
 static void memory_mapping_list_add_mapping_sorted(MemoryMappingList *list,

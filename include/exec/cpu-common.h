@@ -11,6 +11,7 @@
 
 #include "qemu/bswap.h"
 #include "qemu/queue.h"
+#include "qemu/thread.h"
 
 /**
  * CPUListState:
@@ -41,6 +42,38 @@ typedef uint64_t ram_addr_t;
 typedef uintptr_t ram_addr_t;
 #  define RAM_ADDR_MAX UINTPTR_MAX
 #  define RAM_ADDR_FMT "%" PRIxPTR
+#endif
+
+#if !defined(CONFIG_USER_ONLY)
+
+typedef struct RAMBlock {
+    struct MemoryRegion *mr;
+    uint8_t *host;
+    ram_addr_t offset;
+    ram_addr_t length;
+    uint32_t flags;
+    char idstr[256];
+    /* Reads can take either the iothread or the ramlist lock.
+     * Writes must take both locks.
+     */
+    QTAILQ_ENTRY(RAMBlock) next;
+#if defined(__linux__) && !defined(TARGET_S390X)
+    int fd;
+#endif
+} RAMBlock;
+
+typedef struct RAMList {
+    QemuMutex mutex;
+    /* Protected by the iothread lock.  */
+    uint8_t *phys_dirty;
+    RAMBlock *mru_block;
+    /* Protected by the ramlist lock.  */
+    QTAILQ_HEAD(, RAMBlock) blocks;
+    uint32_t version;
+} RAMList;
+
+extern RAMList ram_list;
+
 #endif
 
 /* memory API */
