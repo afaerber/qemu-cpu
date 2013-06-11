@@ -654,22 +654,14 @@ static void piix4_cpu_added_req(Notifier *n, void *opaque)
     piix4_cpu_hotplug_req(s, CPU(opaque), PLUG);
 }
 
-static void piix4_init_cpu_status(CPUState *cpu, void *data)
-{
-    CPUStatus *g = (CPUStatus *)data;
-    CPUClass *k = CPU_GET_CLASS(cpu);
-    int64_t id = k->get_arch_id(cpu);
-
-    g_assert((id / 8) < PIIX4_PROC_LEN);
-    g->sts[id / 8] |= (1 << (id % 8));
-}
-
 static int piix4_device_hotplug(DeviceState *qdev, PCIDevice *dev,
                                 PCIHotplugState state);
 
 static void piix4_acpi_system_hot_add_init(MemoryRegion *parent,
                                            PCIBus *bus, PIIX4PMState *s)
 {
+    CPUState *cpu;
+
     memory_region_init_io(&s->io_gpe, &piix4_gpe_ops, s, "apci-gpe0",
                           GPE_LEN);
     memory_region_add_subregion(parent, GPE_BASE, &s->io_gpe);
@@ -680,7 +672,13 @@ static void piix4_acpi_system_hot_add_init(MemoryRegion *parent,
                                 &s->io_pci);
     pci_bus_hotplug(bus, piix4_device_hotplug, &s->dev.qdev);
 
-    qemu_for_each_cpu(piix4_init_cpu_status, &s->gpe_cpu);
+    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+        CPUClass *cc = CPU_GET_CLASS(cpu);
+        int64_t id = cc->get_arch_id(cpu);
+
+        g_assert((id / 8) < PIIX4_PROC_LEN);
+        s->gpe_cpu.sts[id / 8] |= (1 << (id % 8));
+    }
     memory_region_init_io(&s->io_cpu, &cpu_hotplug_ops, s, "apci-cpu-hotplug",
                           PIIX4_PROC_LEN);
     memory_region_add_subregion(parent, PIIX4_PROC_BASE, &s->io_cpu);

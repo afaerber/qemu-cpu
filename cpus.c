@@ -803,12 +803,6 @@ static void *qemu_dummy_cpu_thread_fn(void *arg)
 
 static void tcg_exec_all(void);
 
-static void tcg_signal_cpu_creation(CPUState *cpu, void *data)
-{
-    cpu->thread_id = qemu_get_thread_id();
-    cpu->created = true;
-}
-
 static void *qemu_tcg_cpu_thread_fn(void *arg)
 {
     CPUState *cpu = arg;
@@ -817,7 +811,10 @@ static void *qemu_tcg_cpu_thread_fn(void *arg)
     qemu_thread_get_self(cpu->thread);
 
     qemu_mutex_lock(&qemu_global_mutex);
-    qemu_for_each_cpu(tcg_signal_cpu_creation, NULL);
+    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+        cpu->thread_id = qemu_get_thread_id();
+        cpu->created = true;
+    }
     qemu_cond_signal(&qemu_cpu_cond);
 
     /* wait for initial kick-off after machine start */
