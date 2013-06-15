@@ -891,7 +891,7 @@ static int escc_init1(SysBusDevice *dev)
     sysbus_init_mmio(dev, &s->mmio);
 
     if (s->chn[0].type == mouse) {
-        qemu_add_mouse_event_handler(sunmouse_event, &s->chn[0], 0,
+        qemu_add_mouse_event_handler(sunmouse_event, &s->chn[0], false,
                                      "QEMU Sun Mouse");
     }
     if (s->chn[1].type == kbd) {

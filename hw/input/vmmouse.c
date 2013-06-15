@@ -114,7 +114,7 @@ static void vmmouse_remove_handler(VMMouseState *s)
     }
 }
 
-static void vmmouse_update_handler(VMMouseState *s, int absolute)
+static void vmmouse_update_handler(VMMouseState *s, uint8_t absolute)
 {
     if (s->status != 0) {
         return;

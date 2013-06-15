@@ -544,8 +544,8 @@ void *tsc2005_init(qemu_irq pintdav)
 
     tsc2005_reset(s);
 
-    qemu_add_mouse_event_handler(tsc2005_touchscreen_event, s, 1,
-                    "QEMU TSC2005-driven Touchscreen");
+    qemu_add_mouse_event_handler(tsc2005_touchscreen_event, s, true,
+                                 "QEMU TSC2005-driven Touchscreen");
 
     qemu_register_reset((void *) tsc2005_reset, s);
     register_savevm(NULL, "tsc2005", -1, 0, tsc2005_save, tsc2005_load, s);

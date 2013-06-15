@@ -145,8 +145,8 @@ static int ads7846_init(SSISlave *dev)
     s->input[7] = ADS_TEMP1;	/* TEMP1 */
 
     /* We want absolute coordinates */
-    qemu_add_mouse_event_handler(ads7846_ts_event, s, 1,
-                    "QEMU ADS7846-driven Touchscreen");
+    qemu_add_mouse_event_handler(ads7846_ts_event, s, true,
+                                 "QEMU ADS7846-driven Touchscreen");
 
     ads7846_int_update(s);
 

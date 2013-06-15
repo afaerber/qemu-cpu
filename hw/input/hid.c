@@ -433,11 +433,13 @@ void hid_init(HIDState *hs, int kind, HIDEventFunc event)
     if (hs->kind == HID_KEYBOARD) {
         hs->kbd.eh_entry = qemu_add_kbd_event_handler(hid_keyboard_event, hs);
     } else if (hs->kind == HID_MOUSE) {
-        hs->ptr.eh_entry = qemu_add_mouse_event_handler(hid_pointer_event, hs,
-                                                        0, "QEMU HID Mouse");
+        hs->ptr.eh_entry = qemu_add_mouse_event_handler(hid_pointer_event,
+                                                        hs, false,
+                                                        "QEMU HID Mouse");
     } else if (hs->kind == HID_TABLET) {
-        hs->ptr.eh_entry = qemu_add_mouse_event_handler(hid_pointer_event, hs,
-                                                        1, "QEMU HID Tablet");
+        hs->ptr.eh_entry = qemu_add_mouse_event_handler(hid_pointer_event,
+                                                        hs, true,
+                                                        "QEMU HID Tablet");
     }
 }
 

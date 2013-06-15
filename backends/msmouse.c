@@ -72,7 +72,8 @@ CharDriverState *qemu_chr_open_msmouse(void)
     chr->chr_close = msmouse_chr_close;
     chr->explicit_be_open = true;
 
-    qemu_add_mouse_event_handler(msmouse_event, chr, 0, "QEMU Microsoft Mouse");
+    qemu_add_mouse_event_handler(msmouse_event, chr, false,
+                                 "QEMU Microsoft Mouse");
 
     return chr;
 }

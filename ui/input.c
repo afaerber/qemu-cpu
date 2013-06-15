@@ -33,7 +33,7 @@
 struct QEMUPutMouseEntry {
     QEMUPutMouseEvent *put_event;
     void *opaque;
-    int absolute;
+    bool absolute;
     char *name;
 
     int index;
@@ -347,7 +347,7 @@ static void check_mode_change(void)
 }
 
 QEMUPutMouseEntry *qemu_add_mouse_event_handler(QEMUPutMouseEvent *func,
-                                                void *opaque, int absolute,
+                                                void *opaque, bool absolute,
                                                 const char *name)
 {
     QEMUPutMouseEntry *s;
@@ -477,7 +477,7 @@ void kbd_mouse_event(int dx, int dy, int dz, int buttons_state)
     }
 }
 
-int kbd_mouse_is_absolute(void)
+bool kbd_mouse_is_absolute(void)
 {
     if (QTAILQ_EMPTY(&mouse_handlers)) {
         return 0;
@@ -486,17 +486,17 @@ int kbd_mouse_is_absolute(void)
     return QTAILQ_FIRST(&mouse_handlers)->absolute;
 }
 
-int kbd_mouse_has_absolute(void)
+bool kbd_mouse_has_absolute(void)
 {
     QEMUPutMouseEntry *entry;
 
     QTAILQ_FOREACH(entry, &mouse_handlers, node) {
         if (entry->absolute) {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 MouseInfoList *qmp_query_mice(Error **errp)
@@ -510,7 +510,7 @@ MouseInfoList *qmp_query_mice(Error **errp)
         info->value = g_malloc0(sizeof(*info->value));
         info->value->name = g_strdup(cursor->name);
         info->value->index = cursor->index;
-        info->value->absolute = !!cursor->absolute;
+        info->value->absolute = cursor->absolute;
         info->value->current = current;
 
         current = false;

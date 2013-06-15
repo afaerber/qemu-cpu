@@ -536,7 +536,7 @@ static void adb_mouse_realizefn(DeviceState *dev, Error **errp)
 
     amc->parent_realize(dev, errp);
 
-    qemu_add_mouse_event_handler(adb_mouse_event, s, 0, "QEMU ADB Mouse");
+    qemu_add_mouse_event_handler(adb_mouse_event, s, false, "QEMU ADB Mouse");
 }
 
 static void adb_mouse_initfn(Object *obj)
