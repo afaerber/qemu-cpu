@@ -73,6 +73,19 @@ static uint32_t vmmouse_get_status(VMMouseState *s)
     return (s->status << 16) | s->nb_queue;
 }
 
+static void vmmouse_get_position(void *opaque, int *x, int *y)
+{
+    VMMouseState *s = opaque;
+
+    if (s->absolute && s->nb_queue >= 4) {
+        *x = s->queue[s->nb_queue - 3] >> 1;
+        *y = s->queue[s->nb_queue - 2] >> 1;
+    } else {
+        *x = 0;
+        *y = 0;
+    }
+}
+
 static void vmmouse_mouse_event(void *opaque, int x, int y, int dz, int buttons_state)
 {
     VMMouseState *s = opaque;
@@ -127,6 +140,7 @@ static void vmmouse_remove_handler(VMMouseState *s)
 static const MouseOps vmmouse_mouse_ops = {
     .put_event = vmmouse_mouse_event,
     .get_buttons_state = vmmouse_get_buttons_state,
+    .get_position = vmmouse_get_position,
 };
 
 static void vmmouse_update_handler(VMMouseState *s, uint8_t absolute)

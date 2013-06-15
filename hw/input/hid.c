@@ -264,6 +264,24 @@ void hid_pointer_activate(HIDState *hs)
     }
 }
 
+static void hid_pointer_get_position(void *opaque, int *x, int *y)
+{
+    HIDState *hs = opaque;
+    int index;
+    HIDPointerEvent *e;
+
+    index = (hs->n ? hs->head : hs->head - 1);
+    e = &hs->ptr.queue[index & QUEUE_MASK];
+
+    if (hs->kind == HID_MOUSE) {
+        *x = 0;
+        *y = 0;
+    } else {
+        *x = e->xdx;
+        *y = e->ydy;
+    }
+}
+
 int hid_pointer_poll(HIDState *hs, uint8_t *buf, int len)
 {
     int dx, dy, dz, b, l;
@@ -442,6 +460,12 @@ static const MouseOps hid_mouse_ops = {
     .get_buttons_state = hid_pointer_get_buttons_state,
 };
 
+static const MouseOps hid_tablet_ops = {
+    .put_event = hid_pointer_event,
+    .get_buttons_state = hid_pointer_get_buttons_state,
+    .get_position = hid_pointer_get_position,
+};
+
 void hid_init(HIDState *hs, int kind, HIDEventFunc event)
 {
     hs->kind = kind;
@@ -454,7 +478,7 @@ void hid_init(HIDState *hs, int kind, HIDEventFunc event)
                                                         hs, false,
                                                         "QEMU HID Mouse");
     } else if (hs->kind == HID_TABLET) {
-        hs->ptr.eh_entry = qemu_add_mouse_event_handler(&hid_mouse_ops,
+        hs->ptr.eh_entry = qemu_add_mouse_event_handler(&hid_tablet_ops,
                                                         hs, true,
                                                         "QEMU HID Tablet");
     }

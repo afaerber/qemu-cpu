@@ -57,10 +57,19 @@ struct common {
     QemuConsole       *con;
 };
 
+/**
+ * XenInput:
+ * @abs_pointer_wanted: Whether guest supports absolute pointer.
+ * @x: Last pointer X position in QEMU coordinates.
+ * @y: Last pointer Y position in QEMU coordinates.
+ * @button_state: Last seen pointer button state.
+ */
 struct XenInput {
     struct common c;
-    int abs_pointer_wanted; /* Whether guest supports absolute pointer */
-    int button_state;       /* Last seen pointer button state */
+    int abs_pointer_wanted;
+    int x;
+    int y;
+    int button_state;
     int extended;
     QEMUPutMouseEntry *qmouse;
 };
@@ -323,13 +332,16 @@ static void xenfb_mouse_event(void *opaque,
     int dh = surface_height(surface);
     int i;
 
-    if (xenfb->abs_pointer_wanted)
+    if (xenfb->abs_pointer_wanted) {
 	xenfb_send_position(xenfb,
 			    dx * (dw - 1) / 0x7fff,
 			    dy * (dh - 1) / 0x7fff,
 			    dz);
-    else
+        xenfb->x = dx;
+        xenfb->y = dy;
+    } else {
 	xenfb_send_motion(xenfb, dx, dy, dz);
+    }
 
     for (i = 0 ; i < 8 ; i++) {
 	int lastDown = xenfb->button_state & (1 << i);
@@ -348,6 +360,19 @@ static int xenfb_mouse_get_buttons_state(void *opaque)
     XenInput *in = opaque;
 
     return in->button_state;
+}
+
+static void xenfb_mouse_get_position(void *opaque, int *x, int *y)
+{
+    XenInput *in = opaque;
+
+    if (in->abs_pointer_wanted) {
+        *x = in->x;
+        *y = in->y;
+    } else {
+        *x = 0;
+        *y = 0;
+    }
 }
 
 static int input_init(struct XenDevice *xendev)
@@ -377,6 +402,7 @@ static int input_initialise(struct XenDevice *xendev)
 static const MouseOps xenfb_mouse_ops = {
     .put_event = xenfb_mouse_event,
     .get_buttons_state = xenfb_mouse_get_buttons_state,
+    .get_position = xenfb_mouse_get_position,
 };
 
 static void input_connected(struct XenDevice *xendev)

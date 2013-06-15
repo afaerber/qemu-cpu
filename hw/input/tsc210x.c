@@ -967,6 +967,14 @@ static void tsc210x_timer_tick(void *opaque)
     qemu_irq_lower(s->davint);
 }
 
+static void tsc210x_touchscreen_get_position(void *opaque, int *x, int *y)
+{
+    TSC210xState *s = opaque;
+
+    *x = s->x;
+    *y = s->y;
+}
+
 static void tsc210x_touchscreen_event(void *opaque,
                 int x, int y, int z, int buttons_state)
 {
@@ -1110,6 +1118,7 @@ static int tsc210x_load(QEMUFile *f, void *opaque, int version_id)
 static const MouseOps tsc210x_touchscreen_ops = {
     .put_event = tsc210x_touchscreen_event,
     .get_buttons_state = tsc210x_touchscreen_get_buttons_state,
+    .get_position = tsc210x_touchscreen_get_position,
 };
 
 uWireSlave *tsc2102_init(qemu_irq pint)

@@ -411,6 +411,14 @@ static void tsc2005_timer_tick(void *opaque)
     tsc2005_pin_update(s);
 }
 
+static void tsc2005_touchscreen_get_position(void *opaque, int *x, int *y)
+{
+    TSC2005State *s = opaque;
+
+    *x = s->x;
+    *y = s->y;
+}
+
 static void tsc2005_touchscreen_event(void *opaque,
                 int x, int y, int z, int buttons_state)
 {
@@ -529,6 +537,7 @@ static int tsc2005_load(QEMUFile *f, void *opaque, int version_id)
 static const MouseOps tsc2005_touchscreen_ops = {
     .put_event = tsc2005_touchscreen_event,
     .get_buttons_state = tsc2005_touchscreen_get_buttons_state,
+    .get_position = tsc2005_touchscreen_get_position,
 };
 
 void *tsc2005_init(qemu_irq pintdav)

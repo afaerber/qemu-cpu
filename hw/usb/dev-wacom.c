@@ -141,6 +141,14 @@ static void usb_mouse_event(void *opaque,
     usb_wakeup(s->intr, 0);
 }
 
+static void usb_wacom_get_position(void *opaque, int *x, int *y)
+{
+    USBWacomState *s = opaque;
+
+    *x = s->x * 0x7FFF / 5040;
+    *y = s->y * 0x7FFF / 3780;
+}
+
 static void usb_wacom_event(void *opaque,
                             int x, int y, int dz, int buttons_state)
 {
@@ -218,6 +226,7 @@ static int usb_mouse_poll(USBWacomState *s, uint8_t *buf, int len)
 static const MouseOps usb_wacom_ops = {
     .put_event = usb_wacom_event,
     .get_buttons_state = usb_mouse_get_buttons_state,
+    .get_position = usb_wacom_get_position,
 };
 
 static int usb_wacom_poll(USBWacomState *s, uint8_t *buf, int len)

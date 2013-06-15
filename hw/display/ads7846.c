@@ -88,6 +88,14 @@ static uint32_t ads7846_transfer(SSISlave *dev, uint32_t value)
     return s->output;
 }
 
+static void ads7846_ts_get_position(void *opaque, int *x, int *y)
+{
+    ADS7846State *s = opaque;
+
+    *x = 0x7fff - (((s->input[1] - X_AXIS_MIN) << 15) / X_AXIS_DMAX);
+    *y = ((s->input[5] - Y_AXIS_MIN) << 15) / Y_AXIS_DMAX;
+}
+
 static void ads7846_ts_event(void *opaque,
                 int x, int y, int z, int buttons_state)
 {
@@ -143,6 +151,7 @@ static const VMStateDescription vmstate_ads7846 = {
 static const MouseOps ads7846_ts_ops = {
     .put_event = ads7846_ts_event,
     .get_buttons_state = ads7846_ts_get_buttons_state,
+    .get_position = ads7846_ts_get_position,
 };
 
 static int ads7846_init(SSISlave *dev)
