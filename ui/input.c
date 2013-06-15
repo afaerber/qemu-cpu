@@ -431,9 +431,8 @@ void kbd_put_ledstate(int ledstate)
 void kbd_mouse_event(int dx, int dy, int dz, int buttons_state)
 {
     QEMUPutMouseEntry *entry;
-    QEMUPutMouseEvent *mouse_event;
-    void *mouse_event_opaque;
     int width, height;
+    int rotated_dx, rotated_dy;
 
     if (!runstate_is_running() && !runstate_check(RUN_STATE_SUSPENDED)) {
         return;
@@ -444,10 +443,7 @@ void kbd_mouse_event(int dx, int dy, int dz, int buttons_state)
 
     entry = QTAILQ_FIRST(&mouse_handlers);
 
-    mouse_event = entry->put_event;
-    mouse_event_opaque = entry->opaque;
-
-    if (mouse_event) {
+    if (entry->put_event) {
         if (entry->absolute) {
             width = 0x7fff;
             height = 0x7fff;
@@ -458,22 +454,26 @@ void kbd_mouse_event(int dx, int dy, int dz, int buttons_state)
 
         switch (graphic_rotate) {
         case 0:
-            mouse_event(mouse_event_opaque,
-                        dx, dy, dz, buttons_state);
+            rotated_dx = dx;
+            rotated_dy = dy;
             break;
         case 90:
-            mouse_event(mouse_event_opaque,
-                        width - dy, dx, dz, buttons_state);
+            rotated_dx = width - dy;
+            rotated_dy = dx;
             break;
         case 180:
-            mouse_event(mouse_event_opaque,
-                        width - dx, height - dy, dz, buttons_state);
+            rotated_dx = width - dx;
+            rotated_dy = height - dy;
             break;
         case 270:
-            mouse_event(mouse_event_opaque,
-                        dy, height - dx, dz, buttons_state);
+            rotated_dx = dy;
+            rotated_dy = height - dx;
             break;
+        default:
+            return;
         }
+        entry->put_event(entry->opaque,
+                         rotated_dx, rotated_dy, dz, buttons_state);
     }
 }
 
