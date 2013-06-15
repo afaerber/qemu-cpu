@@ -1284,7 +1284,7 @@ static void do_mouse_move(Monitor *mon, const QDict *qdict)
 static void do_mouse_button(Monitor *mon, const QDict *qdict)
 {
     int button_state = qdict_get_int(qdict, "button_state");
-    kbd_mouse_event(0, 0, 0, button_state);
+    kbd_mouse_button_event(button_state);
 }
 
 static void do_ioport_read(Monitor *mon, const QDict *qdict)

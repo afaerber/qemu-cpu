@@ -491,6 +491,23 @@ void kbd_mouse_move_event(int dx, int dy, int dz)
     kbd_mouse_event(dx, dy, dz, buttons_state);
 }
 
+void kbd_mouse_button_event(int buttons_state)
+{
+    QEMUPutMouseEntry *mouse;
+    int dx = 0, dy = 0;
+
+    if (QTAILQ_EMPTY(&mouse_handlers)) {
+        return;
+    }
+
+    mouse = QTAILQ_FIRST(&mouse_handlers);
+    if (mouse->absolute && mouse->ops->get_position != NULL) {
+        mouse->ops->get_position(mouse->opaque, &dx, &dy);
+    }
+
+    kbd_mouse_event(dx, dy, 0, buttons_state);
+}
+
 bool kbd_mouse_is_absolute(void)
 {
     if (QTAILQ_EMPTY(&mouse_handlers)) {
