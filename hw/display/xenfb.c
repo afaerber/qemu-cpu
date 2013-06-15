@@ -64,6 +64,7 @@ struct XenInput {
     int extended;
     QEMUPutMouseEntry *qmouse;
 };
+typedef struct XenInput XenInput;
 
 #define UP_QUEUE 8
 
@@ -342,6 +343,13 @@ static void xenfb_mouse_event(void *opaque,
     xenfb->button_state = button_state;
 }
 
+static int xenfb_mouse_get_buttons_state(void *opaque)
+{
+    XenInput *in = opaque;
+
+    return in->button_state;
+}
+
 static int input_init(struct XenDevice *xendev)
 {
     xenstore_write_be_int(xendev, "feature-abs-pointer", 1);
@@ -368,6 +376,7 @@ static int input_initialise(struct XenDevice *xendev)
 
 static const MouseOps xenfb_mouse_ops = {
     .put_event = xenfb_mouse_event,
+    .get_buttons_state = xenfb_mouse_get_buttons_state,
 };
 
 static void input_connected(struct XenDevice *xendev)

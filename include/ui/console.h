@@ -29,13 +29,16 @@ typedef void QEMUPutKBDEvent(void *opaque, int keycode);
 typedef void QEMUPutLEDEvent(void *opaque, int ledstate);
 typedef void QEMUPutMouseEvent(void *opaque, int dx, int dy, int dz,
                                int buttons_state);
+typedef int QEMUGetMouseButtonsState(void *opaque);
 
 /**
  * MouseOps:
  * @put_event: Signals a mouse event to a backend.
+ * @get_buttons_state: Retrieves mouse buttons state from a backend.
  */
 typedef struct MouseOps {
     QEMUPutMouseEvent *put_event;
+    QEMUGetMouseButtonsState *get_buttons_state;
 } MouseOps;
 
 typedef struct QEMUPutMouseEntry QEMUPutMouseEntry;

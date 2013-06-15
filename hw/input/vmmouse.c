@@ -106,6 +106,16 @@ static void vmmouse_mouse_event(void *opaque, int x, int y, int dz, int buttons_
     i8042_isa_mouse_fake_event(s->ps2_mouse);
 }
 
+static int vmmouse_get_buttons_state(void *opaque)
+{
+    VMMouseState *s = opaque;
+
+    if (s->nb_queue < 4) {
+        return 0;
+    }
+    return s->queue[s->nb_queue - 4];
+}
+
 static void vmmouse_remove_handler(VMMouseState *s)
 {
     if (s->entry) {
@@ -116,6 +126,7 @@ static void vmmouse_remove_handler(VMMouseState *s)
 
 static const MouseOps vmmouse_mouse_ops = {
     .put_event = vmmouse_mouse_event,
+    .get_buttons_state = vmmouse_get_buttons_state,
 };
 
 static void vmmouse_update_handler(VMMouseState *s, uint8_t absolute)

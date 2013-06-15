@@ -391,6 +391,13 @@ void ps2_mouse_fake_event(void *opaque)
     ps2_mouse_event(opaque, 1, 0, 0, 0);
 }
 
+static int ps2_mouse_get_buttons_state(void *opaque)
+{
+    PS2MouseState *s = opaque;
+
+    return s->mouse_buttons;
+}
+
 void ps2_write_mouse(void *opaque, int val)
 {
     PS2MouseState *s = (PS2MouseState *)opaque;
@@ -665,6 +672,7 @@ void *ps2_kbd_init(void (*update_irq)(void *, int), void *update_arg)
 
 static const MouseOps ps2_mouse_ops = {
     .put_event = ps2_mouse_event,
+    .get_buttons_state = ps2_mouse_get_buttons_state,
 };
 
 void *ps2_mouse_init(void (*update_irq)(void *, int), void *update_arg)

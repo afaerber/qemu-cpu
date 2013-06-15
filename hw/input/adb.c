@@ -404,6 +404,12 @@ static void adb_mouse_event(void *opaque,
     s->buttons_state = buttons_state;
 }
 
+static int adb_mouse_get_buttons_state(void *opaque)
+{
+    MouseState *s = opaque;
+
+    return s->buttons_state;
+}
 
 static int adb_mouse_poll(ADBDevice *d, uint8_t *obuf)
 {
@@ -531,6 +537,7 @@ static const VMStateDescription vmstate_adb_mouse = {
 
 static const MouseOps adb_mouse_ops = {
     .put_event = adb_mouse_event,
+    .get_buttons_state = adb_mouse_get_buttons_state,
 };
 
 static void adb_mouse_realizefn(DeviceState *dev, Error **errp)

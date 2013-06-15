@@ -988,6 +988,13 @@ static void tsc210x_touchscreen_event(void *opaque,
         tsc210x_pin_update(s);
 }
 
+static int tsc210x_touchscreen_get_buttons_state(void *opaque)
+{
+    TSC210xState *s = opaque;
+
+    return s->pressure;
+}
+
 static void tsc210x_i2s_swallow(TSC210xState *s)
 {
     if (s->dac_voice[0])
@@ -1102,6 +1109,7 @@ static int tsc210x_load(QEMUFile *f, void *opaque, int version_id)
 
 static const MouseOps tsc210x_touchscreen_ops = {
     .put_event = tsc210x_touchscreen_event,
+    .get_buttons_state = tsc210x_touchscreen_get_buttons_state,
 };
 
 uWireSlave *tsc2102_init(qemu_irq pint)

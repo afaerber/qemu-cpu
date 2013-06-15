@@ -108,6 +108,13 @@ static void ads7846_ts_event(void *opaque,
     }
 }
 
+static int ads7846_ts_get_buttons_state(void *opaque)
+{
+    ADS7846State *s = opaque;
+
+    return s->pressure;
+}
+
 static int ads7856_post_load(void *opaque, int version_id)
 {
     ADS7846State *s = opaque;
@@ -135,6 +142,7 @@ static const VMStateDescription vmstate_ads7846 = {
 
 static const MouseOps ads7846_ts_ops = {
     .put_event = ads7846_ts_event,
+    .get_buttons_state = ads7846_ts_get_buttons_state,
 };
 
 static int ads7846_init(SSISlave *dev)

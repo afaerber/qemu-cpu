@@ -155,6 +155,13 @@ static void usb_wacom_event(void *opaque,
     usb_wakeup(s->intr, 0);
 }
 
+static int usb_mouse_get_buttons_state(void *opaque)
+{
+    USBWacomState *s = opaque;
+
+    return s->buttons_state;
+}
+
 static inline int int_clamp(int val, int vmin, int vmax)
 {
     if (val < vmin)
@@ -167,6 +174,7 @@ static inline int int_clamp(int val, int vmin, int vmax)
 
 static const MouseOps usb_mouse_ops = {
     .put_event = usb_mouse_event,
+    .get_buttons_state = usb_mouse_get_buttons_state,
 };
 
 static int usb_mouse_poll(USBWacomState *s, uint8_t *buf, int len)
@@ -209,6 +217,7 @@ static int usb_mouse_poll(USBWacomState *s, uint8_t *buf, int len)
 
 static const MouseOps usb_wacom_ops = {
     .put_event = usb_wacom_event,
+    .get_buttons_state = usb_mouse_get_buttons_state,
 };
 
 static int usb_wacom_poll(USBWacomState *s, uint8_t *buf, int len)

@@ -158,6 +158,18 @@ static void hid_pointer_event(void *opaque,
     hs->event(hs);
 }
 
+static int hid_pointer_get_buttons_state(void *opaque)
+{
+    HIDState *hs = opaque;
+    int index;
+    HIDPointerEvent *e;
+
+    index = (hs->n ? hs->head : hs->head - 1);
+    e = &hs->ptr.queue[index & QUEUE_MASK];
+
+    return e->buttons_state;
+}
+
 static void hid_keyboard_event(void *opaque, int keycode)
 {
     HIDState *hs = opaque;
@@ -427,6 +439,7 @@ void hid_free(HIDState *hs)
 
 static const MouseOps hid_mouse_ops = {
     .put_event = hid_pointer_event,
+    .get_buttons_state = hid_pointer_get_buttons_state,
 };
 
 void hid_init(HIDState *hs, int kind, HIDEventFunc event)

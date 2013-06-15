@@ -432,6 +432,13 @@ static void tsc2005_touchscreen_event(void *opaque,
         tsc2005_pin_update(s);
 }
 
+static int tsc2005_touchscreen_get_buttons_state(void *opaque)
+{
+    TSC2005State *s = opaque;
+
+    return s->pressure;
+}
+
 static void tsc2005_save(QEMUFile *f, void *opaque)
 {
     TSC2005State *s = (TSC2005State *) opaque;
@@ -521,6 +528,7 @@ static int tsc2005_load(QEMUFile *f, void *opaque, int version_id)
 
 static const MouseOps tsc2005_touchscreen_ops = {
     .put_event = tsc2005_touchscreen_event,
+    .get_buttons_state = tsc2005_touchscreen_get_buttons_state,
 };
 
 void *tsc2005_init(qemu_irq pintdav)

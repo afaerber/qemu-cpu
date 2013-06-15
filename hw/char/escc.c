@@ -88,6 +88,7 @@ typedef struct ChannelState {
     SERIOQueue queue;
     CharDriverState *chr;
     int e0_mode, led_mode, caps_lock_mode, num_lock_mode;
+    int buttons_state;
     int disabled;
     int clock;
     uint32_t vmstate_dummy;
@@ -304,6 +305,7 @@ static void escc_reset_chn(ChannelState *s)
     s->rxint = s->txint = 0;
     s->rxint_under_svc = s->txint_under_svc = 0;
     s->e0_mode = s->led_mode = s->caps_lock_mode = s->num_lock_mode = 0;
+    s->buttons_state = 0;
     clear_queue(s);
 }
 
@@ -813,6 +815,7 @@ static void sunmouse_event(void *opaque,
     trace_escc_sunmouse_event(dx, dy, buttons_state);
     ch = 0x80 | 0x7; /* protocol start byte, no buttons pressed */
 
+    s->buttons_state = buttons_state;
     if (buttons_state & MOUSE_EVENT_LBUTTON)
         ch ^= 0x4;
     if (buttons_state & MOUSE_EVENT_MBUTTON)
@@ -846,6 +849,13 @@ static void sunmouse_event(void *opaque,
     put_queue(s, 0);
 }
 
+static int sunmouse_get_buttons_state(void *opaque)
+{
+    ChannelState *s = opaque;
+
+    return s->buttons_state;
+}
+
 void slavio_serial_ms_kbd_init(hwaddr base, qemu_irq irq,
                                int disabled, int clock, int it_shift)
 {
@@ -869,6 +879,7 @@ void slavio_serial_ms_kbd_init(hwaddr base, qemu_irq irq,
 
 static const MouseOps sunmouse_mouse_ops = {
     .put_event = sunmouse_event,
+    .get_buttons_state = sunmouse_get_buttons_state,
 };
 
 static int escc_init1(SysBusDevice *dev)

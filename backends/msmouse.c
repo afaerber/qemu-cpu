@@ -29,10 +29,16 @@
 #define MSMOUSE_LO6(n) ((n) & 0x3f)
 #define MSMOUSE_HI2(n) (((n) & 0xc0) >> 6)
 
+typedef struct MSMouseState {
+    CharDriverState chr;
+
+    int buttons_state;
+} MSMouseState;
+
 static void msmouse_event(void *opaque,
                           int dx, int dy, int dz, int buttons_state)
 {
-    CharDriverState *chr = (CharDriverState *)opaque;
+    MSMouseState *s = opaque;
 
     unsigned char bytes[4] = { 0x40, 0x00, 0x00, 0x00 };
 
@@ -49,7 +55,16 @@ static void msmouse_event(void *opaque,
     /* We always send the packet of, so that we do not have to keep track
        of previous state of the middle button. This can potentially confuse
        some very old drivers for two button mice though. */
-    qemu_chr_be_write(chr, bytes, 4);
+    qemu_chr_be_write(&s->chr, bytes, 4);
+
+    s->buttons_state = buttons_state;
+}
+
+static int msmouse_get_buttons_state(void *opaque)
+{
+    MSMouseState *s = opaque;
+
+    return s->buttons_state;
 }
 
 static int msmouse_chr_write (struct CharDriverState *s, const uint8_t *buf, int len)
@@ -65,13 +80,14 @@ static void msmouse_chr_close (struct CharDriverState *chr)
 
 static const MouseOps msmouse_mouse_ops = {
     .put_event = msmouse_event,
+    .get_buttons_state = msmouse_get_buttons_state,
 };
 
 CharDriverState *qemu_chr_open_msmouse(void)
 {
     CharDriverState *chr;
 
-    chr = g_malloc0(sizeof(CharDriverState));
+    chr = g_malloc0(sizeof(MSMouseState));
     chr->chr_write = msmouse_chr_write;
     chr->chr_close = msmouse_chr_close;
     chr->explicit_be_open = true;
