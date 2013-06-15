@@ -31,10 +31,10 @@
 #include "ui/keymaps.h"
 
 struct QEMUPutMouseEntry {
-    QEMUPutMouseEvent *qemu_put_mouse_event;
-    void *qemu_put_mouse_event_opaque;
-    int qemu_put_mouse_event_absolute;
-    char *qemu_put_mouse_event_name;
+    QEMUPutMouseEvent *put_event;
+    void *opaque;
+    int absolute;
+    char *name;
 
     int index;
 
@@ -355,10 +355,10 @@ QEMUPutMouseEntry *qemu_add_mouse_event_handler(QEMUPutMouseEvent *func,
 
     s = g_malloc0(sizeof(QEMUPutMouseEntry));
 
-    s->qemu_put_mouse_event = func;
-    s->qemu_put_mouse_event_opaque = opaque;
-    s->qemu_put_mouse_event_absolute = absolute;
-    s->qemu_put_mouse_event_name = g_strdup(name);
+    s->put_event = func;
+    s->opaque = opaque;
+    s->absolute = absolute;
+    s->name = g_strdup(name);
     s->index = mouse_index++;
 
     QTAILQ_INSERT_TAIL(&mouse_handlers, s, node);
@@ -380,7 +380,7 @@ void qemu_remove_mouse_event_handler(QEMUPutMouseEntry *entry)
 {
     QTAILQ_REMOVE(&mouse_handlers, entry, node);
 
-    g_free(entry->qemu_put_mouse_event_name);
+    g_free(entry->name);
     g_free(entry);
 
     check_mode_change();
@@ -444,11 +444,11 @@ void kbd_mouse_event(int dx, int dy, int dz, int buttons_state)
 
     entry = QTAILQ_FIRST(&mouse_handlers);
 
-    mouse_event = entry->qemu_put_mouse_event;
-    mouse_event_opaque = entry->qemu_put_mouse_event_opaque;
+    mouse_event = entry->put_event;
+    mouse_event_opaque = entry->opaque;
 
     if (mouse_event) {
-        if (entry->qemu_put_mouse_event_absolute) {
+        if (entry->absolute) {
             width = 0x7fff;
             height = 0x7fff;
         } else {
@@ -483,7 +483,7 @@ int kbd_mouse_is_absolute(void)
         return 0;
     }
 
-    return QTAILQ_FIRST(&mouse_handlers)->qemu_put_mouse_event_absolute;
+    return QTAILQ_FIRST(&mouse_handlers)->absolute;
 }
 
 int kbd_mouse_has_absolute(void)
@@ -491,7 +491,7 @@ int kbd_mouse_has_absolute(void)
     QEMUPutMouseEntry *entry;
 
     QTAILQ_FOREACH(entry, &mouse_handlers, node) {
-        if (entry->qemu_put_mouse_event_absolute) {
+        if (entry->absolute) {
             return 1;
         }
     }
@@ -508,9 +508,9 @@ MouseInfoList *qmp_query_mice(Error **errp)
     QTAILQ_FOREACH(cursor, &mouse_handlers, node) {
         MouseInfoList *info = g_malloc0(sizeof(*info));
         info->value = g_malloc0(sizeof(*info->value));
-        info->value->name = g_strdup(cursor->qemu_put_mouse_event_name);
+        info->value->name = g_strdup(cursor->name);
         info->value->index = cursor->index;
-        info->value->absolute = !!cursor->qemu_put_mouse_event_absolute;
+        info->value->absolute = !!cursor->absolute;
         info->value->current = current;
 
         current = false;
