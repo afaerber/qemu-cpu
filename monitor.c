@@ -1266,8 +1266,6 @@ static void do_sum(Monitor *mon, const QDict *qdict)
     monitor_printf(mon, "%05d\n", sum);
 }
 
-static int mouse_button_state;
-
 static void do_mouse_move(Monitor *mon, const QDict *qdict)
 {
     int dx, dy, dz;
@@ -1277,16 +1275,16 @@ static void do_mouse_move(Monitor *mon, const QDict *qdict)
     dx = strtol(dx_str, NULL, 0);
     dy = strtol(dy_str, NULL, 0);
     dz = 0;
-    if (dz_str)
+    if (dz_str) {
         dz = strtol(dz_str, NULL, 0);
-    kbd_mouse_event(dx, dy, dz, mouse_button_state);
+    }
+    kbd_mouse_move_event(dx, dy, dz);
 }
 
 static void do_mouse_button(Monitor *mon, const QDict *qdict)
 {
     int button_state = qdict_get_int(qdict, "button_state");
-    mouse_button_state = button_state;
-    kbd_mouse_event(0, 0, 0, mouse_button_state);
+    kbd_mouse_event(0, 0, 0, button_state);
 }
 
 static void do_ioport_read(Monitor *mon, const QDict *qdict)
