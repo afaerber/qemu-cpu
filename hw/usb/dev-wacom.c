@@ -165,12 +165,16 @@ static inline int int_clamp(int val, int vmin, int vmax)
         return val;
 }
 
+static const MouseOps usb_mouse_ops = {
+    .put_event = usb_mouse_event,
+};
+
 static int usb_mouse_poll(USBWacomState *s, uint8_t *buf, int len)
 {
     int dx, dy, dz, b, l;
 
     if (!s->mouse_grabbed) {
-        s->eh_entry = qemu_add_mouse_event_handler(usb_mouse_event, s, false,
+        s->eh_entry = qemu_add_mouse_event_handler(&usb_mouse_ops, s, false,
                                                    "QEMU PenPartner tablet");
         qemu_activate_mouse_event_handler(s->eh_entry);
         s->mouse_grabbed = 1;
@@ -203,12 +207,16 @@ static int usb_mouse_poll(USBWacomState *s, uint8_t *buf, int len)
     return l;
 }
 
+static const MouseOps usb_wacom_ops = {
+    .put_event = usb_wacom_event,
+};
+
 static int usb_wacom_poll(USBWacomState *s, uint8_t *buf, int len)
 {
     int b;
 
     if (!s->mouse_grabbed) {
-        s->eh_entry = qemu_add_mouse_event_handler(usb_wacom_event, s, true,
+        s->eh_entry = qemu_add_mouse_event_handler(&usb_wacom_ops, s, true,
                                                    "QEMU PenPartner tablet");
         qemu_activate_mouse_event_handler(s->eh_entry);
         s->mouse_grabbed = 1;

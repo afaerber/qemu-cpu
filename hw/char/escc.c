@@ -867,6 +867,10 @@ void slavio_serial_ms_kbd_init(hwaddr base, qemu_irq irq,
     sysbus_mmio_map(s, 0, base);
 }
 
+static const MouseOps sunmouse_mouse_ops = {
+    .put_event = sunmouse_event,
+};
+
 static int escc_init1(SysBusDevice *dev)
 {
     SerialState *s = FROM_SYSBUS(SerialState, dev);
@@ -891,7 +895,7 @@ static int escc_init1(SysBusDevice *dev)
     sysbus_init_mmio(dev, &s->mmio);
 
     if (s->chn[0].type == mouse) {
-        qemu_add_mouse_event_handler(sunmouse_event, &s->chn[0], false,
+        qemu_add_mouse_event_handler(&sunmouse_mouse_ops, &s->chn[0], false,
                                      "QEMU Sun Mouse");
     }
     if (s->chn[1].type == kbd) {

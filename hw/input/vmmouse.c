@@ -114,6 +114,10 @@ static void vmmouse_remove_handler(VMMouseState *s)
     }
 }
 
+static const MouseOps vmmouse_mouse_ops = {
+    .put_event = vmmouse_mouse_event,
+};
+
 static void vmmouse_update_handler(VMMouseState *s, uint8_t absolute)
 {
     if (s->status != 0) {
@@ -124,7 +128,7 @@ static void vmmouse_update_handler(VMMouseState *s, uint8_t absolute)
         vmmouse_remove_handler(s);
     }
     if (s->entry == NULL) {
-        s->entry = qemu_add_mouse_event_handler(vmmouse_mouse_event,
+        s->entry = qemu_add_mouse_event_handler(&vmmouse_mouse_ops,
                                                 s, s->absolute,
                                                 "vmmouse");
         qemu_activate_mouse_event_handler(s->entry);

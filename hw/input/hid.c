@@ -425,6 +425,10 @@ void hid_free(HIDState *hs)
     hid_del_idle_timer(hs);
 }
 
+static const MouseOps hid_mouse_ops = {
+    .put_event = hid_pointer_event,
+};
+
 void hid_init(HIDState *hs, int kind, HIDEventFunc event)
 {
     hs->kind = kind;
@@ -433,11 +437,11 @@ void hid_init(HIDState *hs, int kind, HIDEventFunc event)
     if (hs->kind == HID_KEYBOARD) {
         hs->kbd.eh_entry = qemu_add_kbd_event_handler(hid_keyboard_event, hs);
     } else if (hs->kind == HID_MOUSE) {
-        hs->ptr.eh_entry = qemu_add_mouse_event_handler(hid_pointer_event,
+        hs->ptr.eh_entry = qemu_add_mouse_event_handler(&hid_mouse_ops,
                                                         hs, false,
                                                         "QEMU HID Mouse");
     } else if (hs->kind == HID_TABLET) {
-        hs->ptr.eh_entry = qemu_add_mouse_event_handler(hid_pointer_event,
+        hs->ptr.eh_entry = qemu_add_mouse_event_handler(&hid_mouse_ops,
                                                         hs, true,
                                                         "QEMU HID Tablet");
     }

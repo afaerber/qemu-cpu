@@ -27,7 +27,16 @@
 
 typedef void QEMUPutKBDEvent(void *opaque, int keycode);
 typedef void QEMUPutLEDEvent(void *opaque, int ledstate);
-typedef void QEMUPutMouseEvent(void *opaque, int dx, int dy, int dz, int buttons_state);
+typedef void QEMUPutMouseEvent(void *opaque, int dx, int dy, int dz,
+                               int buttons_state);
+
+/**
+ * MouseOps:
+ * @put_event: Signals a mouse event to a backend.
+ */
+typedef struct MouseOps {
+    QEMUPutMouseEvent *put_event;
+} MouseOps;
 
 typedef struct QEMUPutMouseEntry QEMUPutMouseEntry;
 typedef struct QEMUPutKbdEntry QEMUPutKbdEntry;
@@ -36,7 +45,7 @@ typedef struct QEMUPutLEDEntry QEMUPutLEDEntry;
 QEMUPutKbdEntry *qemu_add_kbd_event_handler(QEMUPutKBDEvent *func,
                                             void *opaque);
 void qemu_remove_kbd_event_handler(QEMUPutKbdEntry *entry);
-QEMUPutMouseEntry *qemu_add_mouse_event_handler(QEMUPutMouseEvent *func,
+QEMUPutMouseEntry *qemu_add_mouse_event_handler(const MouseOps *ops,
                                                 void *opaque, bool absolute,
                                                 const char *name);
 void qemu_remove_mouse_event_handler(QEMUPutMouseEntry *entry);

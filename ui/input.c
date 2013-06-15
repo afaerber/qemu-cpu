@@ -31,7 +31,7 @@
 #include "ui/keymaps.h"
 
 struct QEMUPutMouseEntry {
-    QEMUPutMouseEvent *put_event;
+    const MouseOps *ops;
     void *opaque;
     bool absolute;
     char *name;
@@ -346,7 +346,7 @@ static void check_mode_change(void)
     current_has_absolute = has_absolute;
 }
 
-QEMUPutMouseEntry *qemu_add_mouse_event_handler(QEMUPutMouseEvent *func,
+QEMUPutMouseEntry *qemu_add_mouse_event_handler(const MouseOps *ops,
                                                 void *opaque, bool absolute,
                                                 const char *name)
 {
@@ -355,7 +355,7 @@ QEMUPutMouseEntry *qemu_add_mouse_event_handler(QEMUPutMouseEvent *func,
 
     s = g_malloc0(sizeof(QEMUPutMouseEntry));
 
-    s->put_event = func;
+    s->ops = ops;
     s->opaque = opaque;
     s->absolute = absolute;
     s->name = g_strdup(name);
@@ -443,7 +443,7 @@ void kbd_mouse_event(int dx, int dy, int dz, int buttons_state)
 
     entry = QTAILQ_FIRST(&mouse_handlers);
 
-    if (entry->put_event) {
+    if (entry->ops->put_event) {
         if (entry->absolute) {
             width = 0x7fff;
             height = 0x7fff;
@@ -472,8 +472,8 @@ void kbd_mouse_event(int dx, int dy, int dz, int buttons_state)
         default:
             return;
         }
-        entry->put_event(entry->opaque,
-                         rotated_dx, rotated_dy, dz, buttons_state);
+        entry->ops->put_event(entry->opaque,
+                              rotated_dx, rotated_dy, dz, buttons_state);
     }
 }
 

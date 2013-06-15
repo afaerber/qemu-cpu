@@ -133,6 +133,10 @@ static const VMStateDescription vmstate_ads7846 = {
     }
 };
 
+static const MouseOps ads7846_ts_ops = {
+    .put_event = ads7846_ts_event,
+};
+
 static int ads7846_init(SSISlave *dev)
 {
     ADS7846State *s = FROM_SSI_SLAVE(ADS7846State, dev);
@@ -145,7 +149,7 @@ static int ads7846_init(SSISlave *dev)
     s->input[7] = ADS_TEMP1;	/* TEMP1 */
 
     /* We want absolute coordinates */
-    qemu_add_mouse_event_handler(ads7846_ts_event, s, true,
+    qemu_add_mouse_event_handler(&ads7846_ts_ops, s, true,
                                  "QEMU ADS7846-driven Touchscreen");
 
     ads7846_int_update(s);

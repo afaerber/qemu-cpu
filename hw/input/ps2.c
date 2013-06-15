@@ -663,6 +663,10 @@ void *ps2_kbd_init(void (*update_irq)(void *, int), void *update_arg)
     return s;
 }
 
+static const MouseOps ps2_mouse_ops = {
+    .put_event = ps2_mouse_event,
+};
+
 void *ps2_mouse_init(void (*update_irq)(void *, int), void *update_arg)
 {
     PS2MouseState *s = (PS2MouseState *)g_malloc0(sizeof(PS2MouseState));
@@ -670,7 +674,7 @@ void *ps2_mouse_init(void (*update_irq)(void *, int), void *update_arg)
     s->common.update_irq = update_irq;
     s->common.update_arg = update_arg;
     vmstate_register(NULL, 0, &vmstate_ps2_mouse, s);
-    qemu_add_mouse_event_handler(ps2_mouse_event, s, false, "QEMU PS/2 Mouse");
+    qemu_add_mouse_event_handler(&ps2_mouse_ops, s, false, "QEMU PS/2 Mouse");
     qemu_register_reset(ps2_mouse_reset, s);
     return s;
 }

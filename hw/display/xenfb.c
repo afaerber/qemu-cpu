@@ -366,6 +366,10 @@ static int input_initialise(struct XenDevice *xendev)
     return 0;
 }
 
+static const MouseOps xenfb_mouse_ops = {
+    .put_event = xenfb_mouse_event,
+};
+
 static void input_connected(struct XenDevice *xendev)
 {
     struct XenInput *in = container_of(xendev, struct XenInput, c.xendev);
@@ -378,7 +382,7 @@ static void input_connected(struct XenDevice *xendev)
     if (in->qmouse) {
         qemu_remove_mouse_event_handler(in->qmouse);
     }
-    in->qmouse = qemu_add_mouse_event_handler(xenfb_mouse_event, in,
+    in->qmouse = qemu_add_mouse_event_handler(&xenfb_mouse_ops, in,
 					      in->abs_pointer_wanted,
 					      "Xen PVFB Mouse");
 }
