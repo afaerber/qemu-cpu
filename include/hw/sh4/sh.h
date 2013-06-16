@@ -11,7 +11,9 @@
 struct SH7750State;
 struct MemoryRegion;
 
+#ifdef CONFIG_SOFTMMU
 struct SH7750State *sh7750_init(SuperHCPU *cpu, struct MemoryRegion *sysmem);
+#endif
 
 typedef struct {
     /* The callback will be triggered if any of the designated lines change */

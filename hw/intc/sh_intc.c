@@ -11,6 +11,7 @@
 #include "hw/sh4/sh_intc.h"
 #include "hw/hw.h"
 #include "hw/sh4/sh.h"
+#include "qom/cpu.h"
 
 //#define DEBUG_INTC
 //#define DEBUG_INTC_SOURCES
