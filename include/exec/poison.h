@@ -46,18 +46,5 @@
 #pragma GCC poison stl_phys
 #pragma GCC poison stq_phys
 
-#pragma GCC poison CPU_INTERRUPT_HARD
-#pragma GCC poison CPU_INTERRUPT_EXITTB
-#pragma GCC poison CPU_INTERRUPT_HALT
-#pragma GCC poison CPU_INTERRUPT_DEBUG
-#pragma GCC poison CPU_INTERRUPT_TGT_EXT_0
-#pragma GCC poison CPU_INTERRUPT_TGT_EXT_1
-#pragma GCC poison CPU_INTERRUPT_TGT_EXT_2
-#pragma GCC poison CPU_INTERRUPT_TGT_EXT_3
-#pragma GCC poison CPU_INTERRUPT_TGT_EXT_4
-#pragma GCC poison CPU_INTERRUPT_TGT_INT_0
-#pragma GCC poison CPU_INTERRUPT_TGT_INT_1
-#pragma GCC poison CPU_INTERRUPT_TGT_INT_2
-
 #endif
 #endif

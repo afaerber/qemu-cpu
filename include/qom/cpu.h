@@ -375,6 +375,63 @@ CPUState *qemu_get_cpu(int index);
  */
 bool cpu_exists(int64_t id);
 
+/**
+ * CPUInterruptFlags:
+ * @CPU_INTERRUPT_HARD: External hardware interrupt pending.
+ * This is typically used for interrupts from devices.
+ * @CPU_INTERRUPT_EXITTB: Exit the current TB.
+ * This is typically used when some system-level device makes some change
+ * to the memory mapping.  E.g., the a20 line change.
+ * @CPU_INTERRUPT_HALT: Halt the CPU.
+ * @CPU_INTERRUPT_DEBUG: Debug event pending.
+ * @CPU_INTERRUPT_SSTEP_MASK: The set of all bits that should be masked
+ * when single-stepping.
+ *
+ * Flags for #CPUState.interrupt_pending.
+ *
+ * The numbers assigned here are non-sequential in order to preserve
+ * binary compatibility with the vmstate dump.  Bit 0 (0x0001) was
+ * previously used for CPU_INTERRUPT_EXIT, and is cleared when loading
+ * the vmstate dump.
+ */
+enum CPUInterruptFlags {
+    CPU_INTERRUPT_HARD      = 0x0002,
+    CPU_INTERRUPT_EXITTB    = 0x0004,
+    CPU_INTERRUPT_HALT      = 0x0020,
+    CPU_INTERRUPT_DEBUG     = 0x0080,
+
+#if defined(CONFIG_SOFTMMU) || defined(CONFIG_USER_ONLY)
+    /* Several target-specific external hardware interrupts.
+     * Each target/cpu.h should define proper names based on them.
+     */
+    CPU_INTERRUPT_TGT_EXT_0 = 0x0008,
+    CPU_INTERRUPT_TGT_EXT_1 = 0x0010,
+    CPU_INTERRUPT_TGT_EXT_2 = 0x0040,
+    CPU_INTERRUPT_TGT_EXT_3 = 0x0200,
+    CPU_INTERRUPT_TGT_EXT_4 = 0x1000,
+
+    /* Several target-specific internal interrupts.  These differ from the
+     * preceding target-specific interrupts in that they are intended to
+     * originate from within the cpu itself, typically in response to some
+     * instruction being executed.  These, therefore, are not masked while
+     * single-stepping within the debugger.
+     */
+    CPU_INTERRUPT_TGT_INT_0 = 0x0100,
+    CPU_INTERRUPT_TGT_INT_1 = 0x0400,
+    CPU_INTERRUPT_TGT_INT_2 = 0x0800,
+    CPU_INTERRUPT_TGT_INT_3 = 0x2000,
+
+    /* First unused bit: 0x4000. */
+
+    CPU_INTERRUPT_SSTEP_MASK = CPU_INTERRUPT_HARD |
+                               CPU_INTERRUPT_TGT_EXT_0 |
+                               CPU_INTERRUPT_TGT_EXT_1 |
+                               CPU_INTERRUPT_TGT_EXT_2 |
+                               CPU_INTERRUPT_TGT_EXT_3 |
+                               CPU_INTERRUPT_TGT_EXT_4,
+#endif
+};
+
 #ifndef CONFIG_USER_ONLY
 
 typedef void (*CPUInterruptHandler)(CPUState *, int);
