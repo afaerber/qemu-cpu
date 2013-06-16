@@ -31,7 +31,7 @@
 #ifdef DEBUG_PCALL
 # define LOG_PCALL(...) qemu_log_mask(CPU_LOG_PCALL, ## __VA_ARGS__)
 # define LOG_PCALL_STATE(env)                                  \
-    log_cpu_state_mask(CPU_LOG_PCALL, (env), CPU_DUMP_CCOP)
+    log_cpu_state_mask(CPU_LOG_PCALL, CPU(x86_env_get_cpu(env)), CPU_DUMP_CCOP)
 #else
 # define LOG_PCALL(...) do { } while (0)
 # define LOG_PCALL_STATE(env) do { } while (0)
@@ -1165,6 +1165,7 @@ static void do_interrupt_all(CPUX86State *env, int intno, int is_int,
 {
     if (qemu_loglevel_mask(CPU_LOG_INT)) {
         if ((env->cr[0] & CR0_PE_MASK)) {
+            X86CPU *cpu = x86_env_get_cpu(env);
             static int count;
 
             qemu_log("%6d: v=%02x e=%04x i=%d cpl=%d IP=%04x:" TARGET_FMT_lx
@@ -1180,7 +1181,7 @@ static void do_interrupt_all(CPUX86State *env, int intno, int is_int,
                 qemu_log(" env->regs[R_EAX]=" TARGET_FMT_lx, env->regs[R_EAX]);
             }
             qemu_log("\n");
-            log_cpu_state(env, CPU_DUMP_CCOP);
+            log_cpu_state(CPU(cpu), CPU_DUMP_CCOP);
 #if 0
             {
                 int i;
