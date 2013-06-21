@@ -287,7 +287,7 @@ enum RSState {
     RS_CHKSUM2,
 };
 typedef struct GDBState {
-    CPUArchState *c_cpu; /* current CPU for step/continue ops */
+    CPUState *c_cpu; /* current CPU for step/continue ops */
     CPUArchState *g_cpu; /* current CPU for other ops */
     CPUState *query_cpu; /* for q{f|s}ThreadInfo */
     enum RSState state; /* parsing state */
@@ -1955,8 +1955,7 @@ static int gdb_breakpoint_insert(target_ulong addr, target_ulong len, int type)
     int err = 0;
 
     if (kvm_enabled()) {
-        return kvm_insert_breakpoint(ENV_GET_CPU(gdbserver_state->c_cpu),
-                                     addr, len, type);
+        return kvm_insert_breakpoint(gdbserver_state->c_cpu, addr, len, type);
     }
 
     switch (type) {
@@ -1994,8 +1993,7 @@ static int gdb_breakpoint_remove(target_ulong addr, target_ulong len, int type)
     int err = 0;
 
     if (kvm_enabled()) {
-        return kvm_remove_breakpoint(ENV_GET_CPU(gdbserver_state->c_cpu),
-                                     addr, len, type);
+        return kvm_remove_breakpoint(gdbserver_state->c_cpu, addr, len, type);
     }
 
     switch (type) {
@@ -2031,7 +2029,7 @@ static void gdb_breakpoint_remove_all(void)
     CPUArchState *env;
 
     if (kvm_enabled()) {
-        kvm_remove_all_breakpoints(ENV_GET_CPU(gdbserver_state->c_cpu));
+        kvm_remove_all_breakpoints(gdbserver_state->c_cpu);
         return;
     }
 
@@ -2046,7 +2044,7 @@ static void gdb_breakpoint_remove_all(void)
 
 static void gdb_set_cpu_pc(GDBState *s, target_ulong pc)
 {
-    CPUState *cpu = ENV_GET_CPU(s->c_cpu);
+    CPUState *cpu = s->c_cpu;
     CPUClass *cc = CPU_GET_CLASS(cpu);
 
     cpu_synchronize_state(cpu);
@@ -2055,20 +2053,11 @@ static void gdb_set_cpu_pc(GDBState *s, target_ulong pc)
     }
 }
 
-static CPUArchState *find_cpu(uint32_t thread_id)
-{
-    CPUState *cpu;
-
-    cpu = qemu_get_cpu(thread_id);
-    if (cpu == NULL) {
-        return NULL;
-    }
-    return cpu->env_ptr;
-}
-
 static int gdb_handle_packet(GDBState *s, const char *line_buf)
 {
+#ifdef TARGET_XTENSA
     CPUArchState *env;
+#endif
     CPUState *cpu;
     const char *p;
     uint32_t thread;
@@ -2087,7 +2076,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
     case '?':
         /* TODO: Make this return the correct value for user-mode.  */
         snprintf(buf, sizeof(buf), "T%02xthread:%02x;", GDB_SIGNAL_TRAP,
-                 cpu_index(ENV_GET_CPU(s->c_cpu)));
+                 cpu_index(s->c_cpu));
         put_packet(s, buf);
         /* Remove all the breakpoints when this query is issued,
          * because gdb is doing and initial connect and the state
@@ -2149,15 +2138,15 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
             }
             if (res) {
                 if (res_thread != -1 && res_thread != 0) {
-                    env = find_cpu(res_thread);
-                    if (env == NULL) {
+                    cpu = qemu_get_cpu(res_thread);
+                    if (cpu == NULL) {
                         put_packet(s, "E22");
                         break;
                     }
-                    s->c_cpu = env;
+                    s->c_cpu = cpu;
                 }
                 if (res == 's') {
-                    cpu_single_step(ENV_GET_CPU(s->c_cpu), sstep_flags);
+                    cpu_single_step(s->c_cpu, sstep_flags);
                 }
                 s->signal = res_signal;
                 gdb_continue(s);
@@ -2185,7 +2174,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
             addr = strtoull(p, (char **)&p, 16);
             gdb_set_cpu_pc(s, addr);
         }
-        cpu_single_step(ENV_GET_CPU(s->c_cpu), sstep_flags);
+        cpu_single_step(s->c_cpu, sstep_flags);
         gdb_continue(s);
 	return RS_IDLE;
     case 'F':
@@ -2204,7 +2193,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
                 p++;
             type = *p;
             if (s->current_syscall_cb) {
-                s->current_syscall_cb(ENV_GET_CPU(s->c_cpu), ret, err);
+                s->current_syscall_cb(s->c_cpu, ret, err);
                 s->current_syscall_cb = NULL;
             }
             if (type == 'C') {
@@ -2216,7 +2205,9 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         break;
     case 'g':
         cpu_synchronize_state(ENV_GET_CPU(s->g_cpu));
+#ifdef TARGET_XTENSA
         env = s->g_cpu;
+#endif
         len = 0;
         for (addr = 0; addr < num_g_regs; addr++) {
             reg_size = gdb_read_register(s->g_cpu, mem_buf + len, addr);
@@ -2227,7 +2218,9 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         break;
     case 'G':
         cpu_synchronize_state(ENV_GET_CPU(s->g_cpu));
+#ifdef TARGET_XTENSA
         env = s->g_cpu;
+#endif
         registers = mem_buf;
         len = strlen(p) / 2;
         hextomem((uint8_t *)registers, p, len);
@@ -2317,18 +2310,18 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
             put_packet(s, "OK");
             break;
         }
-        env = find_cpu(thread);
-        if (env == NULL) {
+        cpu = qemu_get_cpu(thread);
+        if (cpu == NULL) {
             put_packet(s, "E22");
             break;
         }
         switch (type) {
         case 'c':
-            s->c_cpu = env;
+            s->c_cpu = cpu;
             put_packet(s, "OK");
             break;
         case 'g':
-            s->g_cpu = env;
+            s->g_cpu = cpu->env_ptr;
             put_packet(s, "OK");
             break;
         default:
@@ -2403,7 +2396,8 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         }
 #ifdef CONFIG_USER_ONLY
         else if (strncmp(p, "Offsets", 7) == 0) {
-            TaskState *ts = s->c_cpu->opaque;
+            CPUArchState *env = s->c_cpu->env_ptr;
+            TaskState *ts = env->opaque;
 
             snprintf(buf, sizeof(buf),
                      "Text=" TARGET_ABI_FMT_lx ";Data=" TARGET_ABI_FMT_lx
@@ -2495,7 +2489,7 @@ void gdb_set_stop_cpu(CPUState *cpu)
 {
     CPUArchState *env = cpu->env_ptr;
 
-    gdbserver_state->c_cpu = env;
+    gdbserver_state->c_cpu = cpu;
     gdbserver_state->g_cpu = env;
 }
 
@@ -2503,8 +2497,8 @@ void gdb_set_stop_cpu(CPUState *cpu)
 static void gdb_vm_state_change(void *opaque, int running, RunState state)
 {
     GDBState *s = gdbserver_state;
-    CPUArchState *env = s->c_cpu;
-    CPUState *cpu = ENV_GET_CPU(env);
+    CPUArchState *env = s->c_cpu->env_ptr;
+    CPUState *cpu = s->c_cpu;
     char buf[256];
     const char *type;
     int ret;
@@ -2634,7 +2628,7 @@ void gdb_do_syscall(gdb_syscall_complete_cb cb, const char *fmt, ...)
     va_end(va);
 #ifdef CONFIG_USER_ONLY
     put_packet(s, s->syscall_buf);
-    gdb_handlesig(ENV_GET_CPU(s->c_cpu), 0);
+    gdb_handlesig(s->c_cpu, 0);
 #else
     /* In this case wait to send the syscall packet until notification that
        the CPU has stopped.  This must be done because if the packet is sent
@@ -2642,7 +2636,7 @@ void gdb_do_syscall(gdb_syscall_complete_cb cb, const char *fmt, ...)
        is still in the running state, which can cause packets to be dropped
        and state transition 'T' packets to be sent while the syscall is still
        being processed.  */
-    cpu_exit(ENV_GET_CPU(s->c_cpu));
+    cpu_exit(s->c_cpu);
 #endif
 }
 
@@ -2851,7 +2845,7 @@ static void gdb_accept(void)
     socket_set_nodelay(fd);
 
     s = g_malloc0(sizeof(GDBState));
-    s->c_cpu = first_cpu->env_ptr;
+    s->c_cpu = first_cpu;
     s->g_cpu = first_cpu->env_ptr;
     s->fd = fd;
     gdb_has_xml = 0;
@@ -3036,7 +3030,7 @@ int gdbserver_start(const char *device)
         mon_chr = s->mon_chr;
         memset(s, 0, sizeof(GDBState));
     }
-    s->c_cpu = first_cpu->env_ptr;
+    s->c_cpu = first_cpu;
     s->g_cpu = first_cpu->env_ptr;
     s->chr = chr;
     s->state = chr ? RS_IDLE : RS_INACTIVE;
