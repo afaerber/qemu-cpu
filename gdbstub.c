@@ -2092,6 +2092,7 @@ static CPUArchState *find_cpu(uint32_t thread_id)
 static int gdb_handle_packet(GDBState *s, const char *line_buf)
 {
     CPUArchState *env;
+    CPUState *cpu;
     const char *p;
     uint32_t thread;
     int ch, reg_size, type, res;
@@ -2360,9 +2361,9 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         break;
     case 'T':
         thread = strtoull(p, (char **)&p, 16);
-        env = find_cpu(thread);
+        cpu = qemu_get_cpu(thread);
 
-        if (env != NULL) {
+        if (cpu != NULL) {
             put_packet(s, "OK");
         } else {
             put_packet(s, "E22");
@@ -2412,9 +2413,8 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
             break;
         } else if (strncmp(p,"ThreadExtraInfo,", 16) == 0) {
             thread = strtoull(p+16, (char **)&p, 16);
-            env = find_cpu(thread);
-            if (env != NULL) {
-                CPUState *cpu = ENV_GET_CPU(env);
+            cpu = qemu_get_cpu(thread);
+            if (cpu != NULL) {
                 cpu_synchronize_state(cpu);
                 len = snprintf((char *)mem_buf, sizeof(mem_buf),
                                "CPU#%d [%s]", cpu->cpu_index,
