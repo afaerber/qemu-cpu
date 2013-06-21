@@ -1014,6 +1014,7 @@ static void check_breakpoint(CPULM32State *env, DisasContext *dc)
 static void gen_intermediate_code_internal(LM32CPU *cpu,
         TranslationBlock *tb, bool search_pc)
 {
+    CPUState *cs = CPU(cpu);
     CPULM32State *env = &cpu->env;
     struct DisasContext ctx, *dc = &ctx;
     uint16_t *gen_opc_end;
@@ -1031,7 +1032,7 @@ static void gen_intermediate_code_internal(LM32CPU *cpu,
 
     dc->is_jmp = DISAS_NEXT;
     dc->pc = pc_start;
-    dc->singlestep_enabled = env->singlestep_enabled;
+    dc->singlestep_enabled = cs->singlestep_enabled;
     dc->nr_nops = 0;
 
     if (pc_start & 3) {
@@ -1076,7 +1077,7 @@ static void gen_intermediate_code_internal(LM32CPU *cpu,
 
     } while (!dc->is_jmp
          && tcg_ctx.gen_opc_ptr < gen_opc_end
-         && !env->singlestep_enabled
+         && !cs->singlestep_enabled
          && !singlestep
          && (dc->pc < next_page_start)
          && num_insns < max_insns);
@@ -1085,7 +1086,7 @@ static void gen_intermediate_code_internal(LM32CPU *cpu,
         gen_io_end();
     }
 
-    if (unlikely(env->singlestep_enabled)) {
+    if (unlikely(cs->singlestep_enabled)) {
         if (dc->is_jmp == DISAS_NEXT) {
             tcg_gen_movi_tl(cpu_pc, dc->pc);
         }

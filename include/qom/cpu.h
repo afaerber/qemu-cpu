@@ -148,6 +148,7 @@ struct CPUState {
     volatile sig_atomic_t exit_request;
     volatile sig_atomic_t tcg_exit_req;
     uint32_t interrupt_request;
+    int singlestep_enabled;
 
     void *env_ptr; /* CPUArchState */
     struct TranslationBlock *current_tb;

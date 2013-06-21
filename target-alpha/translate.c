@@ -377,10 +377,12 @@ static ExitStatus gen_store_conditional(DisasContext *ctx, int ra, int rb,
 
 static int use_goto_tb(DisasContext *ctx, uint64_t dest)
 {
+    CPUState *cs = CPU(ctx->cpu);
+
     /* Check for the dest on the same page as the start of the TB.  We
        also want to suppress goto_tb in the case of single-steping and IO.  */
     return (((ctx->tb->pc ^ dest) & TARGET_PAGE_MASK) == 0
-            && !ctx->cpu->env.singlestep_enabled
+            && !cs->singlestep_enabled
             && !(ctx->tb->cflags & CF_LAST_IO));
 }
 
@@ -3379,6 +3381,7 @@ static inline void gen_intermediate_code_internal(AlphaCPU *cpu,
                                                   TranslationBlock *tb,
                                                   bool search_pc)
 {
+    CPUState *cs = CPU(cpu);
     CPUAlphaState *env = &cpu->env;
     DisasContext ctx, *ctxp = &ctx;
     target_ulong pc_start;
@@ -3394,9 +3397,10 @@ static inline void gen_intermediate_code_internal(AlphaCPU *cpu,
     gen_opc_end = tcg_ctx.gen_opc_buf + OPC_MAX_SIZE;
 
     ctx.tb = tb;
-    ctx.cpu = alpha_env_get_cpu(env);
+    ctx.cpu = cpu;
     ctx.pc = pc_start;
     ctx.mem_idx = cpu_mmu_index(env);
+    cs = CPU(ctx.cpu);
 
     /* ??? Every TB begins with unset rounding mode, to be initialized on
        the first fp insn of the TB.  Alternately we could define a proper
@@ -3453,7 +3457,7 @@ static inline void gen_intermediate_code_internal(AlphaCPU *cpu,
                 || tcg_ctx.gen_opc_ptr >= gen_opc_end
                 || num_insns >= max_insns
                 || singlestep
-                || env->singlestep_enabled)) {
+                || cs->singlestep_enabled)) {
             ret = EXIT_PC_STALE;
         }
     } while (ret == NO_EXIT);
@@ -3470,7 +3474,7 @@ static inline void gen_intermediate_code_internal(AlphaCPU *cpu,
         tcg_gen_movi_i64(cpu_pc, ctx.pc);
         /* FALLTHRU */
     case EXIT_PC_UPDATED:
-        if (env->singlestep_enabled) {
+        if (cs->singlestep_enabled) {
             gen_excp_1(EXCP_DEBUG, 0);
         } else {
             tcg_gen_exit_tb(0);
