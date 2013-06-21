@@ -3384,6 +3384,7 @@ static inline void gen_intermediate_code_internal(AlphaCPU *cpu,
                                                   TranslationBlock *tb,
                                                   bool search_pc)
 {
+    CPUState *cs = CPU(cpu);
     CPUAlphaState *env = &cpu->env;
     DisasContext ctx, *ctxp = &ctx;
     target_ulong pc_start;
@@ -3402,7 +3403,7 @@ static inline void gen_intermediate_code_internal(AlphaCPU *cpu,
     ctx.pc = pc_start;
     ctx.mem_idx = cpu_mmu_index(env);
     ctx.implver = env->implver;
-    ctx.singlestep_enabled = env->singlestep_enabled;
+    ctx.singlestep_enabled = cs->singlestep_enabled;
 
     /* ??? Every TB begins with unset rounding mode, to be initialized on
        the first fp insn of the TB.  Alternately we could define a proper
