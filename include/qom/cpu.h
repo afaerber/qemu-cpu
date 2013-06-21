@@ -84,6 +84,7 @@ typedef struct CPUClass {
     bool (*get_paging_enabled)(const CPUState *cpu);
     void (*get_memory_mapping)(CPUState *cpu, MemoryMappingList *list,
                                Error **errp);
+    void (*set_pc)(CPUState *cpu, uint64_t value);
 
     const struct VMStateDescription *vmsd;
     int (*write_elf64_note)(WriteCoreDumpFunction f, CPUState *cpu,
