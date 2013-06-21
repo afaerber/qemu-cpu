@@ -38,7 +38,7 @@
 typedef struct DisasContext DisasContext;
 struct DisasContext {
     struct TranslationBlock *tb;
-    CPUAlphaState *env;
+    AlphaCPU *cpu;
     uint64_t pc;
     int mem_idx;
 
@@ -380,7 +380,7 @@ static int use_goto_tb(DisasContext *ctx, uint64_t dest)
     /* Check for the dest on the same page as the start of the TB.  We
        also want to suppress goto_tb in the case of single-steping and IO.  */
     return (((ctx->tb->pc ^ dest) & TARGET_PAGE_MASK) == 0
-            && !ctx->env->singlestep_enabled
+            && !ctx->cpu->env.singlestep_enabled
             && !(ctx->tb->cflags & CF_LAST_IO));
 }
 
@@ -2245,7 +2245,7 @@ static ExitStatus translate_one(DisasContext *ctx, uint32_t insn)
         case 0x6C:
             /* IMPLVER */
             if (rc != 31)
-                tcg_gen_movi_i64(cpu_ir[rc], ctx->env->implver);
+                tcg_gen_movi_i64(cpu_ir[rc], ctx->cpu->env.implver);
             break;
         default:
             goto invalid_opc;
@@ -3394,7 +3394,7 @@ static inline void gen_intermediate_code_internal(AlphaCPU *cpu,
     gen_opc_end = tcg_ctx.gen_opc_buf + OPC_MAX_SIZE;
 
     ctx.tb = tb;
-    ctx.env = env;
+    ctx.cpu = alpha_env_get_cpu(env);
     ctx.pc = pc_start;
     ctx.mem_idx = cpu_mmu_index(env);
 
