@@ -279,7 +279,7 @@ static int write_elf64_notes(DumpState *s)
     int ret;
     int id;
 
-    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+    CPU_FOREACH(cpu) {
         id = cpu_index(cpu);
         ret = cpu_write_elf64_note(fd_write_vmcore, cpu, id, s);
         if (ret < 0) {
@@ -288,7 +288,7 @@ static int write_elf64_notes(DumpState *s)
         }
     }
 
-    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+    CPU_FOREACH(cpu) {
         ret = cpu_write_elf64_qemunote(fd_write_vmcore, cpu, s);
         if (ret < 0) {
             dump_error(s, "dump: failed to write CPU status.\n");
@@ -329,7 +329,7 @@ static int write_elf32_notes(DumpState *s)
     int ret;
     int id;
 
-    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+    CPU_FOREACH(cpu) {
         id = cpu_index(cpu);
         ret = cpu_write_elf32_note(fd_write_vmcore, cpu, id, s);
         if (ret < 0) {
@@ -338,7 +338,7 @@ static int write_elf32_notes(DumpState *s)
         }
     }
 
-    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+    CPU_FOREACH(cpu) {
         ret = cpu_write_elf32_qemunote(fd_write_vmcore, cpu, s);
         if (ret < 0) {
             dump_error(s, "dump: failed to write CPU status.\n");
@@ -734,7 +734,7 @@ static int dump_init(DumpState *s, int fd, bool paging, bool has_filter,
      */
     cpu_synchronize_all_states();
     nr_cpus = 0;
-    for (cpu = first_cpu; cpu != NULL; cpu = cpu->next_cpu) {
+    CPU_FOREACH(cpu) {
         nr_cpus++;
     }
 
