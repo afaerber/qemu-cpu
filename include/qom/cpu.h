@@ -77,6 +77,8 @@ typedef struct CPUClass {
     int reset_dump_flags;
     void (*do_interrupt)(CPUState *cpu);
     CPUUnassignedAccess do_unassigned_access;
+    int (*memory_rw_debug)(CPUState *cpu, uint64_t addr,
+                           uint8_t *buf, int len, bool is_write);
     void (*dump_state)(CPUState *cpu, FILE *f, fprintf_function cpu_fprintf,
                        int flags);
     void (*dump_statistics)(CPUState *cpu, FILE *f,
