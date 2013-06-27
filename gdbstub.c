@@ -289,7 +289,7 @@ enum RSState {
 };
 typedef struct GDBState {
     CPUState *c_cpu; /* current CPU for step/continue ops */
-    CPUArchState *g_cpu; /* current CPU for other ops */
+    CPUState *g_cpu; /* current CPU for other ops */
     CPUState *query_cpu; /* for q{f|s}ThreadInfo */
     enum RSState state; /* parsing state */
     char line_buf[MAX_PACKET_LENGTH];
@@ -2207,30 +2207,28 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         }
         break;
     case 'g':
-        cpu_synchronize_state(ENV_GET_CPU(s->g_cpu));
+        cpu_synchronize_state(s->g_cpu);
 #ifdef TARGET_XTENSA
-        env = s->g_cpu;
+        env = s->g_cpu->env_ptr;
 #endif
         len = 0;
         for (addr = 0; addr < num_g_regs; addr++) {
-            reg_size = gdb_read_register(ENV_GET_CPU(s->g_cpu),
-                                         mem_buf + len, addr);
+            reg_size = gdb_read_register(s->g_cpu, mem_buf + len, addr);
             len += reg_size;
         }
         memtohex(buf, mem_buf, len);
         put_packet(s, buf);
         break;
     case 'G':
-        cpu_synchronize_state(ENV_GET_CPU(s->g_cpu));
+        cpu_synchronize_state(s->g_cpu);
 #ifdef TARGET_XTENSA
-        env = s->g_cpu;
+        env = s->g_cpu->env_ptr;
 #endif
         registers = mem_buf;
         len = strlen(p) / 2;
         hextomem((uint8_t *)registers, p, len);
         for (addr = 0; addr < num_g_regs && len > 0; addr++) {
-            reg_size = gdb_write_register(ENV_GET_CPU(s->g_cpu), registers,
-                                          addr);
+            reg_size = gdb_write_register(s->g_cpu, registers, addr);
             len -= reg_size;
             registers += reg_size;
         }
@@ -2241,8 +2239,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         if (*p == ',')
             p++;
         len = strtoull(p, NULL, 16);
-        if (target_memory_rw_debug(ENV_GET_CPU(s->g_cpu), addr, mem_buf, len,
-                                   false) != 0) {
+        if (target_memory_rw_debug(s->g_cpu, addr, mem_buf, len, false) != 0) {
             put_packet (s, "E14");
         } else {
             memtohex(buf, mem_buf, len);
@@ -2257,7 +2254,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         if (*p == ':')
             p++;
         hextomem(mem_buf, p, len);
-        if (target_memory_rw_debug(ENV_GET_CPU(s->g_cpu), addr, mem_buf, len,
+        if (target_memory_rw_debug(s->g_cpu, addr, mem_buf, len,
                                    true) != 0) {
             put_packet(s, "E14");
         } else {
@@ -2271,7 +2268,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         if (!gdb_has_xml)
             goto unknown_command;
         addr = strtoull(p, (char **)&p, 16);
-        reg_size = gdb_read_register(ENV_GET_CPU(s->g_cpu), mem_buf, addr);
+        reg_size = gdb_read_register(s->g_cpu, mem_buf, addr);
         if (reg_size) {
             memtohex(buf, mem_buf, reg_size);
             put_packet(s, buf);
@@ -2287,7 +2284,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
             p++;
         reg_size = strlen(p) / 2;
         hextomem(mem_buf, p, reg_size);
-        gdb_write_register(ENV_GET_CPU(s->g_cpu), mem_buf, addr);
+        gdb_write_register(s->g_cpu, mem_buf, addr);
         put_packet(s, "OK");
         break;
     case 'Z':
@@ -2328,7 +2325,7 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
             put_packet(s, "OK");
             break;
         case 'g':
-            s->g_cpu = cpu->env_ptr;
+            s->g_cpu = cpu;
             put_packet(s, "OK");
             break;
         default:
@@ -2494,10 +2491,8 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
 
 void gdb_set_stop_cpu(CPUState *cpu)
 {
-    CPUArchState *env = cpu->env_ptr;
-
     gdbserver_state->c_cpu = cpu;
-    gdbserver_state->g_cpu = env;
+    gdbserver_state->g_cpu = cpu;
 }
 
 #ifndef CONFIG_USER_ONLY
@@ -2853,7 +2848,7 @@ static void gdb_accept(void)
 
     s = g_malloc0(sizeof(GDBState));
     s->c_cpu = first_cpu;
-    s->g_cpu = first_cpu->env_ptr;
+    s->g_cpu = first_cpu;
     s->fd = fd;
     gdb_has_xml = 0;
 
@@ -3038,7 +3033,7 @@ int gdbserver_start(const char *device)
         memset(s, 0, sizeof(GDBState));
     }
     s->c_cpu = first_cpu;
-    s->g_cpu = first_cpu->env_ptr;
+    s->g_cpu = first_cpu;
     s->chr = chr;
     s->state = chr ? RS_IDLE : RS_INACTIVE;
     s->mon_chr = mon_chr;
