@@ -137,6 +137,7 @@ struct kvm_run;
  * @singlestep_enabled: Flags for single-stepping.
  * @env_ptr: Pointer to subclass-specific CPUArchState field.
  * @current_tb: Currently executing TB.
+ * @gdb_regs: Additional GDB registers.
  * @next_cpu: Next CPU sharing TB cache.
  * @kvm_fd: vCPU file descriptor for KVM.
  *
@@ -171,6 +172,7 @@ struct CPUState {
 
     void *env_ptr; /* CPUArchState */
     struct TranslationBlock *current_tb;
+    struct GDBRegisterState *gdb_regs;
     CPUState *next_cpu;
 
     int kvm_fd;
