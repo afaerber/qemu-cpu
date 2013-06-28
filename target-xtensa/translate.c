@@ -2881,6 +2881,7 @@ static void gen_intermediate_code_internal(XtensaCPU *cpu,
 {
     CPUState *cs = CPU(cpu);
     CPUXtensaState *env = &cpu->env;
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
     DisasContext dc;
     int insn_count = 0;
     int j, lj = -1;
@@ -2894,7 +2895,7 @@ static void gen_intermediate_code_internal(XtensaCPU *cpu,
         max_insns = CF_COUNT_MASK;
     }
 
-    dc.config = env->config;
+    dc.config = xcc->config;
     dc.singlestep_enabled = cs->singlestep_enabled;
     dc.tb = tb;
     dc.pc = pc_start;
@@ -3021,13 +3022,14 @@ void xtensa_cpu_dump_state(CPUState *cs, FILE *f,
                            fprintf_function cpu_fprintf, int flags)
 {
     XtensaCPU *cpu = XTENSA_CPU(cs);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cs);
     CPUXtensaState *env = &cpu->env;
     int i, j;
 
     cpu_fprintf(f, "PC=%08x\n\n", env->pc);
 
     for (i = j = 0; i < 256; ++i) {
-        if (xtensa_option_bits_enabled(env->config, sregnames[i].opt_bits)) {
+        if (xtensa_option_bits_enabled(xcc->config, sregnames[i].opt_bits)) {
             cpu_fprintf(f, "%12s=%08x%c", sregnames[i].name, env->sregs[i],
                     (j++ % 4) == 3 ? '\n' : ' ');
         }
@@ -3036,7 +3038,7 @@ void xtensa_cpu_dump_state(CPUState *cs, FILE *f,
     cpu_fprintf(f, (j % 4) == 0 ? "\n" : "\n\n");
 
     for (i = j = 0; i < 256; ++i) {
-        if (xtensa_option_bits_enabled(env->config, uregnames[i].opt_bits)) {
+        if (xtensa_option_bits_enabled(xcc->config, uregnames[i].opt_bits)) {
             cpu_fprintf(f, "%s=%08x%c", uregnames[i].name, env->uregs[i],
                     (j++ % 4) == 3 ? '\n' : ' ');
         }
@@ -3051,12 +3053,12 @@ void xtensa_cpu_dump_state(CPUState *cs, FILE *f,
 
     cpu_fprintf(f, "\n");
 
-    for (i = 0; i < env->config->nareg; ++i) {
+    for (i = 0; i < xcc->config->nareg; ++i) {
         cpu_fprintf(f, "AR%02d=%08x%c", i, env->phys_regs[i],
                 (i % 4) == 3 ? '\n' : ' ');
     }
 
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_FP_COPROCESSOR)) {
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_FP_COPROCESSOR)) {
         cpu_fprintf(f, "\n");
 
         for (i = 0; i < 16; ++i) {

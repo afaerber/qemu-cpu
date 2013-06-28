@@ -1692,14 +1692,16 @@ static int cpu_gdb_write_register(CPULM32State *env, uint8_t *mem_buf, int n)
  * reset bit 0 in the 'flags' field of the registers definitions in the
  * gdb/xtensa-config.c inside gdb source tree or inside gdb overlay.
  */
-#define NUM_CORE_REGS (env->config->gdb_regmap.num_regs)
+#define NUM_CORE_REGS \
+  (XTENSA_CPU_GET_CLASS(xtensa_env_get_cpu(env))->config->gdb_regmap.num_regs)
 #define num_g_regs NUM_CORE_REGS
 
 static int cpu_gdb_read_register(CPUXtensaState *env, uint8_t *mem_buf, int n)
 {
-    const XtensaGdbReg *reg = env->config->gdb_regmap.reg + n;
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(xtensa_env_get_cpu(env));
+    const XtensaGdbReg *reg = xcc->config->gdb_regmap.reg + n;
 
-    if (n < 0 || n >= env->config->gdb_regmap.num_regs) {
+    if (n < 0 || n >= xcc->config->gdb_regmap.num_regs) {
         return 0;
     }
 
@@ -1710,7 +1712,7 @@ static int cpu_gdb_read_register(CPUXtensaState *env, uint8_t *mem_buf, int n)
 
     case 1: /*ar*/
         xtensa_sync_phys_from_window(env);
-        GET_REG32(env->phys_regs[(reg->targno & 0xff) % env->config->nareg]);
+        GET_REG32(env->phys_regs[(reg->targno & 0xff) % xcc->config->nareg]);
         break;
 
     case 2: /*SR*/
@@ -1738,10 +1740,11 @@ static int cpu_gdb_read_register(CPUXtensaState *env, uint8_t *mem_buf, int n)
 
 static int cpu_gdb_write_register(CPUXtensaState *env, uint8_t *mem_buf, int n)
 {
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(xtensa_env_get_cpu(env));
     uint32_t tmp;
-    const XtensaGdbReg *reg = env->config->gdb_regmap.reg + n;
+    const XtensaGdbReg *reg = xcc->config->gdb_regmap.reg + n;
 
-    if (n < 0 || n >= env->config->gdb_regmap.num_regs) {
+    if (n < 0 || n >= xcc->config->gdb_regmap.num_regs) {
         return 0;
     }
 
@@ -1753,7 +1756,7 @@ static int cpu_gdb_write_register(CPUXtensaState *env, uint8_t *mem_buf, int n)
         break;
 
     case 1: /*ar*/
-        env->phys_regs[(reg->targno & 0xff) % env->config->nareg] = tmp;
+        env->phys_regs[(reg->targno & 0xff) % xcc->config->nareg] = tmp;
         xtensa_sync_window_from_phys(env);
         break;
 

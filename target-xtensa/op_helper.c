@@ -50,8 +50,11 @@ static void do_unaligned_access(CPUXtensaState *env,
 static void do_unaligned_access(CPUXtensaState *env,
         target_ulong addr, int is_write, int is_user, uintptr_t retaddr)
 {
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_UNALIGNED_EXCEPTION) &&
-            !xtensa_option_enabled(env->config, XTENSA_OPTION_HW_ALIGNMENT)) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_UNALIGNED_EXCEPTION) &&
+            !xtensa_option_enabled(xcc->config, XTENSA_OPTION_HW_ALIGNMENT)) {
         cpu_restore_state(env, retaddr);
         HELPER(exception_cause_vaddr)(env,
                 env->pc, LOAD_STORE_ALIGNMENT_CAUSE, addr);
@@ -101,11 +104,13 @@ void HELPER(exception)(CPUXtensaState *env, uint32_t excp)
 
 void HELPER(exception_cause)(CPUXtensaState *env, uint32_t pc, uint32_t cause)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
     uint32_t vector;
 
     env->pc = pc;
     if (env->sregs[PS] & PS_EXCM) {
-        if (env->config->ndepc) {
+        if (xcc->config->ndepc) {
             env->sregs[DEPC] = pc;
         } else {
             env->sregs[EPC1] = pc;
@@ -131,14 +136,19 @@ void HELPER(exception_cause_vaddr)(CPUXtensaState *env,
 
 void debug_exception_env(CPUXtensaState *env, uint32_t cause)
 {
-    if (xtensa_get_cintlevel(env) < env->config->debug_level) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    if (xtensa_get_cintlevel(env) < xcc->config->debug_level) {
         HELPER(debug_exception)(env, env->pc, cause);
     }
 }
 
 void HELPER(debug_exception)(CPUXtensaState *env, uint32_t pc, uint32_t cause)
 {
-    unsigned level = env->config->debug_level;
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+    unsigned level = xcc->config->debug_level;
 
     env->pc = pc;
     env->sregs[DEBUGCAUSE] = cause;
@@ -165,12 +175,15 @@ uint32_t HELPER(nsau)(uint32_t v)
 static void copy_window_from_phys(CPUXtensaState *env,
         uint32_t window, uint32_t phys, uint32_t n)
 {
-    assert(phys < env->config->nareg);
-    if (phys + n <= env->config->nareg) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    assert(phys < xcc->config->nareg);
+    if (phys + n <= xcc->config->nareg) {
         memcpy(env->regs + window, env->phys_regs + phys,
                 n * sizeof(uint32_t));
     } else {
-        uint32_t n1 = env->config->nareg - phys;
+        uint32_t n1 = xcc->config->nareg - phys;
         memcpy(env->regs + window, env->phys_regs + phys,
                 n1 * sizeof(uint32_t));
         memcpy(env->regs + window + n1, env->phys_regs,
@@ -181,12 +194,15 @@ static void copy_window_from_phys(CPUXtensaState *env,
 static void copy_phys_from_window(CPUXtensaState *env,
         uint32_t phys, uint32_t window, uint32_t n)
 {
-    assert(phys < env->config->nareg);
-    if (phys + n <= env->config->nareg) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    assert(phys < xcc->config->nareg);
+    if (phys + n <= xcc->config->nareg) {
         memcpy(env->phys_regs + phys, env->regs + window,
                 n * sizeof(uint32_t));
     } else {
-        uint32_t n1 = env->config->nareg - phys;
+        uint32_t n1 = xcc->config->nareg - phys;
         memcpy(env->phys_regs + phys, env->regs + window,
                 n1 * sizeof(uint32_t));
         memcpy(env->phys_regs, env->regs + window + n1,
@@ -197,7 +213,10 @@ static void copy_phys_from_window(CPUXtensaState *env,
 
 static inline unsigned windowbase_bound(unsigned a, const CPUXtensaState *env)
 {
-    return a & (env->config->nareg / 4 - 1);
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    return a & (xcc->config->nareg / 4 - 1);
 }
 
 static inline unsigned windowstart_bit(unsigned a, const CPUXtensaState *env)
@@ -375,7 +394,9 @@ void HELPER(dump_state)(CPUXtensaState *env)
 
 void HELPER(waiti)(CPUXtensaState *env, uint32_t pc, uint32_t intlevel)
 {
-    CPUState *cpu;
+    CPUState *cs;
+    XtensaCPU *cpu;
+    XtensaCPUClass *xcc;
 
     env->pc = pc;
     env->sregs[PS] = (env->sregs[PS] & ~PS_INTLEVEL) |
@@ -386,10 +407,12 @@ void HELPER(waiti)(CPUXtensaState *env, uint32_t pc, uint32_t intlevel)
         return;
     }
 
-    cpu = CPU(xtensa_env_get_cpu(env));
+    cpu = xtensa_env_get_cpu(env);
+    cs = CPU(cpu);
+    xcc = XTENSA_CPU_GET_CLASS(cpu);
     env->halt_clock = qemu_get_clock_ns(vm_clock);
-    cpu->halted = 1;
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_TIMER_INTERRUPT)) {
+    cs->halted = 1;
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_TIMER_INTERRUPT)) {
         xtensa_rearm_ccompare_timer(env);
     }
     HELPER(exception)(env, EXCP_HLT);
@@ -418,6 +441,8 @@ void HELPER(check_interrupts)(CPUXtensaState *env)
  */
 void HELPER(check_atomctl)(CPUXtensaState *env, uint32_t pc, uint32_t vaddr)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
     uint32_t paddr, page_size, access;
     uint32_t atomctl = env->sregs[ATOMCTL];
     int rc = xtensa_get_physical_addr(env, true, vaddr, 1,
@@ -441,7 +466,7 @@ void HELPER(check_atomctl)(CPUXtensaState *env, uint32_t pc, uint32_t vaddr)
      * See ISA, 4.3.12.4 The Atomic Operation Control Register (ATOMCTL)
      * under the Conditional Store Option.
      */
-    if (!xtensa_option_enabled(env->config, XTENSA_OPTION_DCACHE)) {
+    if (!xtensa_option_enabled(xcc->config, XTENSA_OPTION_DCACHE)) {
         access = PAGE_CACHE_BYPASS;
     }
 
@@ -500,10 +525,13 @@ static uint32_t get_page_size(const CPUXtensaState *env, bool dtlb, uint32_t way
  */
 uint32_t xtensa_tlb_get_addr_mask(const CPUXtensaState *env, bool dtlb, uint32_t way)
 {
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_MMU)) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_MMU)) {
         bool varway56 = dtlb ?
-            env->config->dtlb.varway56 :
-            env->config->itlb.varway56;
+            xcc->config->dtlb.varway56 :
+            xcc->config->itlb.varway56;
 
         switch (way) {
         case 4:
@@ -537,18 +565,21 @@ uint32_t xtensa_tlb_get_addr_mask(const CPUXtensaState *env, bool dtlb, uint32_t
  */
 static uint32_t get_vpn_mask(const CPUXtensaState *env, bool dtlb, uint32_t way)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
     if (way < 4) {
         bool is32 = (dtlb ?
-                env->config->dtlb.nrefillentries :
-                env->config->itlb.nrefillentries) == 32;
+                xcc->config->dtlb.nrefillentries :
+                xcc->config->itlb.nrefillentries) == 32;
         return is32 ? 0xffff8000 : 0xffffc000;
     } else if (way == 4) {
         return xtensa_tlb_get_addr_mask(env, dtlb, way) << 2;
     } else if (way <= 6) {
         uint32_t mask = xtensa_tlb_get_addr_mask(env, dtlb, way);
         bool varway56 = dtlb ?
-            env->config->dtlb.varway56 :
-            env->config->itlb.varway56;
+            xcc->config->dtlb.varway56 :
+            xcc->config->itlb.varway56;
 
         if (varway56) {
             return mask << (way == 5 ? 2 : 3);
@@ -567,9 +598,11 @@ static uint32_t get_vpn_mask(const CPUXtensaState *env, bool dtlb, uint32_t way)
 void split_tlb_entry_spec_way(const CPUXtensaState *env, uint32_t v, bool dtlb,
         uint32_t *vpn, uint32_t wi, uint32_t *ei)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
     bool varway56 = dtlb ?
-        env->config->dtlb.varway56 :
-        env->config->itlb.varway56;
+        xcc->config->dtlb.varway56 :
+        xcc->config->itlb.varway56;
 
     if (!dtlb) {
         wi &= 7;
@@ -577,8 +610,8 @@ void split_tlb_entry_spec_way(const CPUXtensaState *env, uint32_t v, bool dtlb,
 
     if (wi < 4) {
         bool is32 = (dtlb ?
-                env->config->dtlb.nrefillentries :
-                env->config->itlb.nrefillentries) == 32;
+                xcc->config->dtlb.nrefillentries :
+                xcc->config->itlb.nrefillentries) == 32;
         *ei = (v >> 12) & (is32 ? 0x7 : 0x3);
     } else {
         switch (wi) {
@@ -622,7 +655,10 @@ void split_tlb_entry_spec_way(const CPUXtensaState *env, uint32_t v, bool dtlb,
 static void split_tlb_entry_spec(CPUXtensaState *env, uint32_t v, bool dtlb,
         uint32_t *vpn, uint32_t *wi, uint32_t *ei)
 {
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_MMU)) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_MMU)) {
         *wi = v & (dtlb ? 0xf : 0x7);
         split_tlb_entry_spec_way(env, v, dtlb, vpn, *wi, ei);
     } else {
@@ -648,7 +684,10 @@ static xtensa_tlb_entry *get_tlb_entry(CPUXtensaState *env,
 
 uint32_t HELPER(rtlb0)(CPUXtensaState *env, uint32_t v, uint32_t dtlb)
 {
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_MMU)) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_MMU)) {
         uint32_t wi;
         const xtensa_tlb_entry *entry = get_tlb_entry(env, v, dtlb, &wi);
         return (entry->vaddr & get_vpn_mask(env, dtlb, wi)) | entry->asid;
@@ -665,7 +704,10 @@ uint32_t HELPER(rtlb1)(CPUXtensaState *env, uint32_t v, uint32_t dtlb)
 
 void HELPER(itlb)(CPUXtensaState *env, uint32_t v, uint32_t dtlb)
 {
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_MMU)) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_MMU)) {
         uint32_t wi;
         xtensa_tlb_entry *entry = get_tlb_entry(env, v, dtlb, &wi);
         if (entry->variable && entry->asid) {
@@ -677,7 +719,10 @@ void HELPER(itlb)(CPUXtensaState *env, uint32_t v, uint32_t dtlb)
 
 uint32_t HELPER(ptlb)(CPUXtensaState *env, uint32_t v, uint32_t dtlb)
 {
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_MMU)) {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
+
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_MMU)) {
         uint32_t wi;
         uint32_t ei;
         uint8_t ring;
@@ -714,9 +759,11 @@ void xtensa_tlb_set_entry_mmu(const CPUXtensaState *env,
 void xtensa_tlb_set_entry(CPUXtensaState *env, bool dtlb,
         unsigned wi, unsigned ei, uint32_t vpn, uint32_t pte)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
     xtensa_tlb_entry *entry = xtensa_tlb_get_entry(env, dtlb, wi, ei);
 
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_MMU)) {
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_MMU)) {
         if (entry->variable) {
             if (entry->asid) {
                 tlb_flush_page(env, entry->vaddr);
@@ -729,7 +776,7 @@ void xtensa_tlb_set_entry(CPUXtensaState *env, bool dtlb,
         }
     } else {
         tlb_flush_page(env, entry->vaddr);
-        if (xtensa_option_enabled(env->config,
+        if (xtensa_option_enabled(xcc->config,
                     XTENSA_OPTION_REGION_TRANSLATION)) {
             entry->paddr = pte & REGION_PAGE_MASK;
         }
@@ -749,15 +796,17 @@ void HELPER(wtlb)(CPUXtensaState *env, uint32_t p, uint32_t v, uint32_t dtlb)
 
 void HELPER(wsr_ibreakenable)(CPUXtensaState *env, uint32_t v)
 {
+    XtensaCPU *cpu = xtensa_env_get_cpu(env);
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(cpu);
     uint32_t change = v ^ env->sregs[IBREAKENABLE];
     unsigned i;
 
-    for (i = 0; i < env->config->nibreak; ++i) {
+    for (i = 0; i < xcc->config->nibreak; ++i) {
         if (change & (1 << i)) {
             tb_invalidate_virtual_addr(env, env->sregs[IBREAKA + i]);
         }
     }
-    env->sregs[IBREAKENABLE] = v & ((1 << env->config->nibreak) - 1);
+    env->sregs[IBREAKENABLE] = v & ((1 << xcc->config->nibreak) - 1);
 }
 
 void HELPER(wsr_ibreaka)(CPUXtensaState *env, uint32_t i, uint32_t v)

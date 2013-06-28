@@ -333,7 +333,6 @@ typedef struct XtensaConfigList {
 } XtensaConfigList;
 
 typedef struct CPUXtensaState {
-    const XtensaConfig *config;
     uint32_t regs[16];
     uint32_t pc;
     uint32_t sregs[256];
@@ -432,16 +431,18 @@ static inline bool xtensa_option_enabled(const XtensaConfig *config, int opt)
 
 static inline int xtensa_get_cintlevel(const CPUXtensaState *env)
 {
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(xtensa_env_get_cpu(env));
     int level = (env->sregs[PS] & PS_INTLEVEL) >> PS_INTLEVEL_SHIFT;
-    if ((env->sregs[PS] & PS_EXCM) && env->config->excm_level > level) {
-        level = env->config->excm_level;
+    if ((env->sregs[PS] & PS_EXCM) && xcc->config->excm_level > level) {
+        level = xcc->config->excm_level;
     }
     return level;
 }
 
 static inline int xtensa_get_ring(const CPUXtensaState *env)
 {
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_MMU)) {
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(xtensa_env_get_cpu(env));
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_MMU)) {
         return (env->sregs[PS] & PS_RING) >> PS_RING_SHIFT;
     } else {
         return 0;
@@ -450,7 +451,8 @@ static inline int xtensa_get_ring(const CPUXtensaState *env)
 
 static inline int xtensa_get_cring(const CPUXtensaState *env)
 {
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_MMU) &&
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(xtensa_env_get_cpu(env));
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_MMU) &&
             (env->sregs[PS] & PS_EXCM) == 0) {
         return (env->sregs[PS] & PS_RING) >> PS_RING_SHIFT;
     } else {
@@ -488,6 +490,8 @@ static inline int cpu_mmu_index(CPUXtensaState *env)
 static inline void cpu_get_tb_cpu_state(CPUXtensaState *env, target_ulong *pc,
         target_ulong *cs_base, int *flags)
 {
+    XtensaCPUClass *xcc = XTENSA_CPU_GET_CLASS(xtensa_env_get_cpu(env));
+
     *pc = env->pc;
     *cs_base = 0;
     *flags = 0;
@@ -495,19 +499,19 @@ static inline void cpu_get_tb_cpu_state(CPUXtensaState *env, target_ulong *pc,
     if (env->sregs[PS] & PS_EXCM) {
         *flags |= XTENSA_TBFLAG_EXCM;
     }
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_EXTENDED_L32R) &&
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_EXTENDED_L32R) &&
             (env->sregs[LITBASE] & 1)) {
         *flags |= XTENSA_TBFLAG_LITBASE;
     }
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_DEBUG)) {
-        if (xtensa_get_cintlevel(env) < env->config->debug_level) {
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_DEBUG)) {
+        if (xtensa_get_cintlevel(env) < xcc->config->debug_level) {
             *flags |= XTENSA_TBFLAG_DEBUG;
         }
         if (xtensa_get_cintlevel(env) < env->sregs[ICOUNTLEVEL]) {
             *flags |= XTENSA_TBFLAG_ICOUNT;
         }
     }
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_COPROCESSOR)) {
+    if (xtensa_option_enabled(xcc->config, XTENSA_OPTION_COPROCESSOR)) {
         *flags |= env->sregs[CPENABLE] << XTENSA_TBFLAG_CPENABLE_SHIFT;
     }
 }
