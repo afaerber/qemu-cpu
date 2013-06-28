@@ -156,6 +156,7 @@ struct CPUState {
 
     void *env_ptr; /* CPUArchState */
     struct TranslationBlock *current_tb;
+    struct GDBRegisterState *gdb_regs;
     CPUState *next_cpu;
 
     int kvm_fd;
