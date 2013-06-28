@@ -100,6 +100,8 @@ typedef struct CPUClass {
                             int cpuid, void *opaque);
     int (*write_elf32_qemunote)(WriteCoreDumpFunction f, CPUState *cpu,
                                 void *opaque);
+
+    int gdb_num_core_regs;
 } CPUClass;
 
 struct KVMState;
@@ -157,6 +159,7 @@ struct CPUState {
     void *env_ptr; /* CPUArchState */
     struct TranslationBlock *current_tb;
     struct GDBRegisterState *gdb_regs;
+    int gdb_num_regs;
     CPUState *next_cpu;
 
     int kvm_fd;

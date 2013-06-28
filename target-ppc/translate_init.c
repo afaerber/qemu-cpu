@@ -8313,6 +8313,8 @@ static void ppc_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = ppc_cpu_dump_state;
     cc->dump_statistics = ppc_cpu_dump_statistics;
     cc->set_pc = ppc_cpu_set_pc;
+
+    cc->gdb_num_core_regs = 71;
 }
 
 static const TypeInfo ppc_cpu_type_info = {

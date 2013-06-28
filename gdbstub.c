@@ -530,8 +530,6 @@ static const int gpr_map[16] = {
 #endif
 static const int gpr_map32[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
-#define NUM_CORE_REGS (CPU_NB_REGS * 2 + 25)
-
 #define IDX_IP_REG      CPU_NB_REGS
 #define IDX_FLAGS_REG   (IDX_IP_REG + 1)
 #define IDX_SEG_REGS    (IDX_FLAGS_REG + 1)
@@ -702,7 +700,6 @@ static int cpu_gdb_write_register(CPUX86State *env, uint8_t *mem_buf, int n)
    historical mishap the FP registers appear in between core integer
    regs and PC, MSR, CR, and so forth.  We hack round this by giving the
    FP regs zero size when talking to a newer gdb.  */
-#define NUM_CORE_REGS 71
 #if defined (TARGET_PPC64)
 #define GDB_CORE_XML "power64-core.xml"
 #else
@@ -795,12 +792,6 @@ static int cpu_gdb_write_register(CPUPPCState *env, uint8_t *mem_buf, int n)
 }
 
 #elif defined (TARGET_SPARC)
-
-#if defined(TARGET_SPARC64) && !defined(TARGET_ABI32)
-#define NUM_CORE_REGS 86
-#else
-#define NUM_CORE_REGS 72
-#endif
 
 #ifdef TARGET_ABI32
 #define GET_REGA(val) GET_REG32(val)
@@ -948,7 +939,6 @@ static int cpu_gdb_write_register(CPUSPARCState *env, uint8_t *mem_buf, int n)
    the FPA registers appear in between core integer regs and the CPSR.
    We hack round this by giving the FPA regs zero size when talking to a
    newer gdb.  */
-#define NUM_CORE_REGS 26
 #define GDB_CORE_XML "arm-core.xml"
 
 static int cpu_gdb_read_register(CPUARMState *env, uint8_t *mem_buf, int n)
@@ -1017,8 +1007,6 @@ static int cpu_gdb_write_register(CPUARMState *env, uint8_t *mem_buf, int n)
 
 #elif defined (TARGET_M68K)
 
-#define NUM_CORE_REGS 18
-
 #define GDB_CORE_XML "cf-core.xml"
 
 static int cpu_gdb_read_register(CPUM68KState *env, uint8_t *mem_buf, int n)
@@ -1062,8 +1050,6 @@ static int cpu_gdb_write_register(CPUM68KState *env, uint8_t *mem_buf, int n)
     return 4;
 }
 #elif defined (TARGET_MIPS)
-
-#define NUM_CORE_REGS 73
 
 static int cpu_gdb_read_register(CPUMIPSState *env, uint8_t *mem_buf, int n)
 {
@@ -1165,8 +1151,6 @@ static int cpu_gdb_write_register(CPUMIPSState *env, uint8_t *mem_buf, int n)
 }
 #elif defined(TARGET_OPENRISC)
 
-#define NUM_CORE_REGS (32 + 3)
-
 static int cpu_gdb_read_register(CPUOpenRISCState *env, uint8_t *mem_buf, int n)
 {
     if (n < 32) {
@@ -1195,9 +1179,10 @@ static int cpu_gdb_read_register(CPUOpenRISCState *env, uint8_t *mem_buf, int n)
 static int cpu_gdb_write_register(CPUOpenRISCState *env,
                                   uint8_t *mem_buf, int n)
 {
+    CPUClass *cc = CPU_GET_CLASS(openrisc_env_get_cpu(env));
     uint32_t tmp;
 
-    if (n > NUM_CORE_REGS) {
+    if (n > cc->gdb_num_core_regs) {
         return 0;
     }
 
@@ -1229,8 +1214,6 @@ static int cpu_gdb_write_register(CPUOpenRISCState *env,
 
 /* Hint: Use "set architecture sh4" in GDB to see fpu registers */
 /* FIXME: We should use XML for this.  */
-
-#define NUM_CORE_REGS 59
 
 static int cpu_gdb_read_register(CPUSH4State *env, uint8_t *mem_buf, int n)
 {
@@ -1347,8 +1330,6 @@ static int cpu_gdb_write_register(CPUSH4State *env, uint8_t *mem_buf, int n)
 }
 #elif defined (TARGET_MICROBLAZE)
 
-#define NUM_CORE_REGS (32 + 5)
-
 static int cpu_gdb_read_register(CPUMBState *env, uint8_t *mem_buf, int n)
 {
     if (n < 32) {
@@ -1361,10 +1342,12 @@ static int cpu_gdb_read_register(CPUMBState *env, uint8_t *mem_buf, int n)
 
 static int cpu_gdb_write_register(CPUMBState *env, uint8_t *mem_buf, int n)
 {
+    CPUClass *cc = CPU_GET_CLASS(mb_env_get_cpu(env));
     uint32_t tmp;
 
-    if (n > NUM_CORE_REGS)
+    if (n > cc->gdb_num_core_regs) {
 	return 0;
+    }
 
     tmp = ldl_p(mem_buf);
 
@@ -1376,8 +1359,6 @@ static int cpu_gdb_write_register(CPUMBState *env, uint8_t *mem_buf, int n)
     return 4;
 }
 #elif defined (TARGET_CRIS)
-
-#define NUM_CORE_REGS 49
 
 static int
 read_register_crisv10(CPUCRISState *env, uint8_t *mem_buf, int n)
@@ -1473,8 +1454,6 @@ static int cpu_gdb_write_register(CPUCRISState *env, uint8_t *mem_buf, int n)
 }
 #elif defined (TARGET_ALPHA)
 
-#define NUM_CORE_REGS 67
-
 static int cpu_gdb_read_register(CPUAlphaState *env, uint8_t *mem_buf, int n)
 {
     uint64_t val;
@@ -1542,8 +1521,6 @@ static int cpu_gdb_write_register(CPUAlphaState *env, uint8_t *mem_buf, int n)
     return 8;
 }
 #elif defined (TARGET_S390X)
-
-#define NUM_CORE_REGS  S390_NUM_REGS
 
 static int cpu_gdb_read_register(CPUS390XState *env, uint8_t *mem_buf, int n)
 {
@@ -1614,7 +1591,6 @@ static int cpu_gdb_write_register(CPUS390XState *env, uint8_t *mem_buf, int n)
 #elif defined (TARGET_LM32)
 
 #include "hw/lm32/lm32_pic.h"
-#define NUM_CORE_REGS (32 + 7)
 
 static int cpu_gdb_read_register(CPULM32State *env, uint8_t *mem_buf, int n)
 {
@@ -1651,9 +1627,10 @@ static int cpu_gdb_read_register(CPULM32State *env, uint8_t *mem_buf, int n)
 
 static int cpu_gdb_write_register(CPULM32State *env, uint8_t *mem_buf, int n)
 {
+    CPUClass *cc = CPU_GET_CLASS(lm32_env_get_cpu(env));
     uint32_t tmp;
 
-    if (n > NUM_CORE_REGS) {
+    if (n > cc->gdb_num_core_regs) {
         return 0;
     }
 
@@ -1686,15 +1663,6 @@ static int cpu_gdb_write_register(CPULM32State *env, uint8_t *mem_buf, int n)
     return 4;
 }
 #elif defined(TARGET_XTENSA)
-
-/* Use num_core_regs to see only non-privileged registers in an unmodified gdb.
- * Use num_regs to see all registers. gdb modification is required for that:
- * reset bit 0 in the 'flags' field of the registers definitions in the
- * gdb/xtensa-config.c inside gdb source tree or inside gdb overlay.
- */
-#define NUM_CORE_REGS \
-  (XTENSA_CPU_GET_CLASS(xtensa_env_get_cpu(env))->config->gdb_regmap.num_regs)
-#define num_g_regs NUM_CORE_REGS
 
 static int cpu_gdb_read_register(CPUXtensaState *env, uint8_t *mem_buf, int n)
 {
@@ -1786,8 +1754,6 @@ static int cpu_gdb_write_register(CPUXtensaState *env, uint8_t *mem_buf, int n)
 }
 #else
 
-#define NUM_CORE_REGS 0
-
 static int cpu_gdb_read_register(CPUArchState *env, uint8_t *mem_buf, int n)
 {
     return 0;
@@ -1798,10 +1764,6 @@ static int cpu_gdb_write_register(CPUArchState *env, uint8_t *mem_buf, int n)
     return 0;
 }
 
-#endif
-
-#if !defined(TARGET_XTENSA)
-static int num_g_regs = NUM_CORE_REGS;
 #endif
 
 #ifdef GDB_CORE_XML
@@ -1872,11 +1834,13 @@ static const char *get_feature_xml(const char *p, const char **newp)
 
 static int gdb_read_register(CPUState *cpu, uint8_t *mem_buf, int reg)
 {
+    CPUClass *cc = CPU_GET_CLASS(cpu);
     CPUArchState *env = cpu->env_ptr;
     GDBRegisterState *r;
 
-    if (reg < NUM_CORE_REGS)
+    if (reg < cc->gdb_num_core_regs) {
         return cpu_gdb_read_register(env, mem_buf, reg);
+    }
 
     for (r = cpu->gdb_regs; r; r = r->next) {
         if (r->base_reg <= reg && reg < r->base_reg + r->num_regs) {
@@ -1888,11 +1852,13 @@ static int gdb_read_register(CPUState *cpu, uint8_t *mem_buf, int reg)
 
 static int gdb_write_register(CPUState *cpu, uint8_t *mem_buf, int reg)
 {
+    CPUClass *cc = CPU_GET_CLASS(cpu);
     CPUArchState *env = cpu->env_ptr;
     GDBRegisterState *r;
 
-    if (reg < NUM_CORE_REGS)
+    if (reg < cc->gdb_num_core_regs) {
         return cpu_gdb_write_register(env, mem_buf, reg);
+    }
 
     for (r = cpu->gdb_regs; r; r = r->next) {
         if (r->base_reg <= reg && reg < r->base_reg + r->num_regs) {
@@ -1915,7 +1881,6 @@ void gdb_register_coprocessor(CPUState *cpu,
 {
     GDBRegisterState *s;
     GDBRegisterState **p;
-    static int last_reg = NUM_CORE_REGS;
 
     p = &cpu->gdb_regs;
     while (*p) {
@@ -1926,21 +1891,19 @@ void gdb_register_coprocessor(CPUState *cpu,
     }
 
     s = g_new0(GDBRegisterState, 1);
-    s->base_reg = last_reg;
+    s->base_reg = cpu->gdb_num_regs;
     s->num_regs = num_regs;
     s->get_reg = get_reg;
     s->set_reg = set_reg;
     s->xml = xml;
 
     /* Add to end of list.  */
-    last_reg += num_regs;
+    cpu->gdb_num_regs += num_regs;
     *p = s;
     if (g_pos) {
         if (g_pos != s->base_reg) {
             fprintf(stderr, "Error: Bad gdb register numbering for '%s'\n"
                     "Expected %d got %d\n", xml, g_pos, s->base_reg);
-        } else {
-            num_g_regs = last_reg;
         }
     }
 }
@@ -2061,9 +2024,6 @@ static void gdb_set_cpu_pc(GDBState *s, target_ulong pc)
 
 static int gdb_handle_packet(GDBState *s, const char *line_buf)
 {
-#ifdef TARGET_XTENSA
-    CPUArchState *env;
-#endif
     CPUState *cpu;
     const char *p;
     uint32_t thread;
@@ -2211,11 +2171,8 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         break;
     case 'g':
         cpu_synchronize_state(s->g_cpu);
-#ifdef TARGET_XTENSA
-        env = s->g_cpu->env_ptr;
-#endif
         len = 0;
-        for (addr = 0; addr < num_g_regs; addr++) {
+        for (addr = 0; addr < s->g_cpu->gdb_num_regs; addr++) {
             reg_size = gdb_read_register(s->g_cpu, mem_buf + len, addr);
             len += reg_size;
         }
@@ -2224,13 +2181,10 @@ static int gdb_handle_packet(GDBState *s, const char *line_buf)
         break;
     case 'G':
         cpu_synchronize_state(s->g_cpu);
-#ifdef TARGET_XTENSA
-        env = s->g_cpu->env_ptr;
-#endif
         registers = mem_buf;
         len = strlen(p) / 2;
         hextomem((uint8_t *)registers, p, len);
-        for (addr = 0; addr < num_g_regs && len > 0; addr++) {
+        for (addr = 0; addr < s->g_cpu->gdb_num_regs && len > 0; addr++) {
             reg_size = gdb_write_register(s->g_cpu, registers, addr);
             len -= reg_size;
             registers += reg_size;
