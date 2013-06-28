@@ -24,6 +24,9 @@ typedef struct MemoryRegionSection MemoryRegionSection;
 
 typedef struct MemoryMappingList MemoryMappingList;
 
+struct TranslationBlock;
+typedef struct TranslationBlock TranslationBlock;
+
 typedef struct NICInfo NICInfo;
 typedef struct HCIInfo HCIInfo;
 typedef struct AudioState AudioState;
