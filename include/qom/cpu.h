@@ -62,6 +62,8 @@ typedef void (*CPUUnassignedAccess)(CPUState *cpu, hwaddr addr,
  * @get_paging_enabled: Callback for inquiring whether paging is enabled.
  * @get_memory_mapping: Callback for obtaining the memory mappings.
  * @get_phys_page_debug: Callback for obtaining a physical address.
+ * @gdb_read_register: Callback for letting GDB read a register.
+ * @gdb_write_register: Callback for letting GDB write a register.
  * @vmsd: State description for migration.
  *
  * Represents a CPU family or model.
@@ -90,6 +92,8 @@ typedef struct CPUClass {
     void (*set_pc)(CPUState *cpu, uint64_t value);
     void (*synchronize_from_tb)(CPUState *cpu, struct TranslationBlock *tb);
     hwaddr (*get_phys_page_debug)(CPUState *cpu, uint64_t addr);
+    int (*gdb_read_register)(CPUState *cpu, uint8_t *buf, int reg);
+    int (*gdb_write_register)(CPUState *cpu, uint8_t *buf, int reg);
 
     const struct VMStateDescription *vmsd;
     int (*write_elf64_note)(WriteCoreDumpFunction f, CPUState *cpu,
