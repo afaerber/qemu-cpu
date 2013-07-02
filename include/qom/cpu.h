@@ -186,6 +186,8 @@ struct CPUState {
     uint32_t interrupt_request;
     int singlestep_enabled;
 
+    const char *model_str;
+
     void *env_ptr; /* CPUArchState */
     struct TranslationBlock *current_tb;
     struct GDBRegisterState *gdb_regs;

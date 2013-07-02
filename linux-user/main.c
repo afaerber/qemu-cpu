@@ -3641,6 +3641,7 @@ int main(int argc, char **argv, char **envp)
         exit(1);
     }
     cpu = ENV_GET_CPU(env);
+    cpu->model_str = cpu_model;
     cpu_reset(cpu);
 
     thread_cpu = cpu;

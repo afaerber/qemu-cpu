@@ -23,7 +23,8 @@
 
 CPUArchState *cpu_copy(CPUArchState *env)
 {
-    CPUArchState *new_env = cpu_init(env->cpu_model_str);
+    CPUState *cpu = ENV_GET_CPU(env);
+    CPUArchState *new_env = cpu_init(cpu->model_str);
 #if defined(TARGET_HAS_ICE)
     CPUBreakpoint *bp;
     CPUWatchpoint *wp;
