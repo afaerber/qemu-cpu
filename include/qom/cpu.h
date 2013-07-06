@@ -29,6 +29,14 @@
 
 typedef int (*WriteCoreDumpFunction)(void *buf, size_t size, void *opaque);
 
+typedef uint64_t vaddr;
+#define VADDR_PRId PRId64
+#define VADDR_PRIu PRIu64
+#define VADDR_PRIo PRIo64
+#define VADDR_PRIx PRIx64
+#define VADDR_PRIX PRIX64
+#define VADDR_MAX UINT64_MAX
+
 /**
  * SECTION:cpu
  * @section_id: QEMU-cpu
