@@ -2087,21 +2087,6 @@ vmxnet3_cleanup_msi(VMXNET3State *s)
     }
 }
 
-static void
-vmxnet3_msix_save(QEMUFile *f, void *opaque)
-{
-    PCIDevice *d = PCI_DEVICE(opaque);
-    msix_save(d, f);
-}
-
-static int
-vmxnet3_msix_load(QEMUFile *f, void *opaque, int version_id)
-{
-    PCIDevice *d = PCI_DEVICE(opaque);
-    msix_load(d, f);
-    return 0;
-}
-
 static const MemoryRegionOps b0_ops = {
     .read = vmxnet3_io_bar0_read,
     .write = vmxnet3_io_bar0_write,
@@ -2159,9 +2144,6 @@ static int vmxnet3_pci_init(PCIDevice *pci_dev)
 
     vmxnet3_net_init(s);
 
-    register_savevm(dev, "vmxnet3-msix", -1, 1,
-                    vmxnet3_msix_save, vmxnet3_msix_load, s);
-
     add_boot_device_path(s->conf.bootindex, dev, "/ethernet-phy@0");
 
     return 0;
@@ -2170,12 +2152,9 @@ static int vmxnet3_pci_init(PCIDevice *pci_dev)
 
 static void vmxnet3_pci_uninit(PCIDevice *pci_dev)
 {
-    DeviceState *dev = DEVICE(pci_dev);
     VMXNET3State *s = VMXNET3(pci_dev);
 
     VMW_CBPRN("Starting uninit...");
-
-    unregister_savevm(dev, "vmxnet3-msix", s);
 
     vmxnet3_net_uninit(s);
 
@@ -2431,9 +2410,9 @@ static const VMStateInfo int_state_info = {
 
 static const VMStateDescription vmstate_vmxnet3 = {
     .name = "vmxnet3",
-    .version_id = 1,
-    .minimum_version_id = 1,
-    .minimum_version_id_old = 1,
+    .version_id = 2,
+    .minimum_version_id = 2,
+    .minimum_version_id_old = 2,
     .pre_save = vmxnet3_pre_save,
     .post_load = vmxnet3_post_load,
     .fields      = (VMStateField[]) {

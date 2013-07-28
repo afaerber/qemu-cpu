@@ -490,6 +490,13 @@ static bool pci_device_aer_needed(void *opaque, int version_id)
     return pci_is_express(s) && s->exp.aer_log.log != NULL;
 }
 
+static bool pci_device_msix_needed(void *opaque, int version_id)
+{
+    PCIDevice *s = opaque;
+
+    return msix_present(s);
+}
+
 const VMStateDescription vmstate_pci_device = {
     .name = "PCIDevice",
     .version_id = 2,
@@ -508,6 +515,7 @@ const VMStateDescription vmstate_pci_device = {
         VMSTATE_BUFFER_UNSAFE_INFO(irq_state, PCIDevice, 2,
                                    vmstate_info_pci_irq_state,
                                    PCI_NUM_PINS * sizeof(int32_t)),
+        VMSTATE_MSIX_TEST(pci_device_msix_needed),
         VMSTATE_STRUCT_TEST(exp.aer_log, PCIDevice, pci_device_aer_needed, 0,
                             vmstate_pcie_aer_log, PCIEAERLog),
         VMSTATE_END_OF_LIST()

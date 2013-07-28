@@ -46,12 +46,13 @@ void msix_unset_vector_notifiers(PCIDevice *dev);
 
 extern const VMStateDescription vmstate_msix;
 
-#define VMSTATE_MSIX(_field, _state) {                               \
-    .name       = (stringify(_field)),                               \
+#define VMSTATE_MSIX_TEST(_test) {                                   \
+    .name       = "MSI-X",                                           \
     .size       = sizeof(PCIDevice),                                 \
     .vmsd       = &vmstate_msix,                                     \
     .flags      = VMS_STRUCT,                                        \
-    .offset     = vmstate_offset_value(_state, _field, PCIDevice),   \
+    .offset     = 0,                                                 \
+    .field_exists = (_test),                                         \
 }
 
 #endif

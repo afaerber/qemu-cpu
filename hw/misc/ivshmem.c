@@ -599,9 +599,7 @@ static void ivshmem_save(QEMUFile* f, void *opaque)
     IVSHMEM_DPRINTF("ivshmem_save\n");
     pci_device_save(pci_dev, f);
 
-    if (ivshmem_has_feature(proxy, IVSHMEM_MSI)) {
-        msix_save(pci_dev, f);
-    } else {
+    if (!ivshmem_has_feature(proxy, IVSHMEM_MSI)) {
         qemu_put_be32(f, proxy->intrstatus);
         qemu_put_be32(f, proxy->intrmask);
     }
@@ -631,8 +629,7 @@ static int ivshmem_load(QEMUFile* f, void *opaque, int version_id)
     }
 
     if (ivshmem_has_feature(proxy, IVSHMEM_MSI)) {
-        msix_load(pci_dev, f);
-	ivshmem_use_msix(proxy);
+        ivshmem_use_msix(proxy);
     } else {
         proxy->intrstatus = qemu_get_be32(f);
         proxy->intrmask = qemu_get_be32(f);

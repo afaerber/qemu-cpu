@@ -128,7 +128,6 @@ static void virtio_pci_save_config(DeviceState *d, QEMUFile *f)
     VirtIODevice *vdev = virtio_bus_get_device(&proxy->bus);
 
     pci_device_save(&proxy->pci_dev, f);
-    msix_save(&proxy->pci_dev, f);
     if (msix_present(&proxy->pci_dev))
         qemu_put_be16(f, vdev->config_vector);
 }
@@ -153,7 +152,6 @@ static int virtio_pci_load_config(DeviceState *d, QEMUFile *f)
         return ret;
     }
     msix_unuse_all_vectors(&proxy->pci_dev);
-    msix_load(&proxy->pci_dev, f);
     if (msix_present(&proxy->pci_dev)) {
         qemu_get_be16s(f, &vdev->config_vector);
     } else {
