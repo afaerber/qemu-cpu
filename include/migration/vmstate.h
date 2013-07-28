@@ -473,9 +473,10 @@ extern const VMStateInfo vmstate_info_bitmap;
     .start        = (_start),                                        \
 }
 
-#define VMSTATE_BUFFER_UNSAFE_INFO(_field, _state, _version, _info, _size) { \
+#define VMSTATE_BUFFER_UNSAFE_INFO_TEST(_field, _state, _version, _test, _info, _size) { \
     .name       = (stringify(_field)),                               \
     .version_id = (_version),                                        \
+    .field_exists = (_test),                                         \
     .size       = (_size),                                           \
     .info       = &(_info),                                          \
     .flags      = VMS_BUFFER,                                        \
@@ -736,6 +737,9 @@ extern const VMStateInfo vmstate_info_bitmap;
 
 #define VMSTATE_BUFFER_TEST(_f, _s, _test)                            \
     VMSTATE_STATIC_BUFFER(_f, _s, 0, _test, 0, sizeof(typeof_field(_s, _f)))
+
+#define VMSTATE_BUFFER_UNSAFE_INFO(_field, _state, _version, _info, _size) \
+    VMSTATE_BUFFER_UNSAFE_INFO_TEST(_field, _state, _version, NULL, _info, _size)
 
 #define VMSTATE_BUFFER_UNSAFE(_field, _state, _version, _size)        \
     VMSTATE_BUFFER_UNSAFE_INFO(_field, _state, _version, vmstate_info_buffer, _size)
