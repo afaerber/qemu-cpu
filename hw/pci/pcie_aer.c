@@ -166,6 +166,7 @@ int pcie_aer_init(PCIDevice *dev, uint16_t offset)
 void pcie_aer_exit(PCIDevice *dev)
 {
     g_free(dev->exp.aer_log.log);
+    dev->exp.aer_log.log = NULL;
 }
 
 static void pcie_aer_update_uncor_status(PCIDevice *dev)
