@@ -662,28 +662,30 @@ static void virtio_blk_migration_state_changed(Notifier *notifier, void *data)
 }
 #endif /* CONFIG_VIRTIO_BLK_DATA_PLANE */
 
-static int virtio_blk_device_init(VirtIODevice *vdev)
+static void virtio_blk_device_realize(DeviceState *dev, Error **errp)
 {
-    DeviceState *dev = DEVICE(vdev);
+    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOBlock *s = VIRTIO_BLK(dev);
     VirtIOBlkConf *blk = &(s->blk);
+    DeviceClass *parent_dc = DEVICE_CLASS(VIRTIO_BLK_GET_PARENT_CLASS(dev));
 #ifdef CONFIG_VIRTIO_BLK_DATA_PLANE
     Error *err = NULL;
 #endif
     static int virtio_blk_id;
 
     if (!blk->conf.bs) {
-        error_report("drive property not set");
-        return -1;
+        error_setg(errp, "drive property not set");
+        return;
     }
     if (!bdrv_is_inserted(blk->conf.bs)) {
-        error_report("Device needs media, but drive is empty");
-        return -1;
+        error_setg(errp, "Device needs media, but drive is empty");
+        return;
     }
 
     blkconf_serial(&blk->conf, &blk->serial);
     if (blkconf_geometry(&blk->conf, NULL, 65535, 255, 255) < 0) {
-        return -1;
+        error_setg(errp, "Error setting geometry");
+        return;
     }
 
     virtio_init(vdev, "virtio-blk", VIRTIO_ID_BLOCK,
@@ -699,10 +701,9 @@ static int virtio_blk_device_init(VirtIODevice *vdev)
 #ifdef CONFIG_VIRTIO_BLK_DATA_PLANE
     virtio_blk_data_plane_create(vdev, blk, &s->dataplane, &err);
     if (err != NULL) {
-        error_report("%s", error_get_pretty(err));
-        error_free(err);
+        error_propagate(errp, err);
         virtio_cleanup(vdev);
-        return -1;
+        return;
     }
     s->migration_state_notifier.notify = virtio_blk_migration_state_changed;
     add_migration_state_change_notifier(&s->migration_state_notifier);
@@ -717,10 +718,11 @@ static int virtio_blk_device_init(VirtIODevice *vdev)
     bdrv_iostatus_enable(s->bs);
 
     add_boot_device_path(s->conf->bootindex, dev, "/disk@0,0");
-    return 0;
+
+    parent_dc->realize(dev, errp);
 }
 
-static int virtio_blk_device_exit(DeviceState *dev)
+static void virtio_blk_device_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOBlock *s = VIRTIO_BLK(dev);
@@ -733,7 +735,6 @@ static int virtio_blk_device_exit(DeviceState *dev)
     unregister_savevm(dev, "virtio-blk", s);
     blockdev_mark_auto_del(s->bs);
     virtio_cleanup(vdev);
-    return 0;
 }
 
 static Property virtio_blk_properties[] = {
@@ -745,10 +746,11 @@ static void virtio_blk_class_init(ObjectClass *klass, void *data)
 {
     DeviceClass *dc = DEVICE_CLASS(klass);
     VirtioDeviceClass *vdc = VIRTIO_DEVICE_CLASS(klass);
-    dc->exit = virtio_blk_device_exit;
+
+    dc->realize = virtio_blk_device_realize;
+    dc->unrealize = virtio_blk_device_unrealize;
     dc->props = virtio_blk_properties;
     set_bit(DEVICE_CATEGORY_STORAGE, dc->categories);
-    vdc->init = virtio_blk_device_init;
     vdc->get_config = virtio_blk_update_config;
     vdc->set_config = virtio_blk_set_config;
     vdc->get_features = virtio_blk_get_features;
