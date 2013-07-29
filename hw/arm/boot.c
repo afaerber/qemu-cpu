@@ -15,6 +15,7 @@
 #include "hw/loader.h"
 #include "elf.h"
 #include "sysemu/device_tree.h"
+#include "sysemu/qtest.h"
 #include "qemu/config-file.h"
 
 #define KERNEL_ARGS_ADDR 0x100
@@ -354,6 +355,9 @@ void arm_load_kernel(ARMCPU *cpu, struct arm_boot_info *info)
 
     /* Load the kernel.  */
     if (!info->kernel_filename) {
+        if (qtest_enabled()) {
+            return;
+        }
         fprintf(stderr, "Kernel image must be specified\n");
         exit(1);
     }
