@@ -511,6 +511,16 @@ struct TypeInfo
     OBJECT_CLASS_CHECK(class, object_get_class(OBJECT(obj)), name)
 
 /**
+ * OBJECT_GET_PARENT_CLASS:
+ * @obj: The object to obtain the parent class for.
+ * @name: The QOM typename of @obj.
+ *
+ * Returns the parent class for a given object of a specific class.
+ */
+#define OBJECT_GET_PARENT_CLASS(obj, name) \
+    object_class_get_parent(object_class_by_name(name))
+
+/**
  * InterfaceInfo:
  * @type: The name of the interface.
  *
