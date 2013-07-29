@@ -20,6 +20,8 @@
 #define TYPE_VIRTIO_BLK "virtio-blk-device"
 #define VIRTIO_BLK(obj) \
         OBJECT_CHECK(VirtIOBlock, (obj), TYPE_VIRTIO_BLK)
+#define VIRTIO_BLK_GET_PARENT_CLASS(obj) \
+        OBJECT_GET_PARENT_CLASS(obj, TYPE_VIRTIO_BLK)
 
 /* from Linux's linux/virtio_blk.h */
 
