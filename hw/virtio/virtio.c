@@ -1139,13 +1139,15 @@ void virtio_device_set_child_bus_name(VirtIODevice *vdev, char *bus_name)
     }
 }
 
-static int virtio_device_init(DeviceState *qdev)
+static int virtio_device_init(DeviceState *dev)
 {
-    VirtIODevice *vdev = VIRTIO_DEVICE(qdev);
-    VirtioDeviceClass *k = VIRTIO_DEVICE_GET_CLASS(qdev);
-    assert(k->init != NULL);
-    if (k->init(vdev) < 0) {
-        return -1;
+    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
+    VirtioDeviceClass *vdc = VIRTIO_DEVICE_GET_CLASS(dev);
+
+    if (vdc->init != NULL) {
+        if (vdc->init(vdev) < 0) {
+            return -1;
+        }
     }
     virtio_bus_plug_device(vdev);
     return 0;
