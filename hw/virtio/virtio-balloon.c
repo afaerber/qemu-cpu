@@ -339,8 +339,8 @@ static int virtio_balloon_load(QEMUFile *f, void *opaque, int version_id)
 
 static int virtio_balloon_device_init(VirtIODevice *vdev)
 {
-    DeviceState *qdev = DEVICE(vdev);
-    VirtIOBalloon *s = VIRTIO_BALLOON(vdev);
+    DeviceState *dev = DEVICE(vdev);
+    VirtIOBalloon *s = VIRTIO_BALLOON(dev);
     int ret;
 
     virtio_init(vdev, "virtio-balloon", VIRTIO_ID_BALLOON, 8);
@@ -349,7 +349,7 @@ static int virtio_balloon_device_init(VirtIODevice *vdev)
                                    virtio_balloon_stat, s);
 
     if (ret < 0) {
-        virtio_cleanup(VIRTIO_DEVICE(s));
+        virtio_cleanup(vdev);
         return -1;
     }
 
@@ -357,27 +357,27 @@ static int virtio_balloon_device_init(VirtIODevice *vdev)
     s->dvq = virtio_add_queue(vdev, 128, virtio_balloon_handle_output);
     s->svq = virtio_add_queue(vdev, 128, virtio_balloon_receive_stats);
 
-    register_savevm(qdev, "virtio-balloon", -1, 1,
+    register_savevm(dev, "virtio-balloon", -1, 1,
                     virtio_balloon_save, virtio_balloon_load, s);
 
-    object_property_add(OBJECT(qdev), "guest-stats", "guest statistics",
+    object_property_add(OBJECT(dev), "guest-stats", "guest statistics",
                         balloon_stats_get_all, NULL, NULL, s, NULL);
 
-    object_property_add(OBJECT(qdev), "guest-stats-polling-interval", "int",
+    object_property_add(OBJECT(dev), "guest-stats-polling-interval", "int",
                         balloon_stats_get_poll_interval,
                         balloon_stats_set_poll_interval,
                         NULL, s, NULL);
     return 0;
 }
 
-static int virtio_balloon_device_exit(DeviceState *qdev)
+static int virtio_balloon_device_exit(DeviceState *dev)
 {
-    VirtIOBalloon *s = VIRTIO_BALLOON(qdev);
-    VirtIODevice *vdev = VIRTIO_DEVICE(qdev);
+    VirtIOBalloon *s = VIRTIO_BALLOON(dev);
+    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
 
     balloon_stats_destroy_timer(s);
     qemu_remove_balloon_handler(s);
-    unregister_savevm(qdev, "virtio-balloon", s);
+    unregister_savevm(dev, "virtio-balloon", s);
     virtio_cleanup(vdev);
     return 0;
 }
