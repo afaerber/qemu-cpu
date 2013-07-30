@@ -1017,10 +1017,10 @@ static void virtio_serial_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
     VirtioDeviceClass *vdc = VIRTIO_DEVICE_CLASS(klass);
 
-    dc->unrealize = virtio_serial_device_unrealize;
     dc->props = virtio_serial_properties;
     set_bit(DEVICE_CATEGORY_INPUT, dc->categories);
     vdc->realize = virtio_serial_device_realize;
+    vdc->unrealize = virtio_serial_device_unrealize;
     vdc->get_features = get_features;
     vdc->get_config = get_config;
     vdc->set_config = set_config;

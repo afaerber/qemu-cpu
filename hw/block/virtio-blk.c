@@ -743,6 +743,7 @@ static void virtio_blk_device_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOBlock *s = VIRTIO_BLK(dev);
+
 #ifdef CONFIG_VIRTIO_BLK_DATA_PLANE
     remove_migration_state_change_notifier(&s->migration_state_notifier);
     virtio_blk_data_plane_destroy(s->dataplane);
@@ -764,10 +765,10 @@ static void virtio_blk_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
     VirtioDeviceClass *vdc = VIRTIO_DEVICE_CLASS(klass);
 
-    dc->unrealize = virtio_blk_device_unrealize;
     dc->props = virtio_blk_properties;
     set_bit(DEVICE_CATEGORY_STORAGE, dc->categories);
     vdc->realize = virtio_blk_device_realize;
+    vdc->unrealize = virtio_blk_device_unrealize;
     vdc->get_config = virtio_blk_update_config;
     vdc->set_config = virtio_blk_set_config;
     vdc->get_features = virtio_blk_get_features;
