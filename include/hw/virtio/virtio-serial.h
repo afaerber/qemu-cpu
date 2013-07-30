@@ -247,6 +247,8 @@ void virtio_serial_throttle_port(VirtIOSerialPort *port, bool throttle);
 #define TYPE_VIRTIO_SERIAL "virtio-serial-device"
 #define VIRTIO_SERIAL(obj) \
         OBJECT_CHECK(VirtIOSerial, (obj), TYPE_VIRTIO_SERIAL)
+#define VIRTIO_SERIAL_GET_PARENT_CLASS(obj) \
+        OBJECT_GET_PARENT_CLASS(obj, TYPE_VIRTIO_SERIAL)
 
 #define DEFINE_VIRTIO_SERIAL_PROPERTIES(_state, _field) \
         DEFINE_PROP_UINT32("max_ports", _state, _field.max_virtserial_ports, 31)
