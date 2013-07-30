@@ -1139,37 +1139,29 @@ void virtio_device_set_child_bus_name(VirtIODevice *vdev, char *bus_name)
     }
 }
 
-static int virtio_device_init(DeviceState *dev)
+static void virtio_device_realize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
-    VirtioDeviceClass *vdc = VIRTIO_DEVICE_GET_CLASS(dev);
 
-    if (vdc->init != NULL) {
-        if (vdc->init(vdev) < 0) {
-            return -1;
-        }
-    }
     virtio_bus_plug_device(vdev);
-    return 0;
 }
 
-static int virtio_device_exit(DeviceState *qdev)
+static void virtio_device_unrealize(DeviceState *dev, Error **errp)
 {
-    VirtIODevice *vdev = VIRTIO_DEVICE(qdev);
+    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
 
     if (vdev->bus_name) {
         g_free(vdev->bus_name);
         vdev->bus_name = NULL;
     }
-    return 0;
 }
 
 static void virtio_device_class_init(ObjectClass *klass, void *data)
 {
     /* Set the default value here. */
     DeviceClass *dc = DEVICE_CLASS(klass);
-    dc->init = virtio_device_init;
-    dc->exit = virtio_device_exit;
+    dc->realize = virtio_device_realize;
+    dc->unrealize = virtio_device_unrealize;
     dc->bus_type = TYPE_VIRTIO_BUS;
 }
 
