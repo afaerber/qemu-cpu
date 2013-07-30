@@ -240,11 +240,11 @@ static int vhost_scsi_init(VirtIODevice *vdev)
     return 0;
 }
 
-static int vhost_scsi_exit(DeviceState *qdev)
+static int vhost_scsi_exit(DeviceState *dev)
 {
-    VirtIODevice *vdev = VIRTIO_DEVICE(qdev);
-    VHostSCSI *s = VHOST_SCSI(qdev);
-    VirtIOSCSICommon *vs = VIRTIO_SCSI_COMMON(qdev);
+    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
+    VHostSCSI *s = VHOST_SCSI(dev);
+    VirtIOSCSICommon *vs = VIRTIO_SCSI_COMMON(dev);
 
     migrate_del_blocker(s->migration_blocker);
     error_free(s->migration_blocker);
