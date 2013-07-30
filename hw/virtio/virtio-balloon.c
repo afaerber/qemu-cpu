@@ -378,11 +378,15 @@ static void virtio_balloon_device_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOBalloon *s = VIRTIO_BALLOON(dev);
+    ObjectClass *parent_oc = VIRTIO_BALLOON_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
 
     balloon_stats_destroy_timer(s);
     qemu_remove_balloon_handler(s);
     unregister_savevm(dev, "virtio-balloon", s);
     virtio_cleanup(vdev);
+
+    parent_dc->unrealize(dev, errp);
 }
 
 static Property virtio_balloon_properties[] = {

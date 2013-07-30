@@ -189,11 +189,15 @@ static void virtio_rng_device_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIORNG *vrng = VIRTIO_RNG(dev);
+    ObjectClass *parent_oc = VIRTIO_RNG_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
 
     qemu_del_timer(vrng->rate_limit_timer);
     qemu_free_timer(vrng->rate_limit_timer);
     unregister_savevm(dev, "virtio-rng", vrng);
     virtio_cleanup(vdev);
+
+    parent_dc->unrealize(dev, errp);
 }
 
 static Property virtio_rng_properties[] = {
