@@ -53,6 +53,8 @@ enum vhost_scsi_vq_list {
 #define TYPE_VHOST_SCSI "vhost-scsi"
 #define VHOST_SCSI(obj) \
         OBJECT_CHECK(VHostSCSI, (obj), TYPE_VHOST_SCSI)
+#define VHOST_SCSI_GET_PARENT_CLASS(obj) \
+        OBJECT_GET_PARENT_CLASS(obj, TYPE_VHOST_SCSI)
 
 typedef struct VHostSCSI {
     VirtIOSCSICommon parent_obj;
