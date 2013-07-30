@@ -655,10 +655,14 @@ void virtio_scsi_common_unrealize(DeviceState *dev, Error **errp)
 static void virtio_scsi_device_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIOSCSI *s = VIRTIO_SCSI(dev);
+    ObjectClass *parent_oc = VIRTIO_SCSI_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
 
     unregister_savevm(dev, "virtio-scsi", s);
 
     virtio_scsi_common_unrealize(dev, errp);
+
+    parent_dc->unrealize(dev, errp);
 }
 
 static Property virtio_scsi_properties[] = {

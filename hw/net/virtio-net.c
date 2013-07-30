@@ -1573,6 +1573,8 @@ static void virtio_net_device_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIONet *n = VIRTIO_NET(dev);
+    ObjectClass *parent_oc = VIRTIO_NET_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
     int i;
 
     /* This will stop vhost backend if appropriate. */
@@ -1609,6 +1611,8 @@ static void virtio_net_device_unrealize(DeviceState *dev, Error **errp)
     g_free(n->vqs);
     qemu_del_nic(n->nic);
     virtio_cleanup(vdev);
+
+    parent_dc->unrealize(dev, errp);
 }
 
 static void virtio_net_instance_init(Object *obj)

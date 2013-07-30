@@ -996,6 +996,8 @@ static void virtio_serial_device_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOSerial *vser = VIRTIO_SERIAL(dev);
+    ObjectClass *parent_oc = VIRTIO_SERIAL_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
 
     unregister_savevm(dev, "virtio-console", vser);
 
@@ -1009,6 +1011,8 @@ static void virtio_serial_device_unrealize(DeviceState *dev, Error **errp)
         g_free(vser->post_load);
     }
     virtio_cleanup(vdev);
+
+    parent_dc->unrealize(dev, errp);
 }
 
 static Property virtio_serial_properties[] = {

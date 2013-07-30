@@ -726,6 +726,8 @@ static void virtio_blk_device_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOBlock *s = VIRTIO_BLK(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(VIRTIO_BLK_GET_PARENT_CLASS(dev));
+
 #ifdef CONFIG_VIRTIO_BLK_DATA_PLANE
     remove_migration_state_change_notifier(&s->migration_state_notifier);
     virtio_blk_data_plane_destroy(s->dataplane);
@@ -735,6 +737,8 @@ static void virtio_blk_device_unrealize(DeviceState *dev, Error **errp)
     unregister_savevm(dev, "virtio-blk", s);
     blockdev_mark_auto_del(s->bs);
     virtio_cleanup(vdev);
+
+    parent_dc->unrealize(dev, errp);
 }
 
 static Property virtio_blk_properties[] = {

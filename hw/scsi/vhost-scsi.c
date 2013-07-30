@@ -248,6 +248,8 @@ static void vhost_scsi_unrealize(DeviceState *dev, Error **errp)
 {
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VHostSCSI *s = VHOST_SCSI(dev);
+    ObjectClass *parent_oc = VHOST_SCSI_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
 
     migrate_del_blocker(s->migration_blocker);
     error_free(s->migration_blocker);
@@ -258,6 +260,8 @@ static void vhost_scsi_unrealize(DeviceState *dev, Error **errp)
     g_free(s->dev.vqs);
 
     virtio_scsi_common_unrealize(dev, errp);
+
+    parent_dc->unrealize(dev, errp);
 }
 
 static Property vhost_scsi_properties[] = {
