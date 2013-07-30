@@ -135,19 +135,19 @@ static void check_rate_limit(void *opaque)
 
 static int virtio_rng_device_init(VirtIODevice *vdev)
 {
-    DeviceState *qdev = DEVICE(vdev);
-    VirtIORNG *vrng = VIRTIO_RNG(vdev);
+    DeviceState *dev = DEVICE(vdev);
+    VirtIORNG *vrng = VIRTIO_RNG(dev);
     Error *local_err = NULL;
 
     if (vrng->conf.rng == NULL) {
         vrng->conf.default_backend = RNG_RANDOM(object_new(TYPE_RNG_RANDOM));
 
-        object_property_add_child(OBJECT(qdev),
+        object_property_add_child(OBJECT(dev),
                                   "default-backend",
                                   OBJECT(vrng->conf.default_backend),
                                   NULL);
 
-        object_property_set_link(OBJECT(qdev),
+        object_property_set_link(OBJECT(dev),
                                  OBJECT(vrng->conf.default_backend),
                                  "rng", NULL);
     }
@@ -178,20 +178,20 @@ static int virtio_rng_device_init(VirtIODevice *vdev)
     qemu_mod_timer(vrng->rate_limit_timer,
                    qemu_get_clock_ms(vm_clock) + vrng->conf.period_ms);
 
-    register_savevm(qdev, "virtio-rng", -1, 1, virtio_rng_save,
+    register_savevm(dev, "virtio-rng", -1, 1, virtio_rng_save,
                     virtio_rng_load, vrng);
 
     return 0;
 }
 
-static int virtio_rng_device_exit(DeviceState *qdev)
+static int virtio_rng_device_exit(DeviceState *dev)
 {
-    VirtIORNG *vrng = VIRTIO_RNG(qdev);
-    VirtIODevice *vdev = VIRTIO_DEVICE(qdev);
+    VirtIORNG *vrng = VIRTIO_RNG(dev);
+    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
 
     qemu_del_timer(vrng->rate_limit_timer);
     qemu_free_timer(vrng->rate_limit_timer);
-    unregister_savevm(qdev, "virtio-rng", vrng);
+    unregister_savevm(dev, "virtio-rng", vrng);
     virtio_cleanup(vdev);
     return 0;
 }
