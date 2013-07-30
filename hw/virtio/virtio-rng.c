@@ -133,10 +133,12 @@ static void check_rate_limit(void *opaque)
                    qemu_get_clock_ms(vm_clock) + vrng->conf.period_ms);
 }
 
-static int virtio_rng_device_init(VirtIODevice *vdev)
+static void virtio_rng_device_realize(DeviceState *dev, Error **errp)
 {
-    DeviceState *dev = DEVICE(vdev);
+    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIORNG *vrng = VIRTIO_RNG(dev);
+    ObjectClass *parent_oc = VIRTIO_RNG_GET_PARENT_CLASS(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(parent_oc);
     Error *local_err = NULL;
 
     if (vrng->conf.rng == NULL) {
@@ -156,15 +158,14 @@ static int virtio_rng_device_init(VirtIODevice *vdev)
 
     vrng->rng = vrng->conf.rng;
     if (vrng->rng == NULL) {
-        qerror_report(QERR_INVALID_PARAMETER_VALUE, "rng", "a valid object");
-        return -1;
+        error_set(errp, QERR_INVALID_PARAMETER_VALUE, "rng", "a valid object");
+        return;
     }
 
     rng_backend_open(vrng->rng, &local_err);
     if (local_err) {
-        qerror_report_err(local_err);
-        error_free(local_err);
-        return -1;
+        error_propagate(errp, local_err);
+        return;
     }
 
     vrng->vq = virtio_add_queue(vdev, 8, handle_input);
@@ -181,19 +182,18 @@ static int virtio_rng_device_init(VirtIODevice *vdev)
     register_savevm(dev, "virtio-rng", -1, 1, virtio_rng_save,
                     virtio_rng_load, vrng);
 
-    return 0;
+    parent_dc->realize(dev, errp);
 }
 
-static int virtio_rng_device_exit(DeviceState *dev)
+static void virtio_rng_device_unrealize(DeviceState *dev, Error **errp)
 {
-    VirtIORNG *vrng = VIRTIO_RNG(dev);
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
+    VirtIORNG *vrng = VIRTIO_RNG(dev);
 
     qemu_del_timer(vrng->rate_limit_timer);
     qemu_free_timer(vrng->rate_limit_timer);
     unregister_savevm(dev, "virtio-rng", vrng);
     virtio_cleanup(vdev);
-    return 0;
 }
 
 static Property virtio_rng_properties[] = {
@@ -205,10 +205,11 @@ static void virtio_rng_class_init(ObjectClass *klass, void *data)
 {
     DeviceClass *dc = DEVICE_CLASS(klass);
     VirtioDeviceClass *vdc = VIRTIO_DEVICE_CLASS(klass);
-    dc->exit = virtio_rng_device_exit;
+
+    dc->realize = virtio_rng_device_realize;
+    dc->unrealize = virtio_rng_device_unrealize;
     dc->props = virtio_rng_properties;
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
-    vdc->init = virtio_rng_device_init;
     vdc->get_features = get_features;
 }
 
