@@ -33,37 +33,28 @@ void ipack_bus_new_inplace(IPackBus *bus, DeviceState *parent,
     bus->set_irq = handler;
 }
 
-static int ipack_device_dev_init(DeviceState *qdev)
+static void ipack_device_realize(DeviceState *dev, Error **errp)
 {
-    IPackBus *bus = IPACK_BUS(qdev_get_parent_bus(qdev));
-    IPackDevice *dev = IPACK_DEVICE(qdev);
-    IPackDeviceClass *k = IPACK_DEVICE_GET_CLASS(dev);
+    IPackDevice *idev = IPACK_DEVICE(dev);
+    IPackBus *bus = IPACK_BUS(qdev_get_parent_bus(dev));
 
-    if (dev->slot < 0) {
-        dev->slot = bus->free_slot;
+    if (idev->slot < 0) {
+        idev->slot = bus->free_slot;
     }
-    if (dev->slot >= bus->n_slots) {
-        return -1;
+    if (idev->slot >= bus->n_slots) {
+        error_setg(errp, "Only %" PRIu8 " slots available.", bus->n_slots);
+        return;
     }
-    bus->free_slot = dev->slot + 1;
+    bus->free_slot = idev->slot + 1;
 
-    dev->irq = qemu_allocate_irqs(bus->set_irq, dev, 2);
-
-    return k->init(dev);
+    idev->irq = qemu_allocate_irqs(bus->set_irq, idev, 2);
 }
 
-static int ipack_device_dev_exit(DeviceState *qdev)
+static void ipack_device_unrealize(DeviceState *dev, Error **errp)
 {
-    IPackDevice *dev = IPACK_DEVICE(qdev);
-    IPackDeviceClass *k = IPACK_DEVICE_GET_CLASS(dev);
+    IPackDevice *idev = IPACK_DEVICE(dev);
 
-    if (k->exit) {
-        k->exit(dev);
-    }
-
-    qemu_free_irqs(dev->irq);
-
-    return 0;
+    qemu_free_irqs(idev->irq);
 }
 
 static Property ipack_device_props[] = {
@@ -74,10 +65,11 @@ static Property ipack_device_props[] = {
 static void ipack_device_class_init(ObjectClass *klass, void *data)
 {
     DeviceClass *k = DEVICE_CLASS(klass);
+
     set_bit(DEVICE_CATEGORY_INPUT, k->categories);
     k->bus_type = TYPE_IPACK_BUS;
-    k->init = ipack_device_dev_init;
-    k->exit = ipack_device_dev_exit;
+    k->realize = ipack_device_realize;
+    k->unrealize = ipack_device_unrealize;
     k->props = ipack_device_props;
 }
 

@@ -118,6 +118,8 @@ struct IPOctalState {
 
 #define IPOCTAL(obj) \
     OBJECT_CHECK(IPOctalState, (obj), TYPE_IPOCTAL)
+#define IPOCTAL_GET_PARENT_CLASS(obj) \
+    OBJECT_GET_PARENT_CLASS(obj, TYPE_IPOCTAL)
 
 static const VMStateDescription vmstate_scc2698_channel = {
     .name = "scc2698_channel",
@@ -534,10 +536,18 @@ static void hostdev_event(void *opaque, int event)
     }
 }
 
-static int ipoctal_init(IPackDevice *ip)
+static void ipoctal_realize(DeviceState *dev, Error **errp)
 {
-    IPOctalState *s = IPOCTAL(ip);
+    IPOctalState *s = IPOCTAL(dev);
+    DeviceClass *parent_dc = DEVICE_CLASS(IPOCTAL_GET_PARENT_CLASS(dev));
+    Error *err = NULL;
     unsigned i;
+
+    parent_dc->realize(dev, &err);
+    if (err != NULL) {
+        error_propagate(errp, err);
+        return;
+    }
 
     for (i = 0; i < N_CHANNELS; i++) {
         SCC2698Channel *ch = &s->ch[i];
@@ -552,8 +562,6 @@ static int ipoctal_init(IPackDevice *ip)
             DPRINTF("Could not redirect channel %u, no chardev set\n", i);
         }
     }
-
-    return 0;
 }
 
 static Property ipoctal_properties[] = {
@@ -573,7 +581,6 @@ static void ipoctal_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
     IPackDeviceClass *ic = IPACK_DEVICE_CLASS(klass);
 
-    ic->init        = ipoctal_init;
     ic->io_read     = io_read;
     ic->io_write    = io_write;
     ic->id_read     = id_read;
@@ -585,6 +592,7 @@ static void ipoctal_class_init(ObjectClass *klass, void *data)
     ic->mem_read8   = mem_read8;
     ic->mem_write8  = mem_write8;
 
+    dc->realize = ipoctal_realize;
     set_bit(DEVICE_CATEGORY_INPUT, dc->categories);
     dc->desc    = "GE IP-Octal 232 8-channel RS-232 IndustryPack";
     dc->props   = ipoctal_properties;
