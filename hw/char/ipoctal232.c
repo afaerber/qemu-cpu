@@ -108,7 +108,8 @@ struct SCC2698Block {
 };
 
 struct IPOctalState {
-    IPackDevice dev;
+    IPackDevice parent_obj;
+
     SCC2698Channel ch[N_CHANNELS];
     SCC2698Block blk[N_BLOCKS];
     uint8_t irq_vector;
@@ -174,6 +175,7 @@ static const uint8_t id_prom_data[] = {
 
 static void update_irq(IPOctalState *dev, unsigned block)
 {
+    IPackDevice *idev = IPACK_DEVICE(dev);
     /* Blocks A and B interrupt on INT0#, C and D on INT1#.
        Thus, to get the status we have to check two blocks. */
     SCC2698Block *blk0 = &dev->blk[block];
@@ -181,9 +183,9 @@ static void update_irq(IPOctalState *dev, unsigned block)
     unsigned intno = block / 2;
 
     if ((blk0->isr & blk0->imr) || (blk1->isr & blk1->imr)) {
-        qemu_irq_raise(dev->dev.irq[intno]);
+        qemu_irq_raise(idev->irq[intno]);
     } else {
-        qemu_irq_lower(dev->dev.irq[intno]);
+        qemu_irq_lower(idev->irq[intno]);
     }
 }
 
