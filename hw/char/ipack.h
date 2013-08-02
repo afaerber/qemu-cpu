@@ -72,8 +72,14 @@ struct IPackDevice {
 
 extern const VMStateDescription vmstate_ipack_device;
 
-#define VMSTATE_IPACK_DEVICE(_field, _state)                            \
-    VMSTATE_STRUCT(_field, _state, 1, vmstate_ipack_device, IPackDevice)
+#define VMSTATE_IPACK_DEVICE() {                                            \
+    .name = "parent_obj",                                                   \
+    .size = sizeof(IPackDevice),                                            \
+    .version_id = 1,                                                        \
+    .vmsd = &vmstate_ipack_device,                                          \
+    .flags = VMS_STRUCT,                                                    \
+    .offset = 0,                                                            \
+}
 
 IPackDevice *ipack_device_find(IPackBus *bus, int32_t slot);
 void ipack_bus_new_inplace(IPackBus *bus, DeviceState *parent,

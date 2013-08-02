@@ -156,7 +156,7 @@ static const VMStateDescription vmstate_ipoctal = {
     .minimum_version_id = 1,
     .minimum_version_id_old = 1,
     .fields      = (VMStateField[]) {
-        VMSTATE_IPACK_DEVICE(dev, IPOctalState),
+        VMSTATE_IPACK_DEVICE(),
         VMSTATE_STRUCT_ARRAY(ch, IPOctalState, N_CHANNELS, 1,
                              vmstate_scc2698_channel, SCC2698Channel),
         VMSTATE_STRUCT_ARRAY(blk, IPOctalState, N_BLOCKS, 1,
