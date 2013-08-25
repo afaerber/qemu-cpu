@@ -399,16 +399,6 @@ static inline CPUOpenRISCState *cpu_init(const char *cpu_model)
 
 #include "exec/cpu-all.h"
 
-static inline void cpu_get_tb_cpu_state(CPUOpenRISCState *env,
-                                        target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    *pc = env->pc;
-    *cs_base = 0;
-    /* D_FLAG -- branch instruction exception */
-    *flags = (env->flags & D_FLAG);
-}
-
 #define CPU_INTERRUPT_TIMER   CPU_INTERRUPT_TGT_INT_0
 
 #include "exec/exec-all.h"

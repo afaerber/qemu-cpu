@@ -731,6 +731,36 @@ static void sparc_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.npc = value + 4;
 }
 
+static void sparc_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                       vaddr *cs_base, int *flags)
+{
+    SPARCCPU *cpu = SPARC_CPU(cs);
+    CPUSPARCState *env = &cpu->env;
+
+    *pc = env->pc;
+    *cs_base = env->npc;
+#ifdef TARGET_SPARC64
+    /* AM . Combined FPU enable bits . PRIV . DMMU enabled . IMMU enabled */
+    *flags = (env->pstate & PS_PRIV)                  /* 2 */
+           | ((env->lsu & (DMMU_E | IMMU_E)) >> 2)    /* 1, 0 */
+           | ((env->tl & 0xff) << 8)
+           | (env->dmmu.mmu_primary_context << 16);   /* 16... */
+    if (env->pstate & PS_AM) {
+        *flags |= TB_FLAG_AM_ENABLED;
+    }
+    if ((env->def->features & CPU_FEATURE_FLOAT) && (env->pstate & PS_PEF)
+        && (env->fprs & FPRS_FEF)) {
+        *flags |= TB_FLAG_FPU_ENABLED;
+    }
+#else
+    /* FPU enable . Supervisor */
+    *flags = env->psrs;
+    if ((env->def->features & CPU_FEATURE_FLOAT) && env->psref) {
+        *flags |= TB_FLAG_FPU_ENABLED;
+    }
+#endif
+}
+
 static void sparc_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb)
 {
     SPARCCPU *cpu = SPARC_CPU(cs);
@@ -823,6 +853,7 @@ static void sparc_cpu_class_init(ObjectClass *oc, void *data)
 #endif
     cc->mmu_index = sparc_cpu_mmu_index;
     cc->set_pc = sparc_cpu_set_pc;
+    cc->get_tb_cpu_state = sparc_cpu_get_tb_cpu_state;
     cc->synchronize_from_tb = sparc_cpu_synchronize_from_tb;
     cc->gdb_read_register = sparc_cpu_gdb_read_register;
     cc->gdb_write_register = sparc_cpu_gdb_write_register;

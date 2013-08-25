@@ -1011,11 +1011,12 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
     PageDesc *p;
     int n;
 #ifdef TARGET_HAS_PRECISE_SMC
+    CPUClass *cc = NULL;
     int current_tb_not_found = is_cpu_write_access;
     TranslationBlock *current_tb = NULL;
     int current_tb_modified = 0;
-    target_ulong current_pc = 0;
-    target_ulong current_cs_base = 0;
+    vaddr current_pc = 0;
+    vaddr current_cs_base = 0;
     int current_flags = 0;
 #endif /* TARGET_HAS_PRECISE_SMC */
 
@@ -1032,6 +1033,9 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
 #if defined(TARGET_HAS_PRECISE_SMC) || !defined(CONFIG_USER_ONLY)
     if (cpu != NULL) {
         env = cpu->env_ptr;
+#ifdef TARGET_HAS_PRECISE_SMC
+        cc = CPU_GET_CLASS(cpu);
+#endif
     }
 #endif
 
@@ -1073,7 +1077,7 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
 
                 current_tb_modified = 1;
                 cpu_restore_state_from_tb(current_tb, env, env->mem_io_pc);
-                cpu_get_tb_cpu_state(env, &current_pc, &current_cs_base,
+                cc->get_tb_cpu_state(cpu, &current_pc, &current_cs_base,
                                      &current_flags);
             }
 #endif /* TARGET_HAS_PRECISE_SMC */
@@ -1157,10 +1161,11 @@ static void tb_invalidate_phys_page(tb_page_addr_t addr,
 #ifdef TARGET_HAS_PRECISE_SMC
     TranslationBlock *current_tb = NULL;
     CPUState *cpu = current_cpu;
+    CPUClass *cc = NULL;
     CPUArchState *env = NULL;
     int current_tb_modified = 0;
-    target_ulong current_pc = 0;
-    target_ulong current_cs_base = 0;
+    vaddr current_pc = 0;
+    vaddr current_cs_base = 0;
     int current_flags = 0;
 #endif
 
@@ -1176,6 +1181,7 @@ static void tb_invalidate_phys_page(tb_page_addr_t addr,
     }
     if (cpu != NULL) {
         env = cpu->env_ptr;
+        cc = CPU_GET_CLASS(cpu);
     }
 #endif
     while (tb != NULL) {
@@ -1192,7 +1198,7 @@ static void tb_invalidate_phys_page(tb_page_addr_t addr,
 
             current_tb_modified = 1;
             cpu_restore_state_from_tb(current_tb, env, pc);
-            cpu_get_tb_cpu_state(env, &current_pc, &current_cs_base,
+            cc->get_tb_cpu_state(cpu, &current_pc, &current_cs_base,
                                  &current_flags);
         }
 #endif /* TARGET_HAS_PRECISE_SMC */

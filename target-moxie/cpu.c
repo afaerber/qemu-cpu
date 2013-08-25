@@ -29,6 +29,16 @@ static void moxie_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static void moxie_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                       vaddr *cs_base, int *flags)
+{
+    MoxieCPU *cpu = MOXIE_CPU(cs);
+
+    *pc = cpu->env.pc;
+    *cs_base = 0;
+    *flags = 0;
+}
+
 static bool moxie_cpu_has_work(CPUState *cs)
 {
     return cs->interrupt_request & CPU_INTERRUPT_HARD;
@@ -108,6 +118,7 @@ static void moxie_cpu_class_init(ObjectClass *oc, void *data)
     cc->do_interrupt = moxie_cpu_do_interrupt;
     cc->dump_state = moxie_cpu_dump_state;
     cc->set_pc = moxie_cpu_set_pc;
+    cc->get_tb_cpu_state = moxie_cpu_get_tb_cpu_state;
 #ifndef CONFIG_USER_ONLY
     cc->get_phys_page_debug = moxie_cpu_get_phys_page_debug;
     cc->vmsd = &vmstate_moxie_cpu;

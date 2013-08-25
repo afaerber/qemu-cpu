@@ -31,6 +31,22 @@ static void superh_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static void superh_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                        vaddr *cs_base, int *flags)
+{
+    SuperHCPU *cpu = SUPERH_CPU(cs);
+    CPUSH4State *env = &cpu->env;
+
+    *pc = env->pc;
+    *cs_base = 0;
+    *flags = (env->flags & (DELAY_SLOT | DELAY_SLOT_CONDITIONAL |
+                            DELAY_SLOT_TRUE | DELAY_SLOT_CLEARME))  /* Bits 0-3 */
+           | (env->fpscr & (FPSCR_FR | FPSCR_SZ | FPSCR_PR))  /* Bits 19-21 */
+           | (env->sr & (SR_MD | SR_RB))                      /* Bits 29-30 */
+           | (env->sr & SR_FD)                                /* Bit 15 */
+           | (env->movcal_backup ? TB_FLAG_PENDING_MOVCA : 0); /* Bit 4 */
+}
+
 static void superh_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb)
 {
     SuperHCPU *cpu = SUPERH_CPU(cs);
@@ -300,6 +316,7 @@ static void superh_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = superh_cpu_dump_state;
     cc->mmu_index = superh_cpu_mmu_index;
     cc->set_pc = superh_cpu_set_pc;
+    cc->get_tb_cpu_state = superh_cpu_get_tb_cpu_state;
     cc->synchronize_from_tb = superh_cpu_synchronize_from_tb;
     cc->gdb_read_register = superh_cpu_gdb_read_register;
     cc->gdb_write_register = superh_cpu_gdb_write_register;

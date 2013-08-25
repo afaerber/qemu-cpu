@@ -33,6 +33,18 @@ static void mb_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.sregs[SR_PC] = value;
 }
 
+static void mb_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                    vaddr *cs_base, int *flags)
+{
+    MicroBlazeCPU *cpu = MICROBLAZE_CPU(cs);
+    CPUMBState *env = &cpu->env;
+
+    *pc = env->sregs[SR_PC];
+    *cs_base = 0;
+    *flags = (env->iflags & IFLAGS_TB_MASK) |
+             (env->sregs[SR_MSR] & (MSR_UM | MSR_VM | MSR_EE));
+}
+
 static int mb_cpu_mmu_index(const CPUState *cs)
 {
     MicroBlazeCPU *cpu = MICROBLAZE_CPU(cs);
@@ -163,6 +175,7 @@ static void mb_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = mb_cpu_dump_state;
     cc->mmu_index = mb_cpu_mmu_index;
     cc->set_pc = mb_cpu_set_pc;
+    cc->get_tb_cpu_state = mb_cpu_get_tb_cpu_state;
     cc->gdb_read_register = mb_cpu_gdb_read_register;
     cc->gdb_write_register = mb_cpu_gdb_write_register;
 #ifndef CONFIG_USER_ONLY

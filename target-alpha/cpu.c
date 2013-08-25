@@ -31,6 +31,29 @@ static void alpha_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static void alpha_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                       vaddr *cs_base, int *pflags)
+{
+    AlphaCPU *cpu = ALPHA_CPU(cs);
+    CPUAlphaState *env = &cpu->env;
+    int flags = 0;
+
+    *pc = env->pc;
+    *cs_base = 0;
+
+    if (env->pal_mode) {
+        flags = TB_FLAGS_PAL_MODE;
+    } else {
+        flags = env->ps & PS_USER_MODE;
+    }
+    if (env->fen) {
+        flags |= TB_FLAGS_FEN;
+    }
+    flags |= env->amask << TB_FLAGS_AMASK_SHIFT;
+
+    *pflags = flags;
+}
+
 static int alpha_cpu_mmu_index(const CPUState *cs)
 {
     AlphaCPU *cpu = ALPHA_CPU(cs);
@@ -304,6 +327,7 @@ static void alpha_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = alpha_cpu_dump_state;
     cc->mmu_index = alpha_cpu_mmu_index;
     cc->set_pc = alpha_cpu_set_pc;
+    cc->get_tb_cpu_state = alpha_cpu_get_tb_cpu_state;
     cc->gdb_read_register = alpha_cpu_gdb_read_register;
     cc->gdb_write_register = alpha_cpu_gdb_write_register;
 #ifndef CONFIG_USER_ONLY

@@ -34,6 +34,33 @@ static void arm_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.regs[15] = value;
 }
 
+static void arm_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                     vaddr *cs_base, int *flags)
+{
+    ARMCPU *cpu = ARM_CPU(cs);
+    CPUARMState *env = &cpu->env;
+    int privmode;
+
+    *pc = env->regs[15];
+    *cs_base = 0;
+    *flags = (env->thumb << ARM_TBFLAG_THUMB_SHIFT)
+           | (env->vfp.vec_len << ARM_TBFLAG_VECLEN_SHIFT)
+           | (env->vfp.vec_stride << ARM_TBFLAG_VECSTRIDE_SHIFT)
+           | (env->condexec_bits << ARM_TBFLAG_CONDEXEC_SHIFT)
+           | (env->bswap_code << ARM_TBFLAG_BSWAP_CODE_SHIFT);
+    if (arm_feature(env, ARM_FEATURE_M)) {
+        privmode = !((env->v7m.exception == 0) && (env->v7m.control & 1));
+    } else {
+        privmode = (env->uncached_cpsr & CPSR_M) != ARM_CPU_MODE_USR;
+    }
+    if (privmode) {
+        *flags |= ARM_TBFLAG_PRIV_MASK;
+    }
+    if (env->vfp.xregs[ARM_VFP_FPEXC] & (1 << 30)) {
+        *flags |= ARM_TBFLAG_VFPEN_MASK;
+    }
+}
+
 static int arm_cpu_mmu_index(const CPUState *cs)
 {
     ARMCPU *cpu = ARM_CPU(cs);
@@ -908,6 +935,7 @@ static void arm_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = arm_cpu_dump_state;
     cc->mmu_index = arm_cpu_mmu_index;
     cc->set_pc = arm_cpu_set_pc;
+    cc->get_tb_cpu_state = arm_cpu_get_tb_cpu_state;
     cc->gdb_read_register = arm_cpu_gdb_read_register;
     cc->gdb_write_register = arm_cpu_gdb_write_register;
 #ifndef CONFIG_USER_ONLY

@@ -2015,14 +2015,6 @@ static inline void cpu_write_xer(CPUPPCState *env, target_ulong xer)
     env->xer = xer & ~((1u << XER_SO) | (1u << XER_OV) | (1u << XER_CA));
 }
 
-static inline void cpu_get_tb_cpu_state(CPUPPCState *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    *pc = env->nip;
-    *cs_base = 0;
-    *flags = env->hflags;
-}
-
 #if !defined(CONFIG_USER_ONLY)
 static inline int booke206_tlbm_id(CPUPPCState *env, ppcmas_tlb_t *tlbm)
 {

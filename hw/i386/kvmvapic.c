@@ -395,8 +395,8 @@ static void patch_instruction(VAPICROMState *s, X86CPU *cpu, target_ulong ip)
     VAPICHandlers *handlers;
     uint8_t opcode[2];
     uint32_t imm32;
-    target_ulong current_pc = 0;
-    target_ulong current_cs_base = 0;
+    vaddr current_pc = 0;
+    vaddr current_cs_base = 0;
     int current_flags = 0;
 
     if (smp_cpus == 1) {
@@ -406,8 +406,10 @@ static void patch_instruction(VAPICROMState *s, X86CPU *cpu, target_ulong ip)
     }
 
     if (!kvm_enabled()) {
+        CPUClass *cc = CPU_GET_CLASS(cs);
+
         cpu_restore_state(env, env->mem_io_pc);
-        cpu_get_tb_cpu_state(env, &current_pc, &current_cs_base,
+        cc->get_tb_cpu_state(cs, &current_pc, &current_cs_base,
                              &current_flags);
     }
 

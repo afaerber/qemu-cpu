@@ -80,6 +80,8 @@ struct TranslationBlock;
  * @get_paging_enabled: Callback for inquiring whether paging is enabled.
  * @get_memory_mapping: Callback for obtaining the memory mappings.
  * @set_pc: Callback for setting the Program Counter register.
+ * @get_tb_cpu_state: Callback for obtaining state for a TCG
+ * #TranslationBlock.
  * @synchronize_from_tb: Callback for synchronizing state from a TCG
  * #TranslationBlock.
  * @get_phys_page_debug: Callback for obtaining a physical address.
@@ -115,6 +117,8 @@ typedef struct CPUClass {
     void (*get_memory_mapping)(CPUState *cpu, MemoryMappingList *list,
                                Error **errp);
     void (*set_pc)(CPUState *cpu, vaddr value);
+    void (*get_tb_cpu_state)(const CPUState *cpu, vaddr *pc, vaddr *cs_base,
+                             int *flags);
     void (*synchronize_from_tb)(CPUState *cpu, struct TranslationBlock *tb);
     hwaddr (*get_phys_page_debug)(CPUState *cpu, vaddr addr);
     int (*gdb_read_register)(CPUState *cpu, uint8_t *buf, int reg);

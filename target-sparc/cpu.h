@@ -683,33 +683,6 @@ trap_state* cpu_tsptr(CPUSPARCState* env);
 #define TB_FLAG_FPU_ENABLED (1 << 4)
 #define TB_FLAG_AM_ENABLED (1 << 5)
 
-static inline void cpu_get_tb_cpu_state(CPUSPARCState *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    *pc = env->pc;
-    *cs_base = env->npc;
-#ifdef TARGET_SPARC64
-    // AM . Combined FPU enable bits . PRIV . DMMU enabled . IMMU enabled
-    *flags = (env->pstate & PS_PRIV)               /* 2 */
-        | ((env->lsu & (DMMU_E | IMMU_E)) >> 2)    /* 1, 0 */
-        | ((env->tl & 0xff) << 8)
-        | (env->dmmu.mmu_primary_context << 16);   /* 16... */
-    if (env->pstate & PS_AM) {
-        *flags |= TB_FLAG_AM_ENABLED;
-    }
-    if ((env->def->features & CPU_FEATURE_FLOAT) && (env->pstate & PS_PEF)
-        && (env->fprs & FPRS_FEF)) {
-        *flags |= TB_FLAG_FPU_ENABLED;
-    }
-#else
-    // FPU enable . Supervisor
-    *flags = env->psrs;
-    if ((env->def->features & CPU_FEATURE_FLOAT) && env->psref) {
-        *flags |= TB_FLAG_FPU_ENABLED;
-    }
-#endif
-}
-
 static inline bool tb_fpu_enabled(int tb_flags)
 {
 #if defined(CONFIG_USER_ONLY)

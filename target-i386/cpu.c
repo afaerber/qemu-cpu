@@ -2669,6 +2669,18 @@ static void x86_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.eip = value;
 }
 
+static void x86_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                     vaddr *cs_base, int *flags)
+{
+    X86CPU *cpu = X86_CPU(cs);
+    CPUX86State *env = &cpu->env;
+
+    *cs_base = env->segs[R_CS].base;
+    *pc = *cs_base + env->eip;
+    *flags = env->hflags |
+        (env->eflags & (IOPL_MASK | TF_MASK | RF_MASK | VM_MASK | AC_MASK));
+}
+
 static void x86_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb)
 {
     X86CPU *cpu = X86_CPU(cs);
@@ -2725,6 +2737,7 @@ static void x86_cpu_common_class_init(ObjectClass *oc, void *data)
     cc->dump_state = x86_cpu_dump_state;
     cc->mmu_index = x86_cpu_mmu_index;
     cc->set_pc = x86_cpu_set_pc;
+    cc->get_tb_cpu_state = x86_cpu_get_tb_cpu_state;
     cc->synchronize_from_tb = x86_cpu_synchronize_from_tb;
     cc->gdb_read_register = x86_cpu_gdb_read_register;
     cc->gdb_write_register = x86_cpu_gdb_write_register;

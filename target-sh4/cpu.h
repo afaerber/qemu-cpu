@@ -335,19 +335,6 @@ static inline int cpu_ptel_pr (uint32_t ptel)
 
 #define TB_FLAG_PENDING_MOVCA  (1 << 4)
 
-static inline void cpu_get_tb_cpu_state(CPUSH4State *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    *pc = env->pc;
-    *cs_base = 0;
-    *flags = (env->flags & (DELAY_SLOT | DELAY_SLOT_CONDITIONAL
-                    | DELAY_SLOT_TRUE | DELAY_SLOT_CLEARME))   /* Bits  0- 3 */
-            | (env->fpscr & (FPSCR_FR | FPSCR_SZ | FPSCR_PR))  /* Bits 19-21 */
-            | (env->sr & (SR_MD | SR_RB))                      /* Bits 29-30 */
-            | (env->sr & SR_FD)                                /* Bit 15 */
-            | (env->movcal_backup ? TB_FLAG_PENDING_MOVCA : 0); /* Bit 4 */
-}
-
 #include "exec/exec-all.h"
 
 #endif				/* _CPU_SH4_H */

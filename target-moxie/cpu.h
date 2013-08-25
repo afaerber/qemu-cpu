@@ -139,14 +139,6 @@ static inline CPUMoxieState *cpu_init(const char *cpu_model)
 #include "exec/cpu-all.h"
 #include "exec/exec-all.h"
 
-static inline void cpu_get_tb_cpu_state(CPUMoxieState *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    *pc = env->pc;
-    *cs_base = 0;
-    *flags = 0;
-}
-
 int cpu_moxie_handle_mmu_fault(CPUMoxieState *env, target_ulong address,
                                int rw, int mmu_idx);
 

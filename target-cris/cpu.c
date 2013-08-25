@@ -33,6 +33,19 @@ static void cris_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static void cris_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                      vaddr *cs_base, int *flags)
+{
+    CRISCPU *cpu = CRIS_CPU(cs);
+    CPUCRISState *env = &cpu->env;
+
+    *pc = env->pc;
+    *cs_base = 0;
+    *flags = env->dslot |
+            (env->pregs[PR_CCS] & (S_FLAG | P_FLAG | U_FLAG |
+                                   X_FLAG | PFIX_FLAG));
+}
+
 static int cris_cpu_mmu_index(const CPUState *cs)
 {
     CRISCPU *cpu = CRIS_CPU(cs);
@@ -274,6 +287,7 @@ static void cris_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = cris_cpu_dump_state;
     cc->mmu_index = cris_cpu_mmu_index;
     cc->set_pc = cris_cpu_set_pc;
+    cc->get_tb_cpu_state = cris_cpu_get_tb_cpu_state;
     cc->gdb_read_register = cris_cpu_gdb_read_register;
     cc->gdb_write_register = cris_cpu_gdb_write_register;
 #ifndef CONFIG_USER_ONLY

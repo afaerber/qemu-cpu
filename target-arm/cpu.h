@@ -786,30 +786,6 @@ static inline CPUARMState *cpu_init(const char *cpu_model)
 #define ARM_TBFLAG_BSWAP_CODE(F) \
     (((F) & ARM_TBFLAG_BSWAP_CODE_MASK) >> ARM_TBFLAG_BSWAP_CODE_SHIFT)
 
-static inline void cpu_get_tb_cpu_state(CPUARMState *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    int privmode;
-    *pc = env->regs[15];
-    *cs_base = 0;
-    *flags = (env->thumb << ARM_TBFLAG_THUMB_SHIFT)
-        | (env->vfp.vec_len << ARM_TBFLAG_VECLEN_SHIFT)
-        | (env->vfp.vec_stride << ARM_TBFLAG_VECSTRIDE_SHIFT)
-        | (env->condexec_bits << ARM_TBFLAG_CONDEXEC_SHIFT)
-        | (env->bswap_code << ARM_TBFLAG_BSWAP_CODE_SHIFT);
-    if (arm_feature(env, ARM_FEATURE_M)) {
-        privmode = !((env->v7m.exception == 0) && (env->v7m.control & 1));
-    } else {
-        privmode = (env->uncached_cpsr & CPSR_M) != ARM_CPU_MODE_USR;
-    }
-    if (privmode) {
-        *flags |= ARM_TBFLAG_PRIV_MASK;
-    }
-    if (env->vfp.xregs[ARM_VFP_FPEXC] & (1 << 30)) {
-        *flags |= ARM_TBFLAG_VFPEN_MASK;
-    }
-}
-
 #include "exec/exec-all.h"
 
 /* Load an instruction and return it in the standard little-endian order */

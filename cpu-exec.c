@@ -153,14 +153,16 @@ static TranslationBlock *tb_find_slow(CPUArchState *env,
 
 static inline TranslationBlock *tb_find_fast(CPUArchState *env)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
+    CPUClass *cc = CPU_GET_CLASS(cpu);
     TranslationBlock *tb;
-    target_ulong cs_base, pc;
+    vaddr cs_base, pc;
     int flags;
 
     /* we record a subset of the CPU state. It will
        always be the same before a given translated block
        is executed. */
-    cpu_get_tb_cpu_state(env, &pc, &cs_base, &flags);
+    cc->get_tb_cpu_state(cpu, &pc, &cs_base, &flags);
     tb = env->tb_jmp_cache[tb_jmp_cache_hash_func(pc)];
     if (unlikely(!tb || tb->pc != pc || tb->cs_base != cs_base ||
                  tb->flags != flags)) {

@@ -1478,8 +1478,10 @@ static const MemoryRegionOps notdirty_mem_ops = {
 /* Generate a debug exception if a watchpoint has been hit.  */
 static void check_watchpoint(int offset, int len_mask, int flags)
 {
-    CPUArchState *env = current_cpu->env_ptr;
-    target_ulong pc, cs_base;
+    CPUState *cpu = current_cpu;
+    CPUArchState *env = cpu->env_ptr;
+    CPUClass *cc = CPU_GET_CLASS(cpu);
+    vaddr pc, cs_base;
     target_ulong vaddr;
     CPUWatchpoint *wp;
     int cpu_flags;
@@ -1488,7 +1490,7 @@ static void check_watchpoint(int offset, int len_mask, int flags)
         /* We re-entered the check after replacing the TB. Now raise
          * the debug interrupt so that is will trigger after the
          * current instruction. */
-        cpu_interrupt(ENV_GET_CPU(env), CPU_INTERRUPT_DEBUG);
+        cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
         return;
     }
     vaddr = (env->mem_io_vaddr & TARGET_PAGE_MASK) + offset;
@@ -1503,7 +1505,7 @@ static void check_watchpoint(int offset, int len_mask, int flags)
                     env->exception_index = EXCP_DEBUG;
                     cpu_loop_exit(env);
                 } else {
-                    cpu_get_tb_cpu_state(env, &pc, &cs_base, &cpu_flags);
+                    cc->get_tb_cpu_state(cpu, &pc, &cs_base, &cpu_flags);
                     tb_gen_code(env, pc, cs_base, cpu_flags, 1);
                     cpu_resume_from_signal(env, NULL);
                 }

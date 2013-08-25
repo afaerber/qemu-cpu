@@ -212,15 +212,6 @@ int cpu_lm32_handle_mmu_fault(CPULM32State *env, target_ulong address, int rw,
 #define cpu_handle_mmu_fault cpu_lm32_handle_mmu_fault
 
 #include "exec/cpu-all.h"
-
-static inline void cpu_get_tb_cpu_state(CPULM32State *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    *pc = env->pc;
-    *cs_base = 0;
-    *flags = 0;
-}
-
 #include "exec/exec-all.h"
 
 #endif

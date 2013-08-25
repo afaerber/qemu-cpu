@@ -29,6 +29,16 @@ static void lm32_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static void lm32_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                      vaddr *cs_base, int *flags)
+{
+    LM32CPU *cpu = LM32_CPU(cs);
+
+    *pc = cpu->env.pc;
+    *cs_base = 0;
+    *flags = 0;
+}
+
 static bool lm32_cpu_has_work(CPUState *cs)
 {
     return cs->interrupt_request & CPU_INTERRUPT_HARD;
@@ -95,6 +105,7 @@ static void lm32_cpu_class_init(ObjectClass *oc, void *data)
     cc->do_interrupt = lm32_cpu_do_interrupt;
     cc->dump_state = lm32_cpu_dump_state;
     cc->set_pc = lm32_cpu_set_pc;
+    cc->get_tb_cpu_state = lm32_cpu_get_tb_cpu_state;
     cc->gdb_read_register = lm32_cpu_gdb_read_register;
     cc->gdb_write_register = lm32_cpu_gdb_write_register;
 #ifndef CONFIG_USER_ONLY

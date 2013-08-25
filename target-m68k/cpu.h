@@ -238,17 +238,6 @@ int cpu_m68k_handle_mmu_fault(CPUM68KState *env, target_ulong address, int rw,
 #define cpu_handle_mmu_fault cpu_m68k_handle_mmu_fault
 
 #include "exec/cpu-all.h"
-
-static inline void cpu_get_tb_cpu_state(CPUM68KState *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    *pc = env->pc;
-    *cs_base = 0;
-    *flags = (env->fpcr & M68K_FPCR_PREC)       /* Bit  6 */
-            | (env->sr & SR_S)                  /* Bit  13 */
-            | ((env->macsr >> 4) & 0xf);        /* Bits 0-3 */
-}
-
 #include "exec/exec-all.h"
 
 #endif

@@ -27,6 +27,17 @@ static void openrisc_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static void openrisc_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                          vaddr *cs_base, int *flags)
+{
+    OpenRISCCPU *cpu = OPENRISC_CPU(cs);
+
+    *pc = cpu->env.pc;
+    *cs_base = 0;
+    /* D_FLAG -- branch instruction exception */
+    *flags = (cpu->env.flags & D_FLAG);
+}
+
 static int openrisc_cpu_mmu_index(const CPUState *cs)
 {
     OpenRISCCPU *cpu = OPENRISC_CPU(cs);
@@ -174,6 +185,7 @@ static void openrisc_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = openrisc_cpu_dump_state;
     cc->mmu_index = openrisc_cpu_mmu_index;
     cc->set_pc = openrisc_cpu_set_pc;
+    cc->get_tb_cpu_state = openrisc_cpu_get_tb_cpu_state;
     cc->gdb_read_register = openrisc_cpu_gdb_read_register;
     cc->gdb_write_register = openrisc_cpu_gdb_write_register;
 #ifndef CONFIG_USER_ONLY

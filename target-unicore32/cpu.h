@@ -142,17 +142,6 @@ int uc32_cpu_handle_mmu_fault(CPUUniCore32State *env, target_ulong address, int 
 #include "cpu-qom.h"
 #include "exec/exec-all.h"
 
-static inline void cpu_get_tb_cpu_state(CPUUniCore32State *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *flags)
-{
-    *pc = env->regs[31];
-    *cs_base = 0;
-    *flags = 0;
-    if ((env->uncached_asr & ASR_M) != ASR_MODE_USER) {
-        *flags |= (1 << 6);
-    }
-}
-
 void uc32_translate_init(void);
 void switch_mode(CPUUniCore32State *, int);
 

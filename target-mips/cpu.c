@@ -35,6 +35,17 @@ static void mips_cpu_set_pc(CPUState *cs, vaddr value)
     }
 }
 
+static void mips_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                      vaddr *cs_base, int *flags)
+{
+    MIPSCPU *cpu = MIPS_CPU(cs);
+    CPUMIPSState *env = &cpu->env;
+
+    *pc = env->active_tc.PC;
+    *cs_base = 0;
+    *flags = env->hflags & (MIPS_HFLAG_TMASK | MIPS_HFLAG_BMASK);
+}
+
 static void mips_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb)
 {
     MIPSCPU *cpu = MIPS_CPU(cs);
@@ -138,6 +149,7 @@ static void mips_cpu_class_init(ObjectClass *c, void *data)
     cc->dump_state = mips_cpu_dump_state;
     cc->mmu_index = mips_cpu_mmu_index;
     cc->set_pc = mips_cpu_set_pc;
+    cc->get_tb_cpu_state = mips_cpu_get_tb_cpu_state;
     cc->synchronize_from_tb = mips_cpu_synchronize_from_tb;
     cc->gdb_read_register = mips_cpu_gdb_read_register;
     cc->gdb_write_register = mips_cpu_gdb_write_register;

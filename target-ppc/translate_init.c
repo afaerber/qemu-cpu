@@ -8437,6 +8437,16 @@ static void ppc_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.nip = value;
 }
 
+static void ppc_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                     vaddr *cs_base, int *flags)
+{
+    PowerPCCPU *cpu = POWERPC_CPU(cs);
+
+    *pc = cpu->env.nip;
+    *cs_base = 0;
+    *flags = cpu->env.hflags;
+}
+
 static int ppc_cpu_mmu_index(const CPUState *cs)
 {
     PowerPCCPU *cpu = POWERPC_CPU(cs);
@@ -8582,6 +8592,7 @@ static void ppc_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_statistics = ppc_cpu_dump_statistics;
     cc->mmu_index = ppc_cpu_mmu_index;
     cc->set_pc = ppc_cpu_set_pc;
+    cc->get_tb_cpu_state = ppc_cpu_get_tb_cpu_state;
     cc->gdb_read_register = ppc_cpu_gdb_read_register;
     cc->gdb_write_register = ppc_cpu_gdb_write_register;
 #ifndef CONFIG_USER_ONLY

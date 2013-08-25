@@ -466,27 +466,6 @@ enum {
     TB_FLAGS_AMASK_PREFETCH = AMASK_PREFETCH << TB_FLAGS_AMASK_SHIFT,
 };
 
-static inline void cpu_get_tb_cpu_state(CPUAlphaState *env, target_ulong *pc,
-                                        target_ulong *cs_base, int *pflags)
-{
-    int flags = 0;
-
-    *pc = env->pc;
-    *cs_base = 0;
-
-    if (env->pal_mode) {
-        flags = TB_FLAGS_PAL_MODE;
-    } else {
-        flags = env->ps & PS_USER_MODE;
-    }
-    if (env->fen) {
-        flags |= TB_FLAGS_FEN;
-    }
-    flags |= env->amask << TB_FLAGS_AMASK_SHIFT;
-
-    *pflags = flags;
-}
-
 #include "exec/exec-all.h"
 
 #endif /* !defined (__CPU_ALPHA_H__) */

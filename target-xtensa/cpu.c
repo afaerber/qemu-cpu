@@ -40,6 +40,39 @@ static void xtensa_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static void xtensa_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                        vaddr *cs_base, int *flags)
+{
+    XtensaCPU *cpu = XTENSA_CPU(cs);
+    CPUXtensaState *env = &cpu->env;
+
+    *pc = env->pc;
+    *cs_base = 0;
+    *flags = 0;
+    *flags |= xtensa_get_ring(env);
+    if (env->sregs[PS] & PS_EXCM) {
+        *flags |= XTENSA_TBFLAG_EXCM;
+    }
+    if (xtensa_option_enabled(env->config, XTENSA_OPTION_EXTENDED_L32R) &&
+            (env->sregs[LITBASE] & 1)) {
+        *flags |= XTENSA_TBFLAG_LITBASE;
+    }
+    if (xtensa_option_enabled(env->config, XTENSA_OPTION_DEBUG)) {
+        if (xtensa_get_cintlevel(env) < env->config->debug_level) {
+            *flags |= XTENSA_TBFLAG_DEBUG;
+        }
+        if (xtensa_get_cintlevel(env) < env->sregs[ICOUNTLEVEL]) {
+            *flags |= XTENSA_TBFLAG_ICOUNT;
+        }
+    }
+    if (xtensa_option_enabled(env->config, XTENSA_OPTION_COPROCESSOR)) {
+        *flags |= env->sregs[CPENABLE] << XTENSA_TBFLAG_CPENABLE_SHIFT;
+    }
+    if (cs->singlestep_enabled && env->exception_taken) {
+        *flags |= XTENSA_TBFLAG_EXCEPTION;
+    }
+}
+
 static int xtensa_cpu_mmu_index(const CPUState *cs)
 {
     XtensaCPU *cpu = XTENSA_CPU(cs);
@@ -151,6 +184,7 @@ static void xtensa_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = xtensa_cpu_dump_state;
     cc->mmu_index = xtensa_cpu_mmu_index;
     cc->set_pc = xtensa_cpu_set_pc;
+    cc->get_tb_cpu_state = xtensa_cpu_get_tb_cpu_state;
     cc->gdb_read_register = xtensa_cpu_gdb_read_register;
     cc->gdb_write_register = xtensa_cpu_gdb_write_register;
 #ifndef CONFIG_USER_ONLY

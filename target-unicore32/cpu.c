@@ -23,6 +23,19 @@ static void uc32_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.regs[31] = value;
 }
 
+static void uc32_cpu_get_tb_cpu_state(const CPUState *cs, vaddr *pc,
+                                      vaddr *cs_base, int *flags)
+{
+    UniCore32CPU *cpu = UNICORE32_CPU(cs);
+
+    *pc = cpu->env.regs[31];
+    *cs_base = 0;
+    *flags = 0;
+    if ((cpu->env.uncached_asr & ASR_M) != ASR_MODE_USER) {
+        *flags |= (1 << 6);
+    }
+}
+
 static int uc32_cpu_mmu_index(const CPUState *cs)
 {
     UniCore32CPU *cpu = UNICORE32_CPU(cs);
@@ -156,6 +169,7 @@ static void uc32_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = uc32_cpu_dump_state;
     cc->mmu_index = uc32_cpu_mmu_index;
     cc->set_pc = uc32_cpu_set_pc;
+    cc->get_tb_cpu_state = uc32_cpu_get_tb_cpu_state;
 #ifndef CONFIG_USER_ONLY
     cc->get_phys_page_debug = uc32_cpu_get_phys_page_debug;
 #endif
