@@ -1183,10 +1183,6 @@ static inline CPUPPCState *cpu_init(const char *cpu_model)
 #define MMU_MODE1_SUFFIX _kernel
 #define MMU_MODE2_SUFFIX _hypv
 #define MMU_USER_IDX 0
-static inline int cpu_mmu_index (CPUPPCState *env)
-{
-    return env->mmu_idx;
-}
 
 #include "exec/cpu-all.h"
 

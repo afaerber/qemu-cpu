@@ -273,15 +273,6 @@ typedef struct CPUS390XState {
 #define FLAG_MASK_64            (PSW_MASK_64     >> 32)
 #define FLAG_MASK_32            0x00001000
 
-static inline int cpu_mmu_index (CPUS390XState *env)
-{
-    if (env->psw.mask & PSW_MASK_PSTATE) {
-        return 1;
-    }
-
-    return 0;
-}
-
 static inline void cpu_get_tb_cpu_state(CPUS390XState* env, target_ulong *pc,
                                         target_ulong *cs_base, int *flags)
 {

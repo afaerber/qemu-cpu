@@ -378,17 +378,6 @@ enum {
     PS_USER_MODE = 8
 };
 
-static inline int cpu_mmu_index(CPUAlphaState *env)
-{
-    if (env->pal_mode) {
-        return MMU_KERNEL_IDX;
-    } else if (env->ps & PS_USER_MODE) {
-        return MMU_USER_IDX;
-    } else {
-        return MMU_KERNEL_IDX;
-    }
-}
-
 enum {
     IR_V0   = 0,
     IR_T0   = 1,

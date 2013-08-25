@@ -739,6 +739,30 @@ static void sparc_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb)
     cpu->env.npc = tb->cs_base;
 }
 
+static int sparc_cpu_mmu_index(const CPUState *cs)
+{
+#if defined(CONFIG_USER_ONLY)
+    return MMU_USER_IDX;
+#else
+    SPARCCPU *cpu = SPARC_CPU(cs);
+    CPUSPARCState *env = &cpu->env;
+
+#if !defined(TARGET_SPARC64)
+    return env->psrs;
+#else
+    if (env->tl > 0) {
+        return MMU_NUCLEUS_IDX;
+    } else if (cpu_hypervisor_mode(env)) {
+        return MMU_HYPV_IDX;
+    } else if (cpu_supervisor_mode(env)) {
+        return MMU_KERNEL_IDX;
+    } else {
+        return MMU_USER_IDX;
+    }
+#endif
+#endif
+}
+
 static bool sparc_cpu_has_work(CPUState *cs)
 {
     SPARCCPU *cpu = SPARC_CPU(cs);
@@ -797,6 +821,7 @@ static void sparc_cpu_class_init(ObjectClass *oc, void *data)
 #if !defined(TARGET_SPARC64) && !defined(CONFIG_USER_ONLY)
     cc->memory_rw_debug = sparc_cpu_memory_rw_debug;
 #endif
+    cc->mmu_index = sparc_cpu_mmu_index;
     cc->set_pc = sparc_cpu_set_pc;
     cc->synchronize_from_tb = sparc_cpu_synchronize_from_tb;
     cc->gdb_read_register = sparc_cpu_gdb_read_register;

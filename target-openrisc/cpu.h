@@ -409,14 +409,6 @@ static inline void cpu_get_tb_cpu_state(CPUOpenRISCState *env,
     *flags = (env->flags & D_FLAG);
 }
 
-static inline int cpu_mmu_index(CPUOpenRISCState *env)
-{
-    if (!(env->sr & SR_IME)) {
-        return MMU_NOMMU_IDX;
-    }
-    return (env->sr & SR_SM) == 0 ? MMU_USER_IDX : MMU_SUPERVISOR_IDX;
-}
-
 #define CPU_INTERRUPT_TIMER   CPU_INTERRUPT_TGT_INT_0
 
 #include "exec/exec-all.h"

@@ -36,10 +36,6 @@ typedef struct CPULM32State CPULM32State;
 
 #define NB_MMU_MODES 1
 #define TARGET_PAGE_BITS 12
-static inline int cpu_mmu_index(CPULM32State *env)
-{
-    return 0;
-}
 
 #define TARGET_PHYS_ADDR_SPACE_BITS 32
 #define TARGET_VIRT_ADDR_SPACE_BITS 32

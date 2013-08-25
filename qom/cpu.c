@@ -200,6 +200,11 @@ static void cpu_common_reset(CPUState *cpu)
     cpu->halted = 0;
 }
 
+static int cpu_common_mmu_index(const CPUState *cs)
+{
+    return 0;
+}
+
 static bool cpu_common_has_work(CPUState *cs)
 {
     return false;
@@ -249,6 +254,7 @@ static void cpu_class_init(ObjectClass *klass, void *data)
     k->class_by_name = cpu_common_class_by_name;
     k->reset = cpu_common_reset;
     k->get_arch_id = cpu_common_get_arch_id;
+    k->mmu_index = cpu_common_mmu_index;
     k->has_work = cpu_common_has_work;
     k->get_paging_enabled = cpu_common_get_paging_enabled;
     k->get_memory_mapping = cpu_common_get_memory_mapping;

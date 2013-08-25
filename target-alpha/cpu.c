@@ -31,6 +31,19 @@ static void alpha_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static int alpha_cpu_mmu_index(const CPUState *cs)
+{
+    AlphaCPU *cpu = ALPHA_CPU(cs);
+
+    if (cpu->env.pal_mode) {
+        return MMU_KERNEL_IDX;
+    } else if (cpu->env.ps & PS_USER_MODE) {
+        return MMU_USER_IDX;
+    } else {
+        return MMU_KERNEL_IDX;
+    }
+}
+
 static bool alpha_cpu_has_work(CPUState *cs)
 {
     /* Here we are checking to see if the CPU should wake up from HALT.
@@ -289,6 +302,7 @@ static void alpha_cpu_class_init(ObjectClass *oc, void *data)
     cc->has_work = alpha_cpu_has_work;
     cc->do_interrupt = alpha_cpu_do_interrupt;
     cc->dump_state = alpha_cpu_dump_state;
+    cc->mmu_index = alpha_cpu_mmu_index;
     cc->set_pc = alpha_cpu_set_pc;
     cc->gdb_read_register = alpha_cpu_gdb_read_register;
     cc->gdb_write_register = alpha_cpu_gdb_write_register;

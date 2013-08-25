@@ -137,10 +137,6 @@ int uc32_cpu_handle_mmu_fault(CPUUniCore32State *env, target_ulong address, int 
 #define MMU_MODE0_SUFFIX _kernel
 #define MMU_MODE1_SUFFIX _user
 #define MMU_USER_IDX 1
-static inline int cpu_mmu_index(CPUUniCore32State *env)
-{
-    return (env->uncached_asr & ASR_M) == ASR_MODE_USER ? 1 : 0;
-}
 
 #include "exec/cpu-all.h"
 #include "cpu-qom.h"

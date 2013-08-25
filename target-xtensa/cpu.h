@@ -472,11 +472,6 @@ static inline xtensa_tlb_entry *xtensa_tlb_get_entry(CPUXtensaState *env,
 #define MMU_MODE2_SUFFIX _ring2
 #define MMU_MODE3_SUFFIX _ring3
 
-static inline int cpu_mmu_index(CPUXtensaState *env)
-{
-    return xtensa_get_cring(env);
-}
-
 #define XTENSA_TBFLAG_RING_MASK 0x3
 #define XTENSA_TBFLAG_EXCM 0x4
 #define XTENSA_TBFLAG_LITBASE 0x8

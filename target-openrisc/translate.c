@@ -1679,7 +1679,7 @@ static inline void gen_intermediate_code_internal(OpenRISCCPU *cpu,
     dc->ppc = pc_start;
     dc->pc = pc_start;
     dc->flags = cpu->env.cpucfgr;
-    dc->mem_idx = cpu_mmu_index(&cpu->env);
+    dc->mem_idx = cpu_mmu_index(cs);
     dc->synced_flags = dc->tb_flags = tb->flags;
     dc->delayed_branch = !!(dc->tb_flags & D_FLAG);
     dc->singlestep_enabled = cs->singlestep_enabled;

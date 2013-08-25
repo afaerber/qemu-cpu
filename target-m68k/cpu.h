@@ -232,10 +232,6 @@ static inline CPUM68KState *cpu_init(const char *cpu_model)
 #define MMU_MODE0_SUFFIX _kernel
 #define MMU_MODE1_SUFFIX _user
 #define MMU_USER_IDX 1
-static inline int cpu_mmu_index (CPUM68KState *env)
-{
-    return (env->sr & SR_S) == 0 ? 1 : 0;
-}
 
 int cpu_m68k_handle_mmu_fault(CPUM68KState *env, target_ulong address, int rw,
                               int mmu_idx);

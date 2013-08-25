@@ -316,12 +316,14 @@ void tlb_set_page(CPUArchState *env, target_ulong vaddr,
  */
 tb_page_addr_t get_page_addr_code(CPUArchState *env1, target_ulong addr)
 {
+    CPUState *cpu = ENV_GET_CPU(env1);
+    CPUClass *cc = CPU_GET_CLASS(cpu);
     int mmu_idx, page_index, pd;
     void *p;
     MemoryRegion *mr;
 
     page_index = (addr >> TARGET_PAGE_BITS) & (CPU_TLB_SIZE - 1);
-    mmu_idx = cpu_mmu_index(env1);
+    mmu_idx = cc->mmu_index(cpu);
     if (unlikely(env1->tlb_table[mmu_idx][page_index].addr_code !=
                  (addr & TARGET_PAGE_MASK))) {
         cpu_ldub_code(env1, addr);
@@ -329,9 +331,6 @@ tb_page_addr_t get_page_addr_code(CPUArchState *env1, target_ulong addr)
     pd = env1->iotlb[mmu_idx][page_index] & ~TARGET_PAGE_MASK;
     mr = iotlb_to_region(pd);
     if (memory_region_is_unassigned(mr)) {
-        CPUState *cpu = ENV_GET_CPU(env1);
-        CPUClass *cc = CPU_GET_CLASS(cpu);
-
         if (cc->do_unassigned_access) {
             cc->do_unassigned_access(cpu, addr, false, true, 0, 4);
         } else {

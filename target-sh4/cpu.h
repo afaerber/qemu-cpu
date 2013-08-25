@@ -240,10 +240,6 @@ static inline CPUSH4State *cpu_init(const char *cpu_model)
 #define MMU_MODE0_SUFFIX _kernel
 #define MMU_MODE1_SUFFIX _user
 #define MMU_USER_IDX 1
-static inline int cpu_mmu_index (CPUSH4State *env)
-{
-    return (env->sr & SR_MD) == 0 ? 1 : 0;
-}
 
 #include "exec/cpu-all.h"
 

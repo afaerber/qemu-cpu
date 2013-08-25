@@ -65,6 +65,17 @@ static void s390_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.psw.addr = value;
 }
 
+static int s390_cpu_mmu_index(const CPUState *cs)
+{
+    S390CPU *cpu = S390_CPU(cs);
+
+    if (cpu->env.psw.mask & PSW_MASK_PSTATE) {
+        return 1;
+    }
+
+    return 0;
+}
+
 static bool s390_cpu_has_work(CPUState *cs)
 {
     S390CPU *cpu = S390_CPU(cs);
@@ -229,6 +240,7 @@ static void s390_cpu_class_init(ObjectClass *oc, void *data)
     cc->has_work = s390_cpu_has_work;
     cc->do_interrupt = s390_cpu_do_interrupt;
     cc->dump_state = s390_cpu_dump_state;
+    cc->mmu_index = s390_cpu_mmu_index;
     cc->set_pc = s390_cpu_set_pc;
     cc->gdb_read_register = s390_cpu_gdb_read_register;
     cc->gdb_write_register = s390_cpu_gdb_write_register;

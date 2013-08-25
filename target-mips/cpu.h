@@ -516,10 +516,6 @@ extern uint32_t cpu_rddsp(uint32_t mask_num, CPUMIPSState *env);
 #define MMU_MODE1_SUFFIX _super
 #define MMU_MODE2_SUFFIX _user
 #define MMU_USER_IDX 2
-static inline int cpu_mmu_index (CPUMIPSState *env)
-{
-    return env->hflags & MIPS_HFLAG_KSU;
-}
 
 static inline int cpu_mips_hw_interrupts_pending(CPUMIPSState *env)
 {

@@ -647,25 +647,6 @@ static inline int cpu_supervisor_mode(CPUSPARCState *env1)
 }
 #endif
 
-static inline int cpu_mmu_index(CPUSPARCState *env1)
-{
-#if defined(CONFIG_USER_ONLY)
-    return MMU_USER_IDX;
-#elif !defined(TARGET_SPARC64)
-    return env1->psrs;
-#else
-    if (env1->tl > 0) {
-        return MMU_NUCLEUS_IDX;
-    } else if (cpu_hypervisor_mode(env1)) {
-        return MMU_HYPV_IDX;
-    } else if (cpu_supervisor_mode(env1)) {
-        return MMU_KERNEL_IDX;
-    } else {
-        return MMU_USER_IDX;
-    }
-#endif
-}
-
 static inline int cpu_interrupts_enabled(CPUSPARCState *env1)
 {
 #if !defined (TARGET_SPARC64)

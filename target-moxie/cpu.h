@@ -136,11 +136,6 @@ static inline CPUMoxieState *cpu_init(const char *cpu_model)
 #define cpu_gen_code cpu_moxie_gen_code
 #define cpu_signal_handler cpu_moxie_signal_handler
 
-static inline int cpu_mmu_index(CPUMoxieState *env)
-{
-    return 0;
-}
-
 #include "exec/cpu-all.h"
 #include "exec/exec-all.h"
 

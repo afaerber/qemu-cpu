@@ -3458,7 +3458,7 @@ static inline void gen_intermediate_code_internal(AlphaCPU *cpu,
 
     ctx.tb = tb;
     ctx.pc = pc_start;
-    ctx.mem_idx = cpu_mmu_index(env);
+    ctx.mem_idx = cpu_mmu_index(cs);
     ctx.implver = env->implver;
     ctx.singlestep_enabled = cs->singlestep_enabled;
 

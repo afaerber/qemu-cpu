@@ -316,17 +316,6 @@ static inline CPUMBState *cpu_init(const char *cpu_model)
 #define MMU_USER_IDX    2
 /* See NB_MMU_MODES further up the file.  */
 
-static inline int cpu_mmu_index (CPUMBState *env)
-{
-        /* Are we in nommu mode?.  */
-        if (!(env->sregs[SR_MSR] & MSR_VM))
-            return MMU_NOMMU_IDX;
-
-	if (env->sregs[SR_MSR] & MSR_UM)
-            return MMU_USER_IDX;
-        return MMU_KERNEL_IDX;
-}
-
 int cpu_mb_handle_mmu_fault(CPUMBState *env, target_ulong address, int rw,
                             int mmu_idx);
 #define cpu_handle_mmu_fault cpu_mb_handle_mmu_fault

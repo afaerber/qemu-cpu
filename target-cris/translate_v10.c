@@ -96,7 +96,7 @@ static void gen_store_v10_conditional(DisasContext *dc, TCGv addr, TCGv val,
 static void gen_store_v10(DisasContext *dc, TCGv addr, TCGv val,
                        unsigned int size)
 {
-    int mem_index = cpu_mmu_index(dc->env);
+    int mem_index = cpu_mmu_index(CPU(cris_env_get_cpu(dc->env)));
 
     /* If we get a fault on a delayslot we must keep the jmp state in
        the cpu-state to be able to re-execute the jmp.  */

@@ -440,7 +440,7 @@ static void dec_msr(DisasContext *dc)
 {
     TCGv t0, t1;
     unsigned int sr, to, rn;
-    int mem_index = cpu_mmu_index(dc->env);
+    int mem_index = cpu_mmu_index(CPU(mb_env_get_cpu(dc->env)));
 
     sr = dc->imm & ((1 << 14) - 1);
     to = dc->imm & (1 << 14);
@@ -751,7 +751,7 @@ static void dec_bit(DisasContext *dc)
 {
     TCGv t0, t1;
     unsigned int op;
-    int mem_index = cpu_mmu_index(dc->env);
+    int mem_index = cpu_mmu_index(CPU(mb_env_get_cpu(dc->env)));
 
     op = dc->ir & ((1 << 9) - 1);
     switch (op) {
@@ -874,7 +874,7 @@ static void dec_imm(DisasContext *dc)
 static inline void gen_load(DisasContext *dc, TCGv dst, TCGv addr,
                             unsigned int size)
 {
-    int mem_index = cpu_mmu_index(dc->env);
+    int mem_index = cpu_mmu_index(CPU(mb_env_get_cpu(dc->env)));
 
     if (size == 1) {
         tcg_gen_qemu_ld8u(dst, addr, mem_index);
@@ -1093,7 +1093,7 @@ static void dec_load(DisasContext *dc)
 static void gen_store(DisasContext *dc, TCGv addr, TCGv val,
                       unsigned int size)
 {
-    int mem_index = cpu_mmu_index(dc->env);
+    int mem_index = cpu_mmu_index(CPU(mb_env_get_cpu(dc->env)));
 
     if (size == 1)
         tcg_gen_qemu_st8(val, addr, mem_index);
@@ -1308,7 +1308,7 @@ static void dec_bcc(DisasContext *dc)
 static void dec_br(DisasContext *dc)
 {
     unsigned int dslot, link, abs, mbar;
-    int mem_index = cpu_mmu_index(dc->env);
+    int mem_index = cpu_mmu_index(CPU(mb_env_get_cpu(dc->env)));
 
     dslot = dc->ir & (1 << 20);
     abs = dc->ir & (1 << 19);
@@ -1440,7 +1440,7 @@ static inline void do_rte(DisasContext *dc)
 static void dec_rts(DisasContext *dc)
 {
     unsigned int b_bit, i_bit, e_bit;
-    int mem_index = cpu_mmu_index(dc->env);
+    int mem_index = cpu_mmu_index(CPU(mb_env_get_cpu(dc->env)));
 
     i_bit = dc->ir & (1 << 21);
     b_bit = dc->ir & (1 << 22);
@@ -1616,7 +1616,7 @@ static void dec_null(DisasContext *dc)
 /* Insns connected to FSL or AXI stream attached devices.  */
 static void dec_stream(DisasContext *dc)
 {
-    int mem_index = cpu_mmu_index(dc->env);
+    int mem_index = cpu_mmu_index(CPU(mb_env_get_cpu(dc->env)));
     TCGv_i32 t_id, t_ctrl;
     int ctrl;
 

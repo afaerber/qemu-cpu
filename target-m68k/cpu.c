@@ -30,6 +30,13 @@ static void m68k_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.pc = value;
 }
 
+static int m68k_cpu_mmu_index(const CPUState *cs)
+{
+    M68kCPU *cpu = M68K_CPU(cs);
+
+    return (cpu->env.sr & SR_S) == 0 ? MMU_USER_IDX : 0;
+}
+
 static bool m68k_cpu_has_work(CPUState *cs)
 {
     return cs->interrupt_request & CPU_INTERRUPT_HARD;
@@ -197,6 +204,7 @@ static void m68k_cpu_class_init(ObjectClass *c, void *data)
     cc->has_work = m68k_cpu_has_work;
     cc->do_interrupt = m68k_cpu_do_interrupt;
     cc->dump_state = m68k_cpu_dump_state;
+    cc->mmu_index = m68k_cpu_mmu_index;
     cc->set_pc = m68k_cpu_set_pc;
     cc->gdb_read_register = m68k_cpu_gdb_read_register;
     cc->gdb_write_register = m68k_cpu_gdb_write_register;

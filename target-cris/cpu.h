@@ -238,10 +238,6 @@ static inline CPUCRISState *cpu_init(const char *cpu_model)
 #define MMU_MODE0_SUFFIX _kernel
 #define MMU_MODE1_SUFFIX _user
 #define MMU_USER_IDX 1
-static inline int cpu_mmu_index (CPUCRISState *env)
-{
-	return !!(env->pregs[PR_CCS] & U_FLAG);
-}
 
 int cpu_cris_handle_mmu_fault(CPUCRISState *env, target_ulong address, int rw,
                               int mmu_idx);

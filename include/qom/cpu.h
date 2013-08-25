@@ -76,6 +76,7 @@ struct TranslationBlock;
  * @dump_state: Callback for dumping state.
  * @dump_statistics: Callback for dumping statistics.
  * @get_arch_id: Callback for getting architecture-dependent CPU ID.
+ * @mmu_index: Callback for obtaining MMU index.
  * @get_paging_enabled: Callback for inquiring whether paging is enabled.
  * @get_memory_mapping: Callback for obtaining the memory mappings.
  * @set_pc: Callback for setting the Program Counter register.
@@ -109,6 +110,7 @@ typedef struct CPUClass {
     void (*dump_statistics)(CPUState *cpu, FILE *f,
                             fprintf_function cpu_fprintf, int flags);
     int64_t (*get_arch_id)(CPUState *cpu);
+    int (*mmu_index)(const CPUState *cpu);
     bool (*get_paging_enabled)(const CPUState *cpu);
     void (*get_memory_mapping)(CPUState *cpu, MemoryMappingList *list,
                                Error **errp);
@@ -215,6 +217,19 @@ extern struct CPUTailQ cpus;
 
 DECLARE_TLS(CPUState *, current_cpu);
 #define current_cpu tls_var(current_cpu)
+
+/**
+ * cpu_mmu_index:
+ * @cpu: The CPU whose MMU index is to be obtained.
+ *
+ * Returns: MMU index for @cpu.
+ */
+static inline int cpu_mmu_index(CPUState *cpu)
+{
+    CPUClass *cc = CPU_GET_CLASS(cpu);
+
+    return cc->mmu_index(cpu);
+}
 
 /**
  * cpu_paging_enabled:

@@ -39,6 +39,13 @@ static void superh_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb)
     cpu->env.flags = tb->flags;
 }
 
+static int superh_cpu_mmu_index(const CPUState *cs)
+{
+    SuperHCPU *cpu = SUPERH_CPU(cs);
+
+    return (cpu->env.sr & SR_MD) == 0 ? 1 : 0;
+}
+
 static bool superh_cpu_has_work(CPUState *cs)
 {
     return cs->interrupt_request & CPU_INTERRUPT_HARD;
@@ -291,6 +298,7 @@ static void superh_cpu_class_init(ObjectClass *oc, void *data)
     cc->has_work = superh_cpu_has_work;
     cc->do_interrupt = superh_cpu_do_interrupt;
     cc->dump_state = superh_cpu_dump_state;
+    cc->mmu_index = superh_cpu_mmu_index;
     cc->set_pc = superh_cpu_set_pc;
     cc->synchronize_from_tb = superh_cpu_synchronize_from_tb;
     cc->gdb_read_register = superh_cpu_gdb_read_register;

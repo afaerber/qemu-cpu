@@ -23,6 +23,13 @@ static void uc32_cpu_set_pc(CPUState *cs, vaddr value)
     cpu->env.regs[31] = value;
 }
 
+static int uc32_cpu_mmu_index(const CPUState *cs)
+{
+    UniCore32CPU *cpu = UNICORE32_CPU(cs);
+
+    return (cpu->env.uncached_asr & ASR_M) == ASR_MODE_USER ? MMU_USER_IDX : 0;
+}
+
 static bool uc32_cpu_has_work(CPUState *cs)
 {
     return cs->interrupt_request &
@@ -147,6 +154,7 @@ static void uc32_cpu_class_init(ObjectClass *oc, void *data)
     cc->has_work = uc32_cpu_has_work;
     cc->do_interrupt = uc32_cpu_do_interrupt;
     cc->dump_state = uc32_cpu_dump_state;
+    cc->mmu_index = uc32_cpu_mmu_index;
     cc->set_pc = uc32_cpu_set_pc;
 #ifndef CONFIG_USER_ONLY
     cc->get_phys_page_debug = uc32_cpu_get_phys_page_debug;
