@@ -379,7 +379,7 @@ void cpu_exec_init(CPUArchState *env)
     cpu->cpu_index = cpu_index;
     cpu->numa_node = 0;
     QTAILQ_INIT(&env->breakpoints);
-    QTAILQ_INIT(&env->watchpoints);
+    QTAILQ_INIT(&cpu->watchpoints);
 #ifndef CONFIG_USER_ONLY
     cpu->thread_id = qemu_get_thread_id();
 #endif
@@ -432,6 +432,7 @@ int cpu_watchpoint_insert(CPUArchState *env, target_ulong addr, target_ulong len
 int cpu_watchpoint_insert(CPUArchState *env, target_ulong addr, target_ulong len,
                           int flags, CPUWatchpoint **watchpoint)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     target_ulong len_mask = ~(len - 1);
     CPUWatchpoint *wp;
 
@@ -449,10 +450,11 @@ int cpu_watchpoint_insert(CPUArchState *env, target_ulong addr, target_ulong len
     wp->flags = flags;
 
     /* keep all GDB-injected watchpoints in front */
-    if (flags & BP_GDB)
-        QTAILQ_INSERT_HEAD(&env->watchpoints, wp, entry);
-    else
-        QTAILQ_INSERT_TAIL(&env->watchpoints, wp, entry);
+    if (flags & BP_GDB) {
+        QTAILQ_INSERT_HEAD(&cpu->watchpoints, wp, entry);
+    } else {
+        QTAILQ_INSERT_TAIL(&cpu->watchpoints, wp, entry);
+    }
 
     tlb_flush_page(env, addr);
 
@@ -465,10 +467,11 @@ int cpu_watchpoint_insert(CPUArchState *env, target_ulong addr, target_ulong len
 int cpu_watchpoint_remove(CPUArchState *env, target_ulong addr, target_ulong len,
                           int flags)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     target_ulong len_mask = ~(len - 1);
     CPUWatchpoint *wp;
 
-    QTAILQ_FOREACH(wp, &env->watchpoints, entry) {
+    QTAILQ_FOREACH(wp, &cpu->watchpoints, entry) {
         if (addr == wp->vaddr && len_mask == wp->len_mask
                 && flags == (wp->flags & ~BP_WATCHPOINT_HIT)) {
             cpu_watchpoint_remove_by_ref(env, wp);
@@ -481,7 +484,9 @@ int cpu_watchpoint_remove(CPUArchState *env, target_ulong addr, target_ulong len
 /* Remove a specific watchpoint by reference.  */
 void cpu_watchpoint_remove_by_ref(CPUArchState *env, CPUWatchpoint *watchpoint)
 {
-    QTAILQ_REMOVE(&env->watchpoints, watchpoint, entry);
+    CPUState *cpu = ENV_GET_CPU(env);
+
+    QTAILQ_REMOVE(&cpu->watchpoints, watchpoint, entry);
 
     tlb_flush_page(env, watchpoint->vaddr);
 
@@ -491,9 +496,10 @@ void cpu_watchpoint_remove_by_ref(CPUArchState *env, CPUWatchpoint *watchpoint)
 /* Remove all matching watchpoints.  */
 void cpu_watchpoint_remove_all(CPUArchState *env, int mask)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     CPUWatchpoint *wp, *next;
 
-    QTAILQ_FOREACH_SAFE(wp, &env->watchpoints, entry, next) {
+    QTAILQ_FOREACH_SAFE(wp, &cpu->watchpoints, entry, next) {
         if (wp->flags & mask)
             cpu_watchpoint_remove_by_ref(env, wp);
     }
@@ -677,6 +683,7 @@ hwaddr memory_region_section_get_iotlb(CPUArchState *env,
                                        int prot,
                                        target_ulong *address)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     hwaddr iotlb;
     CPUWatchpoint *wp;
 
@@ -696,7 +703,7 @@ hwaddr memory_region_section_get_iotlb(CPUArchState *env,
 
     /* Make accesses to pages with watchpoints go via the
        watchpoint trap routines.  */
-    QTAILQ_FOREACH(wp, &env->watchpoints, entry) {
+    QTAILQ_FOREACH(wp, &cpu->watchpoints, entry) {
         if (vaddr == (wp->vaddr & TARGET_PAGE_MASK)) {
             /* Avoid trapping reads of pages with a write breakpoint. */
             if ((prot & PAGE_WRITE) || (wp->flags & BP_MEM_READ)) {
@@ -1454,7 +1461,7 @@ static void check_watchpoint(int offset, int len_mask, int flags)
     CPUWatchpoint *wp;
     int cpu_flags;
 
-    if (env->watchpoint_hit) {
+    if (cpu->watchpoint_hit) {
         /* We re-entered the check after replacing the TB. Now raise
          * the debug interrupt so that is will trigger after the
          * current instruction. */
@@ -1462,12 +1469,12 @@ static void check_watchpoint(int offset, int len_mask, int flags)
         return;
     }
     vaddr = (cpu->mem_io_vaddr & TARGET_PAGE_MASK) + offset;
-    QTAILQ_FOREACH(wp, &env->watchpoints, entry) {
+    QTAILQ_FOREACH(wp, &cpu->watchpoints, entry) {
         if ((vaddr == (wp->vaddr & len_mask) ||
              (vaddr & wp->len_mask) == wp->vaddr) && (wp->flags & flags)) {
             wp->flags |= BP_WATCHPOINT_HIT;
-            if (!env->watchpoint_hit) {
-                env->watchpoint_hit = wp;
+            if (!cpu->watchpoint_hit) {
+                cpu->watchpoint_hit = wp;
                 tb_check_watchpoint(env);
                 if (wp->flags & BP_STOP_BEFORE_ACCESS) {
                     cpu->exception_index = EXCP_DEBUG;
