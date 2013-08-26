@@ -114,7 +114,7 @@ glue(glue(helper_ret_ld, USUFFIX), MMUSUFFIX)(CPUArchState *env,
             do_unaligned_access(env, addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
         }
 #endif
-        tlb_fill(env, addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
+        tlb_fill(ENV_GET_CPU(env), addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
         tlb_addr = env->tlb_table[mmu_idx][index].ADDR_READ;
     }
 
@@ -230,7 +230,7 @@ glue(glue(helper_ret_st, SUFFIX), MMUSUFFIX)(CPUArchState *env,
             do_unaligned_access(env, addr, 1, mmu_idx, retaddr);
         }
 #endif
-        tlb_fill(env, addr, 1, mmu_idx, retaddr);
+        tlb_fill(ENV_GET_CPU(env), addr, 1, mmu_idx, retaddr);
         tlb_addr = env->tlb_table[mmu_idx][index].addr_write;
     }
 
