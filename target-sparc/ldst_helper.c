@@ -1284,6 +1284,7 @@ void helper_st_asi(CPUSPARCState *env, target_ulong addr, target_ulong val,
 uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
                        int sign)
 {
+    CPUState *cs = CPU(sparc_env_get_cpu(env));
     uint64_t ret = 0;
 #if defined(DEBUG_ASI)
     target_ulong last_addr = addr;
@@ -1317,7 +1318,7 @@ uint64_t helper_ld_asi(CPUSPARCState *env, target_ulong addr, int asi, int size,
             dump_asi("read ", last_addr, asi, size, ret);
 #endif
             /* env->exception_index is set in get_physical_address_data(). */
-            helper_raise_exception(env, env->exception_index);
+            helper_raise_exception(env, cs->exception_index);
         }
 
         /* convert nonfaulting load ASIs to normal load ASIs */

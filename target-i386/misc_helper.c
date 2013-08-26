@@ -573,7 +573,7 @@ static void do_hlt(X86CPU *cpu)
 
     env->hflags &= ~HF_INHIBIT_IRQ_MASK; /* needed if sti is just before */
     cs->halted = 1;
-    env->exception_index = EXCP_HLT;
+    cs->exception_index = EXCP_HLT;
     cpu_loop_exit(env);
 }
 
@@ -620,6 +620,8 @@ void helper_mwait(CPUX86State *env, int next_eip_addend)
 
 void helper_debug(CPUX86State *env)
 {
-    env->exception_index = EXCP_DEBUG;
+    CPUState *cs = CPU(x86_env_get_cpu(env));
+
+    cs->exception_index = EXCP_DEBUG;
     cpu_loop_exit(env);
 }

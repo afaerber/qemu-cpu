@@ -146,6 +146,7 @@ static void cpu_openrisc_raise_mmu_exception(OpenRISCCPU *cpu,
                                              target_ulong address,
                                              int rw, int tlb_error)
 {
+    CPUState *cs = CPU(cpu);
     int exception = 0;
 
     switch (tlb_error) {
@@ -176,7 +177,7 @@ static void cpu_openrisc_raise_mmu_exception(OpenRISCCPU *cpu,
 #endif
     }
 
-    cpu->env.exception_index = exception;
+    cs->exception_index = exception;
     cpu->env.eear = address;
 }
 

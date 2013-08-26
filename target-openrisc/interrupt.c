@@ -27,25 +27,26 @@
 
 void openrisc_cpu_do_interrupt(CPUState *cs)
 {
+#ifndef CONFIG_USER_ONLY
     OpenRISCCPU *cpu = OPENRISC_CPU(cs);
     CPUOpenRISCState *env = &cpu->env;
-#ifndef CONFIG_USER_ONLY
+
     if (env->flags & D_FLAG) { /* Delay Slot insn */
         env->flags &= ~D_FLAG;
         env->sr |= SR_DSX;
-        if (env->exception_index == EXCP_TICK    ||
-            env->exception_index == EXCP_INT     ||
-            env->exception_index == EXCP_SYSCALL ||
-            env->exception_index == EXCP_FPE) {
+        if (cs->exception_index == EXCP_TICK    ||
+            cs->exception_index == EXCP_INT     ||
+            cs->exception_index == EXCP_SYSCALL ||
+            cs->exception_index == EXCP_FPE) {
             env->epcr = env->jmp_pc;
         } else {
             env->epcr = env->pc - 4;
         }
     } else {
-        if (env->exception_index == EXCP_TICK    ||
-            env->exception_index == EXCP_INT     ||
-            env->exception_index == EXCP_SYSCALL ||
-            env->exception_index == EXCP_FPE) {
+        if (cs->exception_index == EXCP_TICK    ||
+            cs->exception_index == EXCP_INT     ||
+            cs->exception_index == EXCP_SYSCALL ||
+            cs->exception_index == EXCP_FPE) {
             env->epcr = env->npc;
         } else {
             env->epcr = env->pc;
@@ -65,12 +66,12 @@ void openrisc_cpu_do_interrupt(CPUState *cs)
     env->tlb->cpu_openrisc_map_address_data = &cpu_openrisc_get_phys_nommu;
     env->tlb->cpu_openrisc_map_address_code = &cpu_openrisc_get_phys_nommu;
 
-    if (env->exception_index > 0 && env->exception_index < EXCP_NR) {
-        env->pc = (env->exception_index << 8);
+    if (cs->exception_index > 0 && cs->exception_index < EXCP_NR) {
+        env->pc = (cs->exception_index << 8);
     } else {
-        cpu_abort(env, "Unhandled exception 0x%x\n", env->exception_index);
+        cpu_abort(env, "Unhandled exception 0x%x\n", cs->exception_index);
     }
 #endif
 
-    env->exception_index = -1;
+    cs->exception_index = -1;
 }

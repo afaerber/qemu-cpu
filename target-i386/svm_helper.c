@@ -122,6 +122,7 @@ static inline void svm_load_seg_cache(CPUX86State *env, hwaddr addr,
 
 void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
 {
+    CPUState *cs = CPU(x86_env_get_cpu(env));
     target_ulong addr;
     uint32_t event_inj;
     uint32_t int_ctl;
@@ -290,7 +291,7 @@ void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
         /* FIXME: need to implement valid_err */
         switch (event_inj & SVM_EVTINJ_TYPE_MASK) {
         case SVM_EVTINJ_TYPE_INTR:
-            env->exception_index = vector;
+            cs->exception_index = vector;
             env->error_code = event_inj_err;
             env->exception_is_int = 0;
             env->exception_next_eip = -1;
@@ -299,7 +300,7 @@ void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
             do_interrupt_x86_hardirq(env, vector, 1);
             break;
         case SVM_EVTINJ_TYPE_NMI:
-            env->exception_index = EXCP02_NMI;
+            cs->exception_index = EXCP02_NMI;
             env->error_code = event_inj_err;
             env->exception_is_int = 0;
             env->exception_next_eip = env->eip;
@@ -307,7 +308,7 @@ void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
             cpu_loop_exit(env);
             break;
         case SVM_EVTINJ_TYPE_EXEPT:
-            env->exception_index = vector;
+            cs->exception_index = vector;
             env->error_code = event_inj_err;
             env->exception_is_int = 0;
             env->exception_next_eip = -1;
@@ -315,7 +316,7 @@ void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
             cpu_loop_exit(env);
             break;
         case SVM_EVTINJ_TYPE_SOFT:
-            env->exception_index = vector;
+            cs->exception_index = vector;
             env->error_code = event_inj_err;
             env->exception_is_int = 1;
             env->exception_next_eip = env->eip;
@@ -323,7 +324,7 @@ void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
             cpu_loop_exit(env);
             break;
         }
-        qemu_log_mask(CPU_LOG_TB_IN_ASM, " %#x %#x\n", env->exception_index,
+        qemu_log_mask(CPU_LOG_TB_IN_ASM, " %#x %#x\n", cs->exception_index,
                       env->error_code);
     }
 }
@@ -705,7 +706,7 @@ void helper_vmexit(CPUX86State *env, uint32_t exit_code, uint64_t exit_info_1)
        #GP fault is delivered inside the host. */
 
     /* remove any pending exception */
-    env->exception_index = -1;
+    cs->exception_index = -1;
     env->error_code = 0;
     env->old_exception = -1;
 
