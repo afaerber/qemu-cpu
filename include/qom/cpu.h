@@ -252,6 +252,9 @@ struct CPUState {
 
     void *opaque;
 
+    vaddr tlb_flush_addr;
+    vaddr tlb_flush_mask;
+
     /* In order to avoid passing too many arguments to the MMIO helpers,
      * we store some rarely used information in the CPU context.
      */

@@ -74,8 +74,8 @@ void tlb_flush(CPUArchState *env, int flush_global)
 
     memset(cpu->tb_jmp_cache, 0, TB_JMP_CACHE_SIZE * sizeof(void *));
 
-    env->tlb_flush_addr = -1;
-    env->tlb_flush_mask = 0;
+    cpu->tlb_flush_addr = -1;
+    cpu->tlb_flush_mask = 0;
     tlb_flush_count++;
 }
 
@@ -101,11 +101,11 @@ void tlb_flush_page(CPUArchState *env, target_ulong addr)
     printf("tlb_flush_page: " TARGET_FMT_lx "\n", addr);
 #endif
     /* Check if we need to flush due to large pages.  */
-    if ((addr & env->tlb_flush_mask) == env->tlb_flush_addr) {
+    if ((addr & cpu->tlb_flush_mask) == cpu->tlb_flush_addr) {
 #if defined(DEBUG_TLB)
-        printf("tlb_flush_page: forced full flush ("
-               TARGET_FMT_lx "/" TARGET_FMT_lx ")\n",
-               env->tlb_flush_addr, env->tlb_flush_mask);
+        printf("tlb_flush_page: forced full flush (%"
+               VADDR_PRIx "/%" VADDR_PRIx ")\n",
+               cpu->tlb_flush_addr, cpu->tlb_flush_mask);
 #endif
         tlb_flush(env, 1);
         return;
@@ -215,22 +215,23 @@ void tlb_set_dirty(CPUArchState *env, target_ulong vaddr)
 static void tlb_add_large_page(CPUArchState *env, target_ulong vaddr,
                                target_ulong size)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     target_ulong mask = ~(size - 1);
 
-    if (env->tlb_flush_addr == (target_ulong)-1) {
-        env->tlb_flush_addr = vaddr & mask;
-        env->tlb_flush_mask = mask;
+    if ((target_ulong)cpu->tlb_flush_addr == (target_ulong)-1) {
+        cpu->tlb_flush_addr = vaddr & mask;
+        cpu->tlb_flush_mask = mask;
         return;
     }
     /* Extend the existing region to include the new page.
        This is a compromise between unnecessary flushes and the cost
        of maintaining a full variable size TLB.  */
-    mask &= env->tlb_flush_mask;
-    while (((env->tlb_flush_addr ^ vaddr) & mask) != 0) {
+    mask &= cpu->tlb_flush_mask;
+    while (((cpu->tlb_flush_addr ^ vaddr) & mask) != 0) {
         mask <<= 1;
     }
-    env->tlb_flush_addr &= mask;
-    env->tlb_flush_mask = mask;
+    cpu->tlb_flush_addr &= mask;
+    cpu->tlb_flush_mask = mask;
 }
 
 /* Add a new TLB entry. At most one entry for a given virtual address
