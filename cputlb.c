@@ -72,7 +72,7 @@ void tlb_flush(CPUArchState *env, int flush_global)
         }
     }
 
-    memset(env->tb_jmp_cache, 0, TB_JMP_CACHE_SIZE * sizeof (void *));
+    memset(cpu->tb_jmp_cache, 0, TB_JMP_CACHE_SIZE * sizeof(void *));
 
     env->tlb_flush_addr = -1;
     env->tlb_flush_mask = 0;

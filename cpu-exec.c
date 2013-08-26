@@ -100,6 +100,7 @@ static TranslationBlock *tb_find_slow(CPUArchState *env,
                                       target_ulong cs_base,
                                       uint64_t flags)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     TranslationBlock *tb, **ptb1;
     unsigned int h;
     tb_page_addr_t phys_pc, phys_page1;
@@ -147,7 +148,7 @@ static TranslationBlock *tb_find_slow(CPUArchState *env,
         tcg_ctx.tb_ctx.tb_phys_hash[h] = tb;
     }
     /* we add the TB in the virtual pc hash table */
-    env->tb_jmp_cache[tb_jmp_cache_hash_func(pc)] = tb;
+    cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)] = tb;
     return tb;
 }
 
@@ -163,7 +164,7 @@ static inline TranslationBlock *tb_find_fast(CPUArchState *env)
        always be the same before a given translated block
        is executed. */
     cc->get_tb_cpu_state(cpu, &pc, &cs_base, &flags);
-    tb = env->tb_jmp_cache[tb_jmp_cache_hash_func(pc)];
+    tb = cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)];
     if (unlikely(!tb || tb->pc != pc || tb->cs_base != cs_base ||
                  tb->flags != flags)) {
         tb = tb_find_slow(env, pc, cs_base, flags);
