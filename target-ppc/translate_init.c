@@ -8595,7 +8595,9 @@ static void ppc_cpu_class_init(ObjectClass *oc, void *data)
     cc->get_tb_cpu_state = ppc_cpu_get_tb_cpu_state;
     cc->gdb_read_register = ppc_cpu_gdb_read_register;
     cc->gdb_write_register = ppc_cpu_gdb_write_register;
-#ifndef CONFIG_USER_ONLY
+#ifdef CONFIG_USER_ONLY
+    cc->handle_mmu_fault = ppc_cpu_handle_mmu_fault;
+#else
     cc->get_phys_page_debug = ppc_cpu_get_phys_page_debug;
     cc->vmsd = &vmstate_ppc_cpu;
 #endif

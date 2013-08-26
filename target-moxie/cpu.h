@@ -139,7 +139,7 @@ static inline CPUMoxieState *cpu_init(const char *cpu_model)
 #include "exec/cpu-all.h"
 #include "exec/exec-all.h"
 
-int cpu_moxie_handle_mmu_fault(CPUMoxieState *env, target_ulong address,
+int moxie_cpu_handle_mmu_fault(CPUState *cpu, vaddr address,
                                int rw, int mmu_idx);
 
 #endif /* _CPU_MOXIE_H */

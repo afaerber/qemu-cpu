@@ -266,9 +266,8 @@ uint32_t do_arm_semihosting(CPUARMState *env);
    is returned if the signal was handled by the virtual CPU.  */
 int cpu_arm_signal_handler(int host_signum, void *pinfo,
                            void *puc);
-int cpu_arm_handle_mmu_fault (CPUARMState *env, target_ulong address, int rw,
-                              int mmu_idx);
-#define cpu_handle_mmu_fault cpu_arm_handle_mmu_fault
+int arm_cpu_handle_mmu_fault(CPUState *cpu, vaddr address, int rw,
+                             int mmu_idx);
 
 #define CPSR_M (0x1f)
 #define CPSR_T (1 << 5)

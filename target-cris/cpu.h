@@ -239,9 +239,8 @@ static inline CPUCRISState *cpu_init(const char *cpu_model)
 #define MMU_MODE1_SUFFIX _user
 #define MMU_USER_IDX 1
 
-int cpu_cris_handle_mmu_fault(CPUCRISState *env, target_ulong address, int rw,
+int cris_cpu_handle_mmu_fault(CPUState *cpu, vaddr address, int rw,
                               int mmu_idx);
-#define cpu_handle_mmu_fault cpu_cris_handle_mmu_fault
 
 /* Support function regs.  */
 #define SFR_RW_GC_CFG      0][0

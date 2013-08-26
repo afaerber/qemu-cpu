@@ -119,7 +119,9 @@ static void moxie_cpu_class_init(ObjectClass *oc, void *data)
     cc->dump_state = moxie_cpu_dump_state;
     cc->set_pc = moxie_cpu_set_pc;
     cc->get_tb_cpu_state = moxie_cpu_get_tb_cpu_state;
-#ifndef CONFIG_USER_ONLY
+#ifdef CONFIG_USER_ONLY
+    cc->handle_mmu_fault = moxie_cpu_handle_mmu_fault;
+#else
     cc->get_phys_page_debug = moxie_cpu_get_phys_page_debug;
     cc->vmsd = &vmstate_moxie_cpu;
 #endif

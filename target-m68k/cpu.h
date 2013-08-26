@@ -233,9 +233,8 @@ static inline CPUM68KState *cpu_init(const char *cpu_model)
 #define MMU_MODE1_SUFFIX _user
 #define MMU_USER_IDX 1
 
-int cpu_m68k_handle_mmu_fault(CPUM68KState *env, target_ulong address, int rw,
+int m68k_cpu_handle_mmu_fault(CPUState *cpu, vaddr address, int rw,
                               int mmu_idx);
-#define cpu_handle_mmu_fault cpu_m68k_handle_mmu_fault
 
 #include "exec/cpu-all.h"
 #include "exec/exec-all.h"
