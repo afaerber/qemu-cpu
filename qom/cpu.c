@@ -200,6 +200,7 @@ static void cpu_common_reset(CPUState *cpu)
     cpu->halted = 0;
     cpu->mem_io_pc = 0;
     cpu->mem_io_vaddr = 0;
+    cpu->can_do_io = 0;
 }
 
 static int cpu_common_mmu_index(const CPUState *cs)
