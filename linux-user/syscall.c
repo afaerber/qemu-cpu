@@ -4185,7 +4185,7 @@ static void *clone_func(void *arg)
     env = info->env;
     cpu = ENV_GET_CPU(env);
     thread_cpu = cpu;
-    ts = (TaskState *)env->opaque;
+    ts = (TaskState *)cpu->opaque;
     info->tid = gettid();
     cpu->host_tid = info->tid;
     task_settid(ts);
@@ -4213,8 +4213,10 @@ static int do_fork(CPUArchState *env, unsigned int flags, abi_ulong newsp,
                    abi_ulong parent_tidptr, target_ulong newtls,
                    abi_ulong child_tidptr)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     int ret;
     TaskState *ts;
+    CPUState *new_cpu;
     CPUArchState *new_env;
     unsigned int nptl_flags;
     sigset_t sigmask;
@@ -4224,7 +4226,7 @@ static int do_fork(CPUArchState *env, unsigned int flags, abi_ulong newsp,
         flags &= ~(CLONE_VFORK | CLONE_VM);
 
     if (flags & CLONE_VM) {
-        TaskState *parent_ts = (TaskState *)env->opaque;
+        TaskState *parent_ts = (TaskState *)cpu->opaque;
         new_thread_info info;
         pthread_attr_t attr;
 
@@ -4234,7 +4236,8 @@ static int do_fork(CPUArchState *env, unsigned int flags, abi_ulong newsp,
         new_env = cpu_copy(env);
         /* Init regs that differ from the parent.  */
         cpu_clone_regs(new_env, newsp);
-        new_env->opaque = ts;
+        new_cpu = ENV_GET_CPU(new_env);
+        new_cpu->opaque = ts;
         ts->bprm = parent_ts->bprm;
         ts->info = parent_ts->info;
         nptl_flags = flags;
@@ -4306,7 +4309,7 @@ static int do_fork(CPUArchState *env, unsigned int flags, abi_ulong newsp,
                 put_user_u32(gettid(), child_tidptr);
             if (flags & CLONE_PARENT_SETTID)
                 put_user_u32(gettid(), parent_tidptr);
-            ts = (TaskState *)env->opaque;
+            ts = (TaskState *)cpu->opaque;
             if (flags & CLONE_SETTLS)
                 cpu_set_tls (env, newtls);
             if (flags & CLONE_CHILD_CLEARTID)
@@ -4910,7 +4913,8 @@ void init_qemu_uname_release(void)
 static int open_self_maps(void *cpu_env, int fd)
 {
 #if defined(TARGET_ARM) || defined(TARGET_M68K) || defined(TARGET_UNICORE32)
-    TaskState *ts = ((CPUArchState *)cpu_env)->opaque;
+    CPUState *cpu = ENV_GET_CPU((CPUArchState *)cpu_env);
+    TaskState *ts = cpu->opaque;
 #endif
     FILE *fp;
     char *line = NULL;
@@ -4962,7 +4966,8 @@ static int open_self_maps(void *cpu_env, int fd)
 
 static int open_self_stat(void *cpu_env, int fd)
 {
-    TaskState *ts = ((CPUArchState *)cpu_env)->opaque;
+    CPUState *cpu = ENV_GET_CPU((CPUArchState *)cpu_env);
+    TaskState *ts = cpu->opaque;
     abi_ulong start_stack = ts->info->start_stack;
     int i;
 
@@ -4998,7 +5003,8 @@ static int open_self_stat(void *cpu_env, int fd)
 
 static int open_self_auxv(void *cpu_env, int fd)
 {
-    TaskState *ts = ((CPUArchState *)cpu_env)->opaque;
+    CPUState *cpu = ENV_GET_CPU((CPUArchState *)cpu_env);
+    TaskState *ts = cpu->opaque;
     abi_ulong auxv = ts->info->saved_auxv;
     abi_ulong len = ts->info->auxv_len;
     char *ptr;
@@ -5180,14 +5186,14 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
             /* Remove the CPU from the list.  */
             QTAILQ_REMOVE(&cpus, cpu, node);
             cpu_list_unlock();
-            ts = ((CPUArchState *)cpu_env)->opaque;
+            ts = cpu->opaque;
             if (ts->child_tidptr) {
                 put_user_u32(0, ts->child_tidptr);
                 sys_futex(g2h(ts->child_tidptr), FUTEX_WAKE, INT_MAX,
                           NULL, NULL, 0);
             }
             thread_cpu = NULL;
-            object_unref(OBJECT(ENV_GET_CPU(cpu_env)));
+            object_unref(OBJECT(cpu));
             g_free(ts);
             pthread_exit(NULL);
         }
@@ -6485,7 +6491,7 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
         break;
     case TARGET_NR_mprotect:
         {
-            TaskState *ts = ((CPUArchState *)cpu_env)->opaque;
+            TaskState *ts = cpu->opaque;
             /* Special hack to detect libc making the stack executable.  */
             if ((arg3 & PROT_GROWSDOWN)
                 && arg1 >= ts->info->stack_limit
@@ -8569,7 +8575,7 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
       break;
 #elif defined(TARGET_M68K)
       {
-          TaskState *ts = ((CPUArchState *)cpu_env)->opaque;
+          TaskState *ts = cpu->opaque;
           ts->tp_value = arg1;
           ret = 0;
           break;
@@ -8585,7 +8591,7 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
         break;
 #elif defined(TARGET_M68K)
         {
-            TaskState *ts = ((CPUArchState *)cpu_env)->opaque;
+            TaskState *ts = cpu->opaque;
             ret = ts->tp_value;
             break;
         }
