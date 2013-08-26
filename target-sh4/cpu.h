@@ -178,6 +178,7 @@ typedef struct CPUSH4State {
 
     CPU_COMMON
 
+    /* Fields from here on are preserved over CPU reset. */
     int id;			/* CPU model */
 
     void *intc_handle;

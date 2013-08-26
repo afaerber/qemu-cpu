@@ -421,6 +421,7 @@ struct CPUSPARCState {
 
     CPU_COMMON
 
+    /* Fields from here on are preserved across CPU reset. */
     target_ulong version;
     uint32_t nwindows;
 

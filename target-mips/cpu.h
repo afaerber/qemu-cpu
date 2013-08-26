@@ -469,6 +469,7 @@ struct CPUMIPSState {
 
     CPU_COMMON
 
+    /* Fields from here on are preserved across CPU reset. */
     CPUMIPSMVPContext *mvp;
 #if !defined(CONFIG_USER_ONLY)
     CPUMIPSTLBContext *tlb;

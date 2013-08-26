@@ -164,6 +164,7 @@ struct CPULM32State {
 
     CPU_COMMON
 
+    /* Fields from here on are preserved across CPU reset. */
     uint32_t eba;       /* exception base address */
     uint32_t deba;      /* debug exception base address */
 
