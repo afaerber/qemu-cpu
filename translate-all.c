@@ -1062,9 +1062,9 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
             if (current_tb_not_found) {
                 current_tb_not_found = 0;
                 current_tb = NULL;
-                if (env->mem_io_pc) {
+                if (cpu->mem_io_pc) {
                     /* now we have a real cpu fault */
-                    current_tb = tb_find_pc(env->mem_io_pc);
+                    current_tb = tb_find_pc(cpu->mem_io_pc);
                 }
             }
             if (current_tb == tb &&
@@ -1076,7 +1076,7 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
                 restore the CPU state */
 
                 current_tb_modified = 1;
-                cpu_restore_state_from_tb(current_tb, env, env->mem_io_pc);
+                cpu_restore_state_from_tb(current_tb, env, cpu->mem_io_pc);
                 cc->get_tb_cpu_state(cpu, &current_pc, &current_cs_base,
                                      &current_flags);
             }
@@ -1103,7 +1103,7 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
     if (!p->first_tb) {
         invalidate_page_bitmap(p);
         if (is_cpu_write_access) {
-            tlb_unprotect_code_phys(env, start, env->mem_io_vaddr);
+            tlb_unprotect_code_phys(env, start, cpu->mem_io_vaddr);
         }
     }
 #endif
@@ -1389,14 +1389,15 @@ void tb_invalidate_phys_addr(hwaddr addr)
 
 void tb_check_watchpoint(CPUArchState *env)
 {
+    CPUState *cpu = ENV_GET_CPU(env);
     TranslationBlock *tb;
 
-    tb = tb_find_pc(env->mem_io_pc);
+    tb = tb_find_pc(cpu->mem_io_pc);
     if (!tb) {
         cpu_abort(env, "check_watchpoint: could not find TB for pc=%p",
-                  (void *)env->mem_io_pc);
+                  (void *)cpu->mem_io_pc);
     }
-    cpu_restore_state_from_tb(tb, env, env->mem_io_pc);
+    cpu_restore_state_from_tb(tb, env, cpu->mem_io_pc);
     tb_phys_invalidate(tb, -1);
 }
 
