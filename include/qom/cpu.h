@@ -21,6 +21,7 @@
 #define QEMU_CPU_H
 
 #include <signal.h>
+#include <setjmp.h>
 #include "hw/qdev-core.h"
 #include "exec/hwaddr.h"
 #include "qemu/queue.h"
@@ -219,6 +220,7 @@ struct CPUState {
     uint32_t interrupt_request;
     int singlestep_enabled;
     int64_t icount_extra;
+    sigjmp_buf jmp_env;
 
     void *env_ptr; /* CPUArchState */
     struct TranslationBlock *current_tb;
