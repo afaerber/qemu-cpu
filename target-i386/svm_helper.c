@@ -305,7 +305,7 @@ void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
             env->exception_is_int = 0;
             env->exception_next_eip = env->eip;
             qemu_log_mask(CPU_LOG_TB_IN_ASM, "NMI");
-            cpu_loop_exit(env);
+            cpu_loop_exit(cs);
             break;
         case SVM_EVTINJ_TYPE_EXEPT:
             cs->exception_index = vector;
@@ -313,7 +313,7 @@ void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
             env->exception_is_int = 0;
             env->exception_next_eip = -1;
             qemu_log_mask(CPU_LOG_TB_IN_ASM, "EXEPT");
-            cpu_loop_exit(env);
+            cpu_loop_exit(cs);
             break;
         case SVM_EVTINJ_TYPE_SOFT:
             cs->exception_index = vector;
@@ -321,7 +321,7 @@ void helper_vmrun(CPUX86State *env, int aflag, int next_eip_addend)
             env->exception_is_int = 1;
             env->exception_next_eip = env->eip;
             qemu_log_mask(CPU_LOG_TB_IN_ASM, "SOFT");
-            cpu_loop_exit(env);
+            cpu_loop_exit(cs);
             break;
         }
         qemu_log_mask(CPU_LOG_TB_IN_ASM, " %#x %#x\n", cs->exception_index,
@@ -710,7 +710,7 @@ void helper_vmexit(CPUX86State *env, uint32_t exit_code, uint64_t exit_info_1)
     env->error_code = 0;
     env->old_exception = -1;
 
-    cpu_loop_exit(env);
+    cpu_loop_exit(cs);
 }
 
 void cpu_vmexit(CPUX86State *env, uint32_t exit_code, uint64_t exit_info_1)

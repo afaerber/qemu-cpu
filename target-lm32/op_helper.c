@@ -24,7 +24,7 @@ void HELPER(raise_exception)(CPULM32State *env, uint32_t index)
     CPUState *cs = CPU(lm32_env_get_cpu(env));
 
     cs->exception_index = index;
-    cpu_loop_exit(env);
+    cpu_loop_exit(cs);
 }
 
 void HELPER(hlt)(CPULM32State *env)
@@ -33,7 +33,7 @@ void HELPER(hlt)(CPULM32State *env)
 
     cs->halted = 1;
     cs->exception_index = EXCP_HLT;
-    cpu_loop_exit(env);
+    cpu_loop_exit(cs);
 }
 
 void HELPER(wcsr_im)(CPULM32State *env, uint32_t im)
@@ -94,7 +94,7 @@ void tlb_fill(CPUState *cs, target_ulong addr, int is_write, int mmu_idx,
             /* now we have a real cpu fault */
             cpu_restore_state(env, retaddr);
         }
-        cpu_loop_exit(env);
+        cpu_loop_exit(cs);
     }
 }
 #endif
