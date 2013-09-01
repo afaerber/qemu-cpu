@@ -82,7 +82,7 @@ static inline DATA_TYPE glue(io_read, SUFFIX)(CPUArchState *env,
     physaddr = (physaddr & TARGET_PAGE_MASK) + addr;
     cpu->mem_io_pc = retaddr;
     if (mr != &io_mem_rom && mr != &io_mem_notdirty && !cpu_can_do_io(cpu)) {
-        cpu_io_recompile(env, retaddr);
+        cpu_io_recompile(cpu, retaddr);
     }
 
     cpu->mem_io_vaddr = addr;
@@ -202,7 +202,7 @@ static inline void glue(io_write, SUFFIX)(CPUArchState *env,
 
     physaddr = (physaddr & TARGET_PAGE_MASK) + addr;
     if (mr != &io_mem_rom && mr != &io_mem_notdirty && !cpu_can_do_io(cpu)) {
-        cpu_io_recompile(env, retaddr);
+        cpu_io_recompile(cpu, retaddr);
     }
 
     cpu->mem_io_vaddr = addr;
