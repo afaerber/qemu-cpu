@@ -638,7 +638,6 @@ static const int xlat_gdb_type[] = {
 static int gdb_breakpoint_insert(target_ulong addr, target_ulong len, int type)
 {
     CPUState *cpu;
-    CPUArchState *env;
     int err = 0;
 
     if (kvm_enabled()) {
@@ -649,10 +648,10 @@ static int gdb_breakpoint_insert(target_ulong addr, target_ulong len, int type)
     case GDB_BREAKPOINT_SW:
     case GDB_BREAKPOINT_HW:
         CPU_FOREACH(cpu) {
-            env = cpu->env_ptr;
-            err = cpu_breakpoint_insert(env, addr, BP_GDB, NULL);
-            if (err)
+            err = cpu_breakpoint_insert(cpu, addr, BP_GDB, NULL);
+            if (err) {
                 break;
+            }
         }
         return err;
 #ifndef CONFIG_USER_ONLY
@@ -675,7 +674,6 @@ static int gdb_breakpoint_insert(target_ulong addr, target_ulong len, int type)
 static int gdb_breakpoint_remove(target_ulong addr, target_ulong len, int type)
 {
     CPUState *cpu;
-    CPUArchState *env;
     int err = 0;
 
     if (kvm_enabled()) {
@@ -686,10 +684,10 @@ static int gdb_breakpoint_remove(target_ulong addr, target_ulong len, int type)
     case GDB_BREAKPOINT_SW:
     case GDB_BREAKPOINT_HW:
         CPU_FOREACH(cpu) {
-            env = cpu->env_ptr;
-            err = cpu_breakpoint_remove(env, addr, BP_GDB);
-            if (err)
+            err = cpu_breakpoint_remove(cpu, addr, BP_GDB);
+            if (err) {
                 break;
+            }
         }
         return err;
 #ifndef CONFIG_USER_ONLY
@@ -711,7 +709,6 @@ static int gdb_breakpoint_remove(target_ulong addr, target_ulong len, int type)
 static void gdb_breakpoint_remove_all(void)
 {
     CPUState *cpu;
-    CPUArchState *env;
 
     if (kvm_enabled()) {
         kvm_remove_all_breakpoints(gdbserver_state->c_cpu);
@@ -719,8 +716,7 @@ static void gdb_breakpoint_remove_all(void)
     }
 
     CPU_FOREACH(cpu) {
-        env = cpu->env_ptr;
-        cpu_breakpoint_remove_all(env, BP_GDB);
+        cpu_breakpoint_remove_all(cpu, BP_GDB);
 #ifndef CONFIG_USER_ONLY
         cpu_watchpoint_remove_all(cpu, BP_GDB);
 #endif
@@ -1604,7 +1600,7 @@ void gdbserver_fork(CPUArchState *env)
     }
     close(s->fd);
     s->fd = -1;
-    cpu_breakpoint_remove_all(env, BP_GDB);
+    cpu_breakpoint_remove_all(cpu, BP_GDB);
     cpu_watchpoint_remove_all(cpu, BP_GDB);
 }
 #else
