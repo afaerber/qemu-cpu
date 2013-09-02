@@ -988,6 +988,7 @@ hwaddr x86_cpu_get_phys_page_debug(CPUState *cs, vaddr addr)
 
 void hw_breakpoint_insert(CPUX86State *env, int index)
 {
+    CPUState *cs = CPU(x86_env_get_cpu(env));
     int type = 0, err = 0;
 
     switch (hw_breakpoint_type(env->dr[7], index)) {
@@ -1009,7 +1010,7 @@ void hw_breakpoint_insert(CPUX86State *env, int index)
     }
 
     if (type != 0) {
-        err = cpu_watchpoint_insert(env, env->dr[index],
+        err = cpu_watchpoint_insert(cs, env->dr[index],
                                     hw_breakpoint_len(env->dr[7], index),
                                     type, &env->cpu_watchpoint[index]);
     }
@@ -1021,8 +1022,12 @@ void hw_breakpoint_insert(CPUX86State *env, int index)
 
 void hw_breakpoint_remove(CPUX86State *env, int index)
 {
-    if (!env->cpu_breakpoint[index])
+    CPUState *cs;
+
+    if (!env->cpu_breakpoint[index]) {
         return;
+    }
+    cs = CPU(x86_env_get_cpu(env));
     switch (hw_breakpoint_type(env->dr[7], index)) {
     case DR7_TYPE_BP_INST:
         if (hw_breakpoint_enabled(env->dr[7], index)) {
@@ -1031,7 +1036,7 @@ void hw_breakpoint_remove(CPUX86State *env, int index)
         break;
     case DR7_TYPE_DATA_WR:
     case DR7_TYPE_DATA_RW:
-        cpu_watchpoint_remove_by_ref(env, env->cpu_watchpoint[index]);
+        cpu_watchpoint_remove_by_ref(cs, env->cpu_watchpoint[index]);
         break;
     case DR7_TYPE_IO_RW:
         /* No support for I/O watchpoints yet */
