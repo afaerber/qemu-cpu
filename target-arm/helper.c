@@ -337,7 +337,9 @@ static void tlbimva_write(CPUARMState *env, const ARMCPRegInfo *ri,
                           uint64_t value)
 {
     /* Invalidate single TLB entry by MVA and ASID (TLBIMVA) */
-    tlb_flush_page(env, value & TARGET_PAGE_MASK);
+    ARMCPU *cpu = arm_env_get_cpu(env);
+
+    tlb_flush_page(CPU(cpu), value & TARGET_PAGE_MASK);
 }
 
 static void tlbiasid_write(CPUARMState *env, const ARMCPRegInfo *ri,
@@ -351,7 +353,9 @@ static void tlbimvaa_write(CPUARMState *env, const ARMCPRegInfo *ri,
                            uint64_t value)
 {
     /* Invalidate single entry by MVA, all ASIDs (TLBIMVAA) */
-    tlb_flush_page(env, value & TARGET_PAGE_MASK);
+    ARMCPU *cpu = arm_env_get_cpu(env);
+
+    tlb_flush_page(CPU(cpu), value & TARGET_PAGE_MASK);
 }
 
 static const ARMCPRegInfo cp_reginfo[] = {
@@ -1608,16 +1612,18 @@ static void tlbi_aa64_va_write(CPUARMState *env, const ARMCPRegInfo *ri,
                                uint64_t value)
 {
     /* Invalidate by VA (AArch64 version) */
+    ARMCPU *cpu = arm_env_get_cpu(env);
     uint64_t pageaddr = value << 12;
-    tlb_flush_page(env, pageaddr);
+    tlb_flush_page(CPU(cpu), pageaddr);
 }
 
 static void tlbi_aa64_vaa_write(CPUARMState *env, const ARMCPRegInfo *ri,
                                 uint64_t value)
 {
     /* Invalidate by VA, all ASIDs (AArch64 version) */
+    ARMCPU *cpu = arm_env_get_cpu(env);
     uint64_t pageaddr = value << 12;
-    tlb_flush_page(env, pageaddr);
+    tlb_flush_page(CPU(cpu), pageaddr);
 }
 
 static void tlbi_aa64_asid_write(CPUARMState *env, const ARMCPRegInfo *ri,
