@@ -416,7 +416,7 @@ int ppc_hash64_handle_mmu_fault(PowerPCCPU *cpu, target_ulong eaddr,
         /* Translation is off */
         /* In real mode the top 4 effective address bits are ignored */
         raddr = eaddr & 0x0FFFFFFFFFFFFFFFULL;
-        tlb_set_page(env, eaddr & TARGET_PAGE_MASK, raddr & TARGET_PAGE_MASK,
+        tlb_set_page(cs, eaddr & TARGET_PAGE_MASK, raddr & TARGET_PAGE_MASK,
                      PAGE_READ | PAGE_WRITE | PAGE_EXEC, mmu_idx,
                      TARGET_PAGE_SIZE);
         return 0;
@@ -517,7 +517,7 @@ int ppc_hash64_handle_mmu_fault(PowerPCCPU *cpu, target_ulong eaddr,
 
     raddr = ppc_hash64_pte_raddr(slb, pte, eaddr);
 
-    tlb_set_page(env, eaddr & TARGET_PAGE_MASK, raddr & TARGET_PAGE_MASK,
+    tlb_set_page(cs, eaddr & TARGET_PAGE_MASK, raddr & TARGET_PAGE_MASK,
                  prot, mmu_idx, TARGET_PAGE_SIZE);
 
     return 0;
