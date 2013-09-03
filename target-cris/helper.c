@@ -89,7 +89,7 @@ int cris_cpu_handle_mmu_fault(CPUState *cs, vaddr address, int rw,
                               rw, mmu_idx, 0);
     if (miss) {
         if (cs->exception_index == EXCP_BUSFAULT) {
-            cpu_abort(env,
+            cpu_abort(cs,
                       "CRIS: Illegal recursive bus fault."
                       "addr=%" VADDR_PRIx " rw=%d\n",
                       address, rw);
@@ -145,7 +145,7 @@ void crisv10_cpu_do_interrupt(CPUState *cs)
         break;
 
     case EXCP_BUSFAULT:
-        cpu_abort(env, "Unhandled busfault");
+        cpu_abort(cs, "Unhandled busfault");
         break;
 
     default:
