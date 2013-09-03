@@ -212,10 +212,9 @@ void tlb_set_dirty(CPUArchState *env, target_ulong vaddr)
 
 /* Our TLB does not support large pages, so remember the area covered by
    large pages and trigger a full TLB flush if these are invalidated.  */
-static void tlb_add_large_page(CPUArchState *env, target_ulong vaddr,
+static void tlb_add_large_page(CPUState *cpu, target_ulong vaddr,
                                target_ulong size)
 {
-    CPUState *cpu = ENV_GET_CPU(env);
     target_ulong mask = ~(size - 1);
 
     if ((target_ulong)cpu->tlb_flush_addr == (target_ulong)-1) {
@@ -252,7 +251,7 @@ void tlb_set_page(CPUArchState *env, target_ulong vaddr,
 
     assert(size >= TARGET_PAGE_SIZE);
     if (size != TARGET_PAGE_SIZE) {
-        tlb_add_large_page(env, vaddr, size);
+        tlb_add_large_page(cpu, vaddr, size);
     }
 
     sz = size;
