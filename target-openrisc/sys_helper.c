@@ -84,7 +84,7 @@ void HELPER(mtspr)(CPUOpenRISCState *env,
     case TO_SPR(1, 512) ... TO_SPR(1, 639): /* DTLBW0MR 0-127 */
         idx = spr - TO_SPR(1, 512);
         if (!(rb & 1)) {
-            tlb_flush_page(env, env->tlb->dtlb[0][idx].mr & TARGET_PAGE_MASK);
+            tlb_flush_page(cs, env->tlb->dtlb[0][idx].mr & TARGET_PAGE_MASK);
         }
         env->tlb->dtlb[0][idx].mr = rb;
         break;
@@ -103,7 +103,7 @@ void HELPER(mtspr)(CPUOpenRISCState *env,
     case TO_SPR(2, 512) ... TO_SPR(2, 639):   /* ITLBW0MR 0-127 */
         idx = spr - TO_SPR(2, 512);
         if (!(rb & 1)) {
-            tlb_flush_page(env, env->tlb->itlb[0][idx].mr & TARGET_PAGE_MASK);
+            tlb_flush_page(cs, env->tlb->itlb[0][idx].mr & TARGET_PAGE_MASK);
         }
         env->tlb->itlb[0][idx].mr = rb;
         break;

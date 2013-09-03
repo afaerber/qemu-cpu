@@ -311,8 +311,10 @@ static int tlbiall_write(CPUARMState *env, const ARMCPRegInfo *ri,
 static int tlbimva_write(CPUARMState *env, const ARMCPRegInfo *ri,
                          uint64_t value)
 {
+    ARMCPU *cpu = arm_env_get_cpu(env);
+
     /* Invalidate single TLB entry by MVA and ASID (TLBIMVA) */
-    tlb_flush_page(env, value & TARGET_PAGE_MASK);
+    tlb_flush_page(CPU(cpu), value & TARGET_PAGE_MASK);
     return 0;
 }
 
@@ -327,8 +329,10 @@ static int tlbiasid_write(CPUARMState *env, const ARMCPRegInfo *ri,
 static int tlbimvaa_write(CPUARMState *env, const ARMCPRegInfo *ri,
                           uint64_t value)
 {
+    ARMCPU *cpu = arm_env_get_cpu(env);
+
     /* Invalidate single entry by MVA, all ASIDs (TLBIMVAA) */
-    tlb_flush_page(env, value & TARGET_PAGE_MASK);
+    tlb_flush_page(CPU(cpu), value & TARGET_PAGE_MASK);
     return 0;
 }
 
