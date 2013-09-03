@@ -1002,7 +1002,7 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
 {
     TranslationBlock *tb, *tb_next, *saved_tb;
     CPUState *cpu = current_cpu;
-#if defined(TARGET_HAS_PRECISE_SMC) || !defined(CONFIG_USER_ONLY)
+#if !defined(CONFIG_USER_ONLY)
     CPUArchState *env = NULL;
 #endif
     tb_page_addr_t tb_start, tb_end;
@@ -1030,7 +1030,9 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
     }
 #if defined(TARGET_HAS_PRECISE_SMC) || !defined(CONFIG_USER_ONLY)
     if (cpu != NULL) {
+#ifndef CONFIG_USER_ONLY
         env = cpu->env_ptr;
+#endif
 #ifdef TARGET_HAS_PRECISE_SMC
         cc = CPU_GET_CLASS(cpu);
 #endif
@@ -1112,7 +1114,7 @@ void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
            itself */
         cpu->current_tb = NULL;
         tb_gen_code(cpu, current_pc, current_cs_base, current_flags, 1);
-        cpu_resume_from_signal(env, NULL);
+        cpu_resume_from_signal(cpu, NULL);
     }
 #endif
 }
@@ -1160,7 +1162,6 @@ static void tb_invalidate_phys_page(tb_page_addr_t addr,
     TranslationBlock *current_tb = NULL;
     CPUState *cpu = current_cpu;
     CPUClass *cc = NULL;
-    CPUArchState *env = NULL;
     int current_tb_modified = 0;
     vaddr current_pc = 0;
     vaddr current_cs_base = 0;
@@ -1178,7 +1179,6 @@ static void tb_invalidate_phys_page(tb_page_addr_t addr,
         current_tb = tb_find_pc(pc);
     }
     if (cpu != NULL) {
-        env = cpu->env_ptr;
         cc = CPU_GET_CLASS(cpu);
     }
 #endif
@@ -1214,7 +1214,7 @@ static void tb_invalidate_phys_page(tb_page_addr_t addr,
         if (locked) {
             mmap_unlock();
         }
-        cpu_resume_from_signal(env, puc);
+        cpu_resume_from_signal(cpu, puc);
     }
 #endif
 }
@@ -1489,7 +1489,7 @@ void cpu_io_recompile(CPUState *cpu, uintptr_t retaddr)
        repeating the fault, which is horribly inefficient.
        Better would be to execute just this insn uncached, or generate a
        second new TB.  */
-    cpu_resume_from_signal(env, NULL);
+    cpu_resume_from_signal(cpu, NULL);
 }
 
 void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr)

@@ -1455,7 +1455,6 @@ static const MemoryRegionOps notdirty_mem_ops = {
 static void check_watchpoint(int offset, int len_mask, int flags)
 {
     CPUState *cpu = current_cpu;
-    CPUArchState *env = cpu->env_ptr;
     CPUClass *cc = CPU_GET_CLASS(cpu);
     vaddr pc, cs_base;
     target_ulong vaddr;
@@ -1483,7 +1482,7 @@ static void check_watchpoint(int offset, int len_mask, int flags)
                 } else {
                     cc->get_tb_cpu_state(cpu, &pc, &cs_base, &cpu_flags);
                     tb_gen_code(cpu, pc, cs_base, cpu_flags, 1);
-                    cpu_resume_from_signal(env, NULL);
+                    cpu_resume_from_signal(cpu, NULL);
                 }
             }
         } else {
