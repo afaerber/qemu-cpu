@@ -173,8 +173,6 @@ struct CPULM32State {
     /* JTAG UART handle for callbacks */
     DeviceState *juart_state;
 
-    /* processor core features */
-    uint32_t features;
     uint32_t flags;
     uint8_t num_bps;
     uint8_t num_wps;

@@ -218,7 +218,7 @@ LM32CPU *cpu_lm32_init(const char *cpu_model)
     cpu = LM32_CPU(object_new(TYPE_LM32_CPU));
     env = &cpu->env;
 
-    env->features = def->features;
+    cpu->features = def->features;
     env->num_bps = def->num_breakpoints;
     env->num_wps = def->num_watchpoints;
     env->cfg = cfg_by_def(def);

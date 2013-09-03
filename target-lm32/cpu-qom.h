@@ -51,6 +51,7 @@ typedef struct LM32CPUClass {
 /**
  * LM32CPU:
  * @env: #CPULM32State
+ * @features: Processor core features.
  *
  * A LatticeMico32 CPU.
  */
@@ -60,6 +61,8 @@ typedef struct LM32CPU {
     /*< public >*/
 
     CPULM32State env;
+
+    uint32_t features;
 } LM32CPU;
 
 static inline LM32CPU *lm32_env_get_cpu(CPULM32State *env)

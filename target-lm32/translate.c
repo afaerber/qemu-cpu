@@ -421,7 +421,7 @@ static void dec_divu(DisasContext *dc)
 
     LOG_DIS("divu r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
 
-    if (!(dc->cpu->env.features & LM32_FEATURE_DIVIDE)) {
+    if (!(dc->cpu->features & LM32_FEATURE_DIVIDE)) {
         cpu_abort(CPU(dc->cpu), "hardware divider is not available\n");
     }
 
@@ -499,7 +499,7 @@ static void dec_modu(DisasContext *dc)
 
     LOG_DIS("modu r%d, r%d, %d\n", dc->r2, dc->r0, dc->r1);
 
-    if (!(dc->cpu->env.features & LM32_FEATURE_DIVIDE)) {
+    if (!(dc->cpu->features & LM32_FEATURE_DIVIDE)) {
         cpu_abort(CPU(dc->cpu), "hardware divider is not available\n");
     }
 
@@ -520,7 +520,7 @@ static void dec_mul(DisasContext *dc)
         LOG_DIS("mul r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
     }
 
-    if (!(dc->cpu->env.features & LM32_FEATURE_MULTIPLY)) {
+    if (!(dc->cpu->features & LM32_FEATURE_MULTIPLY)) {
         cpu_abort(CPU(dc->cpu), "hardware multiplier is not available\n");
     }
 
@@ -671,7 +671,7 @@ static void dec_sextb(DisasContext *dc)
 {
     LOG_DIS("sextb r%d, r%d\n", dc->r2, dc->r0);
 
-    if (!(dc->cpu->env.features & LM32_FEATURE_SIGN_EXTEND)) {
+    if (!(dc->cpu->features & LM32_FEATURE_SIGN_EXTEND)) {
         cpu_abort(CPU(dc->cpu), "hardware sign extender is not available\n");
     }
 
@@ -682,7 +682,7 @@ static void dec_sexth(DisasContext *dc)
 {
     LOG_DIS("sexth r%d, r%d\n", dc->r2, dc->r0);
 
-    if (!(dc->cpu->env.features & LM32_FEATURE_SIGN_EXTEND)) {
+    if (!(dc->cpu->features & LM32_FEATURE_SIGN_EXTEND)) {
         cpu_abort(CPU(dc->cpu), "hardware sign extender is not available\n");
     }
 
@@ -709,7 +709,7 @@ static void dec_sl(DisasContext *dc)
         LOG_DIS("sl r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
     }
 
-    if (!(dc->cpu->env.features & LM32_FEATURE_SHIFT)) {
+    if (!(dc->cpu->features & LM32_FEATURE_SHIFT)) {
         cpu_abort(CPU(dc->cpu), "hardware shifter is not available\n");
     }
 
@@ -731,7 +731,7 @@ static void dec_sr(DisasContext *dc)
         LOG_DIS("sr r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
     }
 
-    if (!(dc->cpu->env.features & LM32_FEATURE_SHIFT)) {
+    if (!(dc->cpu->features & LM32_FEATURE_SHIFT)) {
         if (dc->format == OP_FMT_RI) {
             /* TODO: check r1 == 1 during runtime */
         } else {
@@ -759,7 +759,7 @@ static void dec_sru(DisasContext *dc)
         LOG_DIS("sru r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
     }
 
-    if (!(dc->cpu->env.features & LM32_FEATURE_SHIFT)) {
+    if (!(dc->cpu->features & LM32_FEATURE_SHIFT)) {
         if (dc->format == OP_FMT_RI) {
             /* TODO: check r1 == 1 during runtime */
         } else {
