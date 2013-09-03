@@ -64,7 +64,7 @@ enum {
 
 /* This is the state at translation time.  */
 typedef struct DisasContext {
-    CPULM32State *env;
+    LM32CPU *cpu;
     target_ulong pc;
 
     /* Decoder.  */
@@ -421,8 +421,8 @@ static void dec_divu(DisasContext *dc)
 
     LOG_DIS("divu r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
 
-    if (!(dc->env->features & LM32_FEATURE_DIVIDE)) {
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "hardware divider is not available\n");
+    if (!(dc->cpu->env.features & LM32_FEATURE_DIVIDE)) {
+        cpu_abort(CPU(dc->cpu), "hardware divider is not available\n");
     }
 
     l1 = gen_new_label();
@@ -499,8 +499,8 @@ static void dec_modu(DisasContext *dc)
 
     LOG_DIS("modu r%d, r%d, %d\n", dc->r2, dc->r0, dc->r1);
 
-    if (!(dc->env->features & LM32_FEATURE_DIVIDE)) {
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "hardware divider is not available\n");
+    if (!(dc->cpu->env.features & LM32_FEATURE_DIVIDE)) {
+        cpu_abort(CPU(dc->cpu), "hardware divider is not available\n");
     }
 
     l1 = gen_new_label();
@@ -520,8 +520,8 @@ static void dec_mul(DisasContext *dc)
         LOG_DIS("mul r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
     }
 
-    if (!(dc->env->features & LM32_FEATURE_MULTIPLY)) {
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "hardware multiplier is not available\n");
+    if (!(dc->cpu->env.features & LM32_FEATURE_MULTIPLY)) {
+        cpu_abort(CPU(dc->cpu), "hardware multiplier is not available\n");
     }
 
     if (dc->format == OP_FMT_RI) {
@@ -590,7 +590,7 @@ static void dec_scall(DisasContext *dc)
     } else if (dc->imm5 == 2) {
         LOG_DIS("break\n");
     } else {
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "invalid opcode\n");
+        cpu_abort(CPU(dc->cpu), "invalid opcode\n");
     }
 
     if (dc->imm5 == 7) {
@@ -647,10 +647,10 @@ static void dec_rcsr(DisasContext *dc)
     case CSR_WP1:
     case CSR_WP2:
     case CSR_WP3:
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "invalid read access csr=%x\n", dc->csr);
+        cpu_abort(CPU(dc->cpu), "invalid read access csr=%x\n", dc->csr);
         break;
     default:
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "read_csr: unknown csr=%x\n", dc->csr);
+        cpu_abort(CPU(dc->cpu), "read_csr: unknown csr=%x\n", dc->csr);
         break;
     }
 }
@@ -671,8 +671,8 @@ static void dec_sextb(DisasContext *dc)
 {
     LOG_DIS("sextb r%d, r%d\n", dc->r2, dc->r0);
 
-    if (!(dc->env->features & LM32_FEATURE_SIGN_EXTEND)) {
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "hardware sign extender is not available\n");
+    if (!(dc->cpu->env.features & LM32_FEATURE_SIGN_EXTEND)) {
+        cpu_abort(CPU(dc->cpu), "hardware sign extender is not available\n");
     }
 
     tcg_gen_ext8s_tl(cpu_R[dc->r2], cpu_R[dc->r0]);
@@ -682,8 +682,8 @@ static void dec_sexth(DisasContext *dc)
 {
     LOG_DIS("sexth r%d, r%d\n", dc->r2, dc->r0);
 
-    if (!(dc->env->features & LM32_FEATURE_SIGN_EXTEND)) {
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "hardware sign extender is not available\n");
+    if (!(dc->cpu->env.features & LM32_FEATURE_SIGN_EXTEND)) {
+        cpu_abort(CPU(dc->cpu), "hardware sign extender is not available\n");
     }
 
     tcg_gen_ext16s_tl(cpu_R[dc->r2], cpu_R[dc->r0]);
@@ -709,8 +709,8 @@ static void dec_sl(DisasContext *dc)
         LOG_DIS("sl r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
     }
 
-    if (!(dc->env->features & LM32_FEATURE_SHIFT)) {
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "hardware shifter is not available\n");
+    if (!(dc->cpu->env.features & LM32_FEATURE_SHIFT)) {
+        cpu_abort(CPU(dc->cpu), "hardware shifter is not available\n");
     }
 
     if (dc->format == OP_FMT_RI) {
@@ -731,12 +731,12 @@ static void dec_sr(DisasContext *dc)
         LOG_DIS("sr r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
     }
 
-    if (!(dc->env->features & LM32_FEATURE_SHIFT)) {
+    if (!(dc->cpu->env.features & LM32_FEATURE_SHIFT)) {
         if (dc->format == OP_FMT_RI) {
             /* TODO: check r1 == 1 during runtime */
         } else {
             if (dc->imm5 != 1) {
-                cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "hardware shifter is not available\n");
+                cpu_abort(CPU(dc->cpu), "hardware shifter is not available\n");
             }
         }
     }
@@ -759,12 +759,12 @@ static void dec_sru(DisasContext *dc)
         LOG_DIS("sru r%d, r%d, r%d\n", dc->r2, dc->r0, dc->r1);
     }
 
-    if (!(dc->env->features & LM32_FEATURE_SHIFT)) {
+    if (!(dc->cpu->env.features & LM32_FEATURE_SHIFT)) {
         if (dc->format == OP_FMT_RI) {
             /* TODO: check r1 == 1 during runtime */
         } else {
             if (dc->imm5 != 1) {
-                cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "hardware shifter is not available\n");
+                cpu_abort(CPU(dc->cpu), "hardware shifter is not available\n");
             }
         }
     }
@@ -802,7 +802,7 @@ static void dec_user(DisasContext *dc)
 {
     LOG_DIS("user");
 
-    cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "user insn undefined\n");
+    cpu_abort(CPU(dc->cpu), "user insn undefined\n");
 }
 
 static void dec_wcsr(DisasContext *dc)
@@ -867,8 +867,8 @@ static void dec_wcsr(DisasContext *dc)
     case CSR_BP2:
     case CSR_BP3:
         no = dc->csr - CSR_BP0;
-        if (dc->env->num_bps <= no) {
-            cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "breakpoint #%i is not available\n", no);
+        if (dc->cpu->env.num_bps <= no) {
+            cpu_abort(CPU(dc->cpu), "breakpoint #%i is not available\n", no);
         }
         tcg_gen_mov_tl(cpu_bp[no], cpu_R[dc->r1]);
         break;
@@ -877,17 +877,17 @@ static void dec_wcsr(DisasContext *dc)
     case CSR_WP2:
     case CSR_WP3:
         no = dc->csr - CSR_WP0;
-        if (dc->env->num_wps <= no) {
-            cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "watchpoint #%i is not available\n", no);
+        if (dc->cpu->env.num_wps <= no) {
+            cpu_abort(CPU(dc->cpu), "watchpoint #%i is not available\n", no);
         }
         tcg_gen_mov_tl(cpu_wp[no], cpu_R[dc->r1]);
         break;
     case CSR_CC:
     case CSR_CFG:
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "invalid write access csr=%x\n", dc->csr);
+        cpu_abort(CPU(dc->cpu), "invalid write access csr=%x\n", dc->csr);
         break;
     default:
-        cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "write_csr unknown csr=%x\n", dc->csr);
+        cpu_abort(CPU(dc->cpu), "write_csr unknown csr=%x\n", dc->csr);
         break;
     }
 }
@@ -933,7 +933,7 @@ static void dec_xor(DisasContext *dc)
 
 static void dec_ill(DisasContext *dc)
 {
-    cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "unknown opcode 0x%02x\n", dc->opcode);
+    cpu_abort(CPU(dc->cpu), "unknown opcode 0x%02x\n", dc->opcode);
 }
 
 typedef void (*DecoderInfo)(DisasContext *dc);
@@ -967,7 +967,7 @@ static inline void decode(DisasContext *dc, uint32_t ir)
         LOG_DIS("nr_nops=%d\t", dc->nr_nops);
         dc->nr_nops++;
         if (dc->nr_nops > 4) {
-            cpu_abort(CPU(lm32_env_get_cpu(dc->env)), "fetching nop sequence\n");
+            cpu_abort(CPU(dc->cpu), "fetching nop sequence\n");
         }
     }
 
@@ -1027,7 +1027,7 @@ void gen_intermediate_code_internal(LM32CPU *cpu,
     int max_insns;
 
     pc_start = tb->pc;
-    dc->env = env;
+    dc->cpu = cpu;
     dc->tb = tb;
 
     gen_opc_end = tcg_ctx.gen_opc_buf + OPC_MAX_SIZE;
