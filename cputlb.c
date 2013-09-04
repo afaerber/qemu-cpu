@@ -52,9 +52,9 @@ static const CPUTLBEntry s_cputlb_empty_entry = {
  * entries from the TLB at any time, so flushing more entries than
  * required is only an efficiency issue, not a correctness issue.
  */
-void tlb_flush(CPUArchState *env, int flush_global)
+void tlb_flush(CPUState *cpu, int flush_global)
 {
-    CPUState *cpu = ENV_GET_CPU(env);
+    CPUArchState *env = cpu->env_ptr;
     int i;
 
 #if defined(DEBUG_TLB)
@@ -107,7 +107,7 @@ void tlb_flush_page(CPUState *cpu, target_ulong addr)
                VADDR_PRIx "/%" VADDR_PRIx ")\n",
                cpu->tlb_flush_addr, cpu->tlb_flush_mask);
 #endif
-        tlb_flush(env, 1);
+        tlb_flush(cpu, 1);
         return;
     }
     /* must reset current TB so that interrupts cannot modify the

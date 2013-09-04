@@ -253,7 +253,7 @@ void mmu_write(CPUMBState *env, uint32_t rn, uint32_t v)
             /* Changes to the zone protection reg flush the QEMU TLB.
                Fortunately, these are very uncommon.  */
             if (v != env->mmu.regs[rn]) {
-                tlb_flush(env, 1);
+                tlb_flush(CPU(cpu), 1);
             }
             env->mmu.regs[rn] = v;
             break;

@@ -113,14 +113,13 @@ static void s390_cpu_reset(CPUState *s)
 {
     S390CPU *cpu = S390_CPU(s);
     S390CPUClass *scc = S390_CPU_GET_CLASS(cpu);
-    CPUS390XState *env = &cpu->env;
 
     s390_del_running_cpu(cpu);
     scc->parent_reset(s);
 #if !defined(CONFIG_USER_ONLY)
     s->halted = 1;
 #endif
-    tlb_flush(env, 1);
+    tlb_flush(s, 1);
 }
 
 /* S390CPUClass::initial_reset() */
@@ -161,7 +160,7 @@ static void s390_cpu_full_reset(CPUState *s)
 #if !defined(CONFIG_USER_ONLY)
     s->halted = 1;
 #endif
-    tlb_flush(env, 1);
+    tlb_flush(s, 1);
 }
 
 #if !defined(CONFIG_USER_ONLY)

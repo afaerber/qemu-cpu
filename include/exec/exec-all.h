@@ -97,7 +97,7 @@ void tb_invalidate_phys_range(tb_page_addr_t start, tb_page_addr_t end,
 #if !defined(CONFIG_USER_ONLY)
 /* cputlb.c */
 void tlb_flush_page(CPUState *cpu, target_ulong addr);
-void tlb_flush(CPUArchState *env, int flush_global);
+void tlb_flush(CPUState *cpu, int flush_global);
 void tlb_set_page(CPUState *cpu, target_ulong vaddr,
                   hwaddr paddr, int prot,
                   int mmu_idx, target_ulong size);
@@ -107,7 +107,7 @@ static inline void tlb_flush_page(CPUState *cpu, target_ulong addr)
 {
 }
 
-static inline void tlb_flush(CPUArchState *env, int flush_global)
+static inline void tlb_flush(CPUState *cpu, int flush_global)
 {
 }
 #endif
