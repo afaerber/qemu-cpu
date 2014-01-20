@@ -802,7 +802,7 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_MCE | CPUID_PAE | CPUID_MSR | CPUID_TSC | CPUID_PSE |
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
-            CPUID_EXT_SSSE3 | CPUID_EXT_SSE3,
+            CPUID_EXT_X2APIC | CPUID_EXT_SSSE3 | CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_NX | CPUID_EXT2_SYSCALL,
         .features[FEAT_8000_0001_ECX] =
@@ -824,8 +824,8 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_MCE | CPUID_PAE | CPUID_MSR | CPUID_TSC | CPUID_PSE |
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
-            CPUID_EXT_SSE41 | CPUID_EXT_CX16 | CPUID_EXT_SSSE3 |
-             CPUID_EXT_SSE3,
+            CPUID_EXT_X2APIC | CPUID_EXT_SSE41 | CPUID_EXT_CX16 |
+            CPUID_EXT_SSSE3 | CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_NX | CPUID_EXT2_SYSCALL,
         .features[FEAT_8000_0001_ECX] =
@@ -847,8 +847,8 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_MCE | CPUID_PAE | CPUID_MSR | CPUID_TSC | CPUID_PSE |
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
-            CPUID_EXT_POPCNT | CPUID_EXT_SSE42 | CPUID_EXT_SSE41 |
-             CPUID_EXT_CX16 | CPUID_EXT_SSSE3 | CPUID_EXT_SSE3,
+            CPUID_EXT_POPCNT | CPUID_EXT_X2APIC | CPUID_EXT_SSE42 |
+            CPUID_EXT_SSE41 | CPUID_EXT_CX16 | CPUID_EXT_SSSE3 | CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_SYSCALL | CPUID_EXT2_NX,
         .features[FEAT_8000_0001_ECX] =
@@ -870,9 +870,9 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_MCE | CPUID_PAE | CPUID_MSR | CPUID_TSC | CPUID_PSE |
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
-            CPUID_EXT_AES | CPUID_EXT_POPCNT | CPUID_EXT_SSE42 |
-             CPUID_EXT_SSE41 | CPUID_EXT_CX16 | CPUID_EXT_SSSE3 |
-             CPUID_EXT_PCLMULQDQ | CPUID_EXT_SSE3,
+            CPUID_EXT_AES | CPUID_EXT_POPCNT | CPUID_EXT_X2APIC |
+            CPUID_EXT_SSE42 | CPUID_EXT_SSE41 | CPUID_EXT_CX16 |
+            CPUID_EXT_SSSE3 | CPUID_EXT_PCLMULQDQ | CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_SYSCALL | CPUID_EXT2_NX,
         .features[FEAT_8000_0001_ECX] =
@@ -954,7 +954,7 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_MCE | CPUID_PAE | CPUID_MSR | CPUID_TSC | CPUID_PSE |
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
-            CPUID_EXT_SSE3,
+            CPUID_EXT_X2APIC | CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_FXSR | CPUID_EXT2_MMX |
              CPUID_EXT2_NX | CPUID_EXT2_PSE36 | CPUID_EXT2_PAT |
@@ -979,7 +979,7 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_MCE | CPUID_PAE | CPUID_MSR | CPUID_TSC | CPUID_PSE |
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
-            CPUID_EXT_CX16 | CPUID_EXT_SSE3,
+            CPUID_EXT_X2APIC | CPUID_EXT_CX16 | CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_RDTSCP | CPUID_EXT2_FXSR |
              CPUID_EXT2_MMX | CPUID_EXT2_NX | CPUID_EXT2_PSE36 |
@@ -1007,8 +1007,8 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_MCE | CPUID_PAE | CPUID_MSR | CPUID_TSC | CPUID_PSE |
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
-            CPUID_EXT_POPCNT | CPUID_EXT_CX16 | CPUID_EXT_MONITOR |
-             CPUID_EXT_SSE3,
+            CPUID_EXT_POPCNT | CPUID_EXT_X2APIC | CPUID_EXT_CX16 |
+            CPUID_EXT_MONITOR | CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_RDTSCP | CPUID_EXT2_FXSR |
              CPUID_EXT2_MMX | CPUID_EXT2_NX | CPUID_EXT2_PSE36 |
@@ -1038,9 +1038,9 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
             CPUID_EXT_AVX | CPUID_EXT_XSAVE | CPUID_EXT_AES |
-             CPUID_EXT_POPCNT | CPUID_EXT_SSE42 | CPUID_EXT_SSE41 |
-             CPUID_EXT_CX16 | CPUID_EXT_SSSE3 | CPUID_EXT_PCLMULQDQ |
-             CPUID_EXT_SSE3,
+             CPUID_EXT_POPCNT | CPUID_EXT_X2APIC | CPUID_EXT_SSE42 |
+             CPUID_EXT_SSE41 | CPUID_EXT_CX16 | CPUID_EXT_SSSE3 |
+             CPUID_EXT_PCLMULQDQ | CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_RDTSCP |
              CPUID_EXT2_PDPE1GB | CPUID_EXT2_FXSR | CPUID_EXT2_MMX |
@@ -1072,9 +1072,10 @@ static X86CPUDefinition builtin_x86_defs[] = {
              CPUID_DE | CPUID_FP87,
         .features[FEAT_1_ECX] =
             CPUID_EXT_F16C | CPUID_EXT_AVX | CPUID_EXT_XSAVE |
-             CPUID_EXT_AES | CPUID_EXT_POPCNT | CPUID_EXT_SSE42 |
-             CPUID_EXT_SSE41 | CPUID_EXT_CX16 | CPUID_EXT_FMA |
-             CPUID_EXT_SSSE3 | CPUID_EXT_PCLMULQDQ | CPUID_EXT_SSE3,
+             CPUID_EXT_AES | CPUID_EXT_POPCNT | CPUID_EXT_X2APIC |
+             CPUID_EXT_SSE42 | CPUID_EXT_SSE41 | CPUID_EXT_CX16 |
+             CPUID_EXT_FMA | CPUID_EXT_SSSE3 | CPUID_EXT_PCLMULQDQ |
+             CPUID_EXT_SSE3,
         .features[FEAT_8000_0001_EDX] =
             CPUID_EXT2_LM | CPUID_EXT2_RDTSCP |
              CPUID_EXT2_PDPE1GB | CPUID_EXT2_FXSR | CPUID_EXT2_MMX |
