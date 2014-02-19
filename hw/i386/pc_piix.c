@@ -292,7 +292,7 @@ static void pc_compat_1_3(QEMUMachineInitArgs *args)
 static void pc_compat_1_2(QEMUMachineInitArgs *args)
 {
     pc_compat_1_3(args);
-    disable_kvm_pv_eoi();
+    x86_cpu_compat_disable_kvm_features(FEAT_KVM, KVM_FEATURE_PV_EOI);
 }
 
 static void pc_init_pci_1_7(QEMUMachineInitArgs *args)
@@ -338,7 +338,7 @@ static void pc_init_pci_no_kvmclock(QEMUMachineInitArgs *args)
     has_pci_info = false;
     has_acpi_build = false;
     smbios_type1_defaults = false;
-    disable_kvm_pv_eoi();
+    x86_cpu_compat_disable_kvm_features(FEAT_KVM, KVM_FEATURE_PV_EOI);
     enable_compat_apic_id_mode();
     pc_init1(args, 1, 0);
 }
@@ -351,7 +351,7 @@ static void pc_init_isa(QEMUMachineInitArgs *args)
     if (!args->cpu_model) {
         args->cpu_model = "486";
     }
-    disable_kvm_pv_eoi();
+    x86_cpu_compat_disable_kvm_features(FEAT_KVM, KVM_FEATURE_PV_EOI);
     enable_compat_apic_id_mode();
     pc_init1(args, 0, 1);
 }
