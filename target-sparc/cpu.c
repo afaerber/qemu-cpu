@@ -18,6 +18,7 @@
  */
 
 #include "cpu.h"
+#include "qemu/error-report.h"
 
 //#define DEBUG_FEATURES
 
@@ -505,7 +506,7 @@ static void add_flagname_to_bitmaps(const char *flagname, uint32_t *features)
             return;
         }
     }
-    fprintf(stderr, "CPU feature %s not found\n", flagname);
+    error_report("CPU feature %s not found", flagname);
 }
 
 static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
@@ -544,7 +545,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
 
                 iu_version = strtoll(val, &err, 0);
                 if (!*val || *err) {
-                    fprintf(stderr, "bad numerical value %s\n", val);
+                    error_report("bad numerical value %s", val);
                     goto error;
                 }
                 cpu_def->iu_version = iu_version;
@@ -556,7 +557,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
 
                 fpu_version = strtol(val, &err, 0);
                 if (!*val || *err) {
-                    fprintf(stderr, "bad numerical value %s\n", val);
+                    error_report("bad numerical value %s", val);
                     goto error;
                 }
                 cpu_def->fpu_version = fpu_version;
@@ -568,7 +569,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
 
                 mmu_version = strtol(val, &err, 0);
                 if (!*val || *err) {
-                    fprintf(stderr, "bad numerical value %s\n", val);
+                    error_report("bad numerical value %s", val);
                     goto error;
                 }
                 cpu_def->mmu_version = mmu_version;
@@ -581,7 +582,7 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                 nwindows = strtol(val, &err, 0);
                 if (!*val || *err || nwindows > MAX_NWINDOWS ||
                     nwindows < MIN_NWINDOWS) {
-                    fprintf(stderr, "bad numerical value %s\n", val);
+                    error_report("bad numerical value %s", val);
                     goto error;
                 }
                 cpu_def->nwindows = nwindows;
@@ -589,12 +590,12 @@ static int cpu_sparc_find_by_name(sparc_def_t *cpu_def, const char *cpu_model)
                 fprintf(stderr, "nwindows %d\n", nwindows);
 #endif
             } else {
-                fprintf(stderr, "unrecognized feature %s\n", featurestr);
+                error_report("unrecognized feature %s", featurestr);
                 goto error;
             }
         } else {
-            fprintf(stderr, "feature string `%s' not in format "
-                    "(+feature|-feature|feature=xyz)\n", featurestr);
+            error_report("feature string `%s' not in format "
+                         "(+feature|-feature|feature=xyz)", featurestr);
             goto error;
         }
         featurestr = strtok(NULL, ",");
