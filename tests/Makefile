@@ -191,6 +191,8 @@ gcov-files-i386-y += hw/pci-host/q35.c
 ifeq ($(CONFIG_VHOST_NET),y)
 check-qtest-i386-$(CONFIG_LINUX) += tests/vhost-user-test$(EXESUF)
 endif
+check-qtest-i386-y += tests/ivshmem-test$(EXESUF)
+gcov-files-i386-y += i386-softmmu/hw/misc/ivshmem.c
 check-qtest-x86_64-y = $(check-qtest-i386-y)
 gcov-files-i386-y += i386-softmmu/hw/timer/mc146818rtc.c
 gcov-files-x86_64-y = $(subst i386-softmmu/,x86_64-softmmu/,$(gcov-files-i386-y))
@@ -434,6 +436,7 @@ tests/usb-hcd-ehci-test$(EXESUF): tests/usb-hcd-ehci-test.o $(libqos-usb-obj-y)
 tests/usb-hcd-xhci-test$(EXESUF): tests/usb-hcd-xhci-test.o $(libqos-usb-obj-y)
 tests/pc-cpu-test$(EXESUF): tests/pc-cpu-test.o
 tests/vhost-user-test$(EXESUF): tests/vhost-user-test.o qemu-char.o qemu-timer.o $(qtest-obj-y)
+tests/ivshmem-test$(EXESUF): tests/ivshmem-test.o
 tests/qemu-iotests/socket_scm_helper$(EXESUF): tests/qemu-iotests/socket_scm_helper.o
 tests/test-qemu-opts$(EXESUF): tests/test-qemu-opts.o $(test-util-obj-y)
 tests/test-write-threshold$(EXESUF): tests/test-write-threshold.o $(test-block-obj-y)
