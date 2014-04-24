@@ -1103,6 +1103,12 @@ F: include/sysemu/qtest.h
 F: qtest.c
 F: tests/libqtest.[hc]
 
+I2C libqos
+M: Andreas Färber <afaerber@suse.de>
+S: Maintained
+F: tests/libqos/i2c.[hc]
+F: tests/libqos/i2c-omap.c
+
 Stable branches
 ---------------
 Stable 1.0
