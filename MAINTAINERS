@@ -1093,6 +1093,16 @@ S: Maintained
 F: tcg/tci/
 F: tci.c
 
+Testing infrastructure
+----------------------
+QTest
+M: Anthony Liguori <aliguori@amazon.com>
+M: Andreas Färber <afaerber@suse.de>
+S: Maintained
+F: include/sysemu/qtest.h
+F: qtest.c
+F: tests/libqtest.[hc]
+
 Stable branches
 ---------------
 Stable 1.0
