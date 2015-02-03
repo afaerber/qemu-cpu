@@ -3,4 +3,4 @@ obj-$(CONFIG_REALVIEW) += realview_mpcore.o
 obj-$(CONFIG_A9MPCORE) += a9mpcore.o
 obj-$(CONFIG_A15MPCORE) += a15mpcore.o
 obj-$(CONFIG_ICC_BUS) += icc_bus.o
-
+obj-y += socket.o
