@@ -54,11 +54,14 @@
 #include "exec/memory.h"
 #include "exec/address-spaces.h"
 #include "sysemu/arch_init.h"
+#include "sysemu/cpus.h"
 #include "qemu/bitmap.h"
 #include "qemu/config-file.h"
 #include "hw/acpi/acpi.h"
 #include "hw/acpi/cpu_hotplug.h"
 #include "hw/cpu/icc_bus.h"
+#include "hw/i386/cpu-socket.h"
+#include "hw/i386/cpu-core.h"
 #include "hw/boards.h"
 #include "hw/pci/pci_host.h"
 #include "acpi-build.h"
@@ -990,6 +993,17 @@ void pc_acpi_smi_interrupt(void *opaque, int irq, int level)
     }
 }
 
+static inline size_t pc_cpu_core_size(void)
+{
+    return sizeof(X86CPUCore);
+}
+
+static inline X86CPUCore *pc_cpu_socket_get_core(X86CPUSocket *socket,
+                                                 unsigned int index)
+{
+    return &socket->core[index];
+}
+
 static X86CPU *pc_new_cpu(const char *cpu_model, int64_t apic_id,
                           DeviceState *icc_bridge, Error **errp)
 {
@@ -1009,7 +1023,6 @@ static X86CPU *pc_new_cpu(const char *cpu_model, int64_t apic_id,
     qdev_set_parent_bus(DEVICE(cpu), qdev_get_child_bus(icc_bridge, "icc"));
 
     object_property_set_int(OBJECT(cpu), apic_id, "apic-id", &local_err);
-    object_property_set_bool(OBJECT(cpu), true, "realized", &local_err);
 
 out:
     if (local_err) {
@@ -1060,15 +1073,19 @@ void pc_hot_add_cpu(const int64_t id, Error **errp)
         error_propagate(errp, local_err);
         return;
     }
+    object_property_set_bool(OBJECT(cpu), true, "realized", errp);
     object_unref(OBJECT(cpu));
 }
 
 void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
 {
-    int i;
+    int i, j, k;
+    X86CPUSocket *socket;
+    X86CPUCore *core;
     X86CPU *cpu = NULL;
     Error *error = NULL;
     unsigned long apic_id_limit;
+    int sockets, cpu_index = 0;
 
     /* init CPUs */
     if (cpu_model == NULL) {
@@ -1087,14 +1104,41 @@ void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
         exit(1);
     }
 
-    for (i = 0; i < smp_cpus; i++) {
-        cpu = pc_new_cpu(cpu_model, x86_cpu_apic_id_from_index(i),
-                         icc_bridge, &error);
-        if (error) {
-            error_report_err(error);
-            exit(1);
+    sockets = smp_cpus / smp_cores / smp_threads;
+    for (i = 0; i < sockets; i++) {
+        socket = g_malloc0(sizeof(*socket) + smp_cores * pc_cpu_core_size());
+        object_initialize(socket, sizeof(*socket), TYPE_X86_CPU_SOCKET);
+        OBJECT(socket)->free = g_free;
+
+        for (j = 0; j < smp_cores; j++) {
+            core = pc_cpu_socket_get_core(socket, j);
+            object_initialize(core, sizeof(*core), TYPE_X86_CPU_CORE);
+            object_property_add_child(OBJECT(socket), "core[*]",
+                                      OBJECT(core), &error);
+            if (error) {
+                goto error;
+            }
+
+            for (k = 0; k < smp_threads; k++) {
+                cpu = pc_new_cpu(cpu_model,
+                                 x86_cpu_apic_id_from_index(cpu_index),
+                                 icc_bridge, &error);
+                if (error) {
+                    goto error;
+                }
+                object_property_add_child(OBJECT(core), "thread[*]",
+                                          OBJECT(cpu), &error);
+                object_unref(OBJECT(cpu));
+                if (error) {
+                    goto error;
+                }
+                cpu_index++;
+            }
         }
-        object_unref(OBJECT(cpu));
+        object_property_set_bool(OBJECT(socket), true, "realized", &error);
+        if (error) {
+            goto error;
+        }
     }
 
     /* map APIC MMIO area if CPU has APIC */
@@ -1106,6 +1150,12 @@ void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
 
     /* tell smbios about cpuid version and features */
     smbios_set_cpuid(cpu->env.cpuid_version, cpu->env.features[FEAT_1_EDX]);
+
+error:
+    if (error) {
+        error_report_err(error);
+        exit(1);
+    }
 }
 
 /* pci-info ROM file. Little endian format */
