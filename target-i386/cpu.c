@@ -2159,7 +2159,6 @@ static void x86_cpu_load_def(X86CPU *cpu, X86CPUDefinition *def, Error **errp)
 X86CPU *cpu_x86_create(const char *cpu_model, Error **errp)
 {
     X86CPU *cpu = NULL;
-    X86CPUClass *xcc;
     ObjectClass *oc;
     gchar **model_pieces;
     char *name, *features;
@@ -2176,12 +2175,6 @@ X86CPU *cpu_x86_create(const char *cpu_model, Error **errp)
     oc = x86_cpu_class_by_name(name);
     if (oc == NULL) {
         error_setg(&error, "Unable to find CPU definition: %s", name);
-        goto out;
-    }
-    xcc = X86_CPU_CLASS(oc);
-
-    if (xcc->kvm_required && !kvm_enabled()) {
-        error_setg(&error, "CPU model '%s' requires KVM", name);
         goto out;
     }
 
