@@ -44,14 +44,18 @@ bool cpu_exists(int64_t id)
 
 CPUState *cpu_generic_init(const char *typename, const char *cpu_model)
 {
-    char *str, *name, *featurestr;
+    char *str, *last, *name, *featurestr;
     CPUState *cpu;
     ObjectClass *oc;
     CPUClass *cc;
     Error *err = NULL;
 
+    if (cpu_model == NULL) {
+        return NULL;
+    }
+
     str = g_strdup(cpu_model);
-    name = strtok(str, ",");
+    name = strtok_r(str, ",", &last);
 
     oc = cpu_class_by_name(typename, name);
     if (oc == NULL) {
@@ -62,7 +66,7 @@ CPUState *cpu_generic_init(const char *typename, const char *cpu_model)
     cpu = CPU(object_new(object_class_get_name(oc)));
     cc = CPU_GET_CLASS(cpu);
 
-    featurestr = strtok(NULL, ",");
+    featurestr = strtok_r(NULL, ",", &last);
     cc->parse_features(cpu, featurestr, &err);
     g_free(str);
     if (err != NULL) {
