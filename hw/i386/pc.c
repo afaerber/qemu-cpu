@@ -1128,11 +1128,12 @@ void pc_hot_add_cpu(const int64_t id, Error **errp)
         }
         socket = NULL;
     }
+    cpu = &core->thread[id % smp_threads];
 
     oc = cpu_class_by_name(TYPE_X86_CPU, machine->cpu_model);
     assert(oc);
     cc = CPU_CLASS(oc);
-    cpu = X86_CPU(object_new(object_class_get_name(oc)));
+    object_initialize(cpu, sizeof(*cpu), object_class_get_name(oc));
     assert(cc->parse_features);
     cc->parse_features(CPU(cpu), pcms->cpu_model_features, &local_err);
     if (local_err != NULL) {
