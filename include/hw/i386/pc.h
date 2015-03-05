@@ -40,8 +40,9 @@
 struct PCMachineState {
     /*< private >*/
     MachineState parent_obj;
-
     /* <public> */
+
+    char *cpu_model_features;
 
     /* State for other subsystems/APIs: */
     MemoryHotplugState hotplug_memory;

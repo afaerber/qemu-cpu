@@ -1067,34 +1067,15 @@ static inline X86CPUCore *pc_cpu_socket_get_core(X86CPUSocket *socket,
     return (void *)&socket->core[0] + index * pc_cpu_core_size();
 }
 
-static X86CPU *pc_new_cpu(const char *cpu_model, int64_t apic_id,
-                          Error **errp)
-{
-    X86CPU *cpu = NULL;
-    Error *local_err = NULL;
-
-    cpu = cpu_x86_create(cpu_model, &local_err);
-    if (local_err != NULL) {
-        goto out;
-    }
-
-    object_property_set_int(OBJECT(cpu), apic_id, "apic-id", &local_err);
-
-out:
-    if (local_err) {
-        error_propagate(errp, local_err);
-        object_unref(OBJECT(cpu));
-        cpu = NULL;
-    }
-    return cpu;
-}
-
 void pc_hot_add_cpu(const int64_t id, Error **errp)
 {
     X86CPUSocket *socket;
     X86CPUCore *core;
     X86CPU *cpu = NULL;
+    CPUClass *cc;
+    ObjectClass *oc;
     MachineState *machine = MACHINE(qdev_get_machine());
+    PCMachineState *pcms = PC_MACHINE(machine);
     int64_t apic_id = x86_cpu_apic_id_from_index(id);
     int i;
     Error *local_err = NULL;
@@ -1148,7 +1129,17 @@ void pc_hot_add_cpu(const int64_t id, Error **errp)
         socket = NULL;
     }
 
-    cpu = pc_new_cpu(machine->cpu_model, apic_id, &local_err);
+    oc = cpu_class_by_name(TYPE_X86_CPU, machine->cpu_model);
+    assert(oc);
+    cc = CPU_CLASS(oc);
+    cpu = X86_CPU(object_new(object_class_get_name(oc)));
+    assert(cc->parse_features);
+    cc->parse_features(CPU(cpu), pcms->cpu_model_features, &local_err);
+    if (local_err != NULL) {
+        goto out;
+    }
+
+    object_property_set_int(OBJECT(cpu), apic_id, "apic-id", &local_err);
     if (local_err) {
         goto out;
     }
@@ -1203,6 +1194,8 @@ void pc_cpus_init(PCMachineState *pcms)
     cpu_name = cpu_model_pieces[0];
     assert(cpu_name);
     cpu_features = cpu_model_pieces[1];
+    machine->cpu_model = cpu_name;
+    pcms->cpu_model_features = cpu_features;
 
     cpu_oc = cpu_class_by_name(TYPE_X86_CPU, cpu_name);
     if (cpu_oc == NULL) {
@@ -1269,7 +1262,7 @@ void pc_cpus_init(PCMachineState *pcms)
     smbios_set_cpuid(cpu->env.cpuid_version, cpu->env.features[FEAT_1_EDX]);
 
 error:
-    g_strfreev(cpu_model_pieces);
+    g_free(cpu_model_pieces);
     if (error) {
         error_report_err(error);
         exit(1);
