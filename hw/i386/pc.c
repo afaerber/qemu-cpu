@@ -995,13 +995,13 @@ void pc_acpi_smi_interrupt(void *opaque, int irq, int level)
 
 static inline size_t pc_cpu_core_size(void)
 {
-    return sizeof(X86CPUCore);
+    return sizeof(X86CPUCore) + smp_threads * sizeof(X86CPU);
 }
 
 static inline X86CPUCore *pc_cpu_socket_get_core(X86CPUSocket *socket,
                                                  unsigned int index)
 {
-    return &socket->core[index];
+    return (void *)&socket->core[0] + index * pc_cpu_core_size();
 }
 
 static X86CPU *pc_new_cpu(const char *cpu_model, int64_t apic_id,
@@ -1083,7 +1083,12 @@ void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
     X86CPUSocket *socket;
     X86CPUCore *core;
     X86CPU *cpu = NULL;
+    X86CPUClass *xcc;
+    CPUClass *cc;
+    ObjectClass *cpu_oc;
     Error *error = NULL;
+    gchar **cpu_model_pieces;
+    char *cpu_name, *cpu_features;
     unsigned long apic_id_limit;
     int sockets, cpu_index = 0;
 
@@ -1096,6 +1101,23 @@ void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
 #endif
     }
     current_cpu_model = cpu_model;
+    cpu_model_pieces = g_strsplit(cpu_model, ",", 2);
+    cpu_name = cpu_model_pieces[0];
+    assert(cpu_name);
+    cpu_features = cpu_model_pieces[1];
+
+    cpu_oc = cpu_class_by_name(TYPE_X86_CPU, cpu_name);
+    if (cpu_oc == NULL) {
+        error_report("Unable to find CPU definition: %s", cpu_name);
+        exit(1);
+    }
+    cc = CPU_CLASS(cpu_oc);
+    xcc = X86_CPU_CLASS(cpu_oc);
+
+    if (xcc->kvm_required && !kvm_enabled()) {
+        error_report("CPU model '%s' requires KVM", cpu_name);
+        exit(1);
+    }
 
     apic_id_limit = pc_apic_id_limit(max_cpus);
     if (apic_id_limit > ACPI_CPU_HOTPLUG_ID_LIMIT) {
@@ -1120,12 +1142,18 @@ void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
             }
 
             for (k = 0; k < smp_threads; k++) {
-                cpu = pc_new_cpu(cpu_model,
-                                 x86_cpu_apic_id_from_index(cpu_index),
-                                 icc_bridge, &error);
+                cpu = &core->thread[k];
+                object_initialize(cpu, sizeof(*cpu),
+                                  object_class_get_name(cpu_oc));
+                cc->parse_features(CPU(cpu), cpu_features, &error);
                 if (error) {
                     goto error;
                 }
+                qdev_set_parent_bus(DEVICE(cpu),
+                                    qdev_get_child_bus(icc_bridge, "icc"));
+                object_property_set_int(OBJECT(cpu),
+                                        x86_cpu_apic_id_from_index(cpu_index),
+                                        "apic-id", &error);
                 object_property_add_child(OBJECT(core), "thread[*]",
                                           OBJECT(cpu), &error);
                 object_unref(OBJECT(cpu));
@@ -1152,6 +1180,7 @@ void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
     smbios_set_cpuid(cpu->env.cpuid_version, cpu->env.features[FEAT_1_EDX]);
 
 error:
+    g_strfreev(cpu_model_pieces);
     if (error) {
         error_report_err(error);
         exit(1);

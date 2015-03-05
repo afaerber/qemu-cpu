@@ -7,6 +7,7 @@
 #define HW_I386_CPU_CORE_H
 
 #include "hw/qdev.h"
+#include "cpu.h"
 
 #ifdef TARGET_X86_64
 #define TYPE_X86_CPU_CORE "x86_64-cpu-core"
@@ -21,6 +22,8 @@ typedef struct X86CPUCore {
     /*< private >*/
     DeviceState parent_obj;
     /*< public >*/
+
+    X86CPU thread[0];
 } X86CPUCore;
 
 #endif
