@@ -1058,13 +1058,13 @@ void pc_acpi_smi_interrupt(void *opaque, int irq, int level)
 
 static inline size_t pc_cpu_core_size(void)
 {
-    return sizeof(X86CPUCore);
+    return sizeof(X86CPUCore) + smp_threads * sizeof(X86CPU);
 }
 
 static inline X86CPUCore *pc_cpu_socket_get_core(X86CPUSocket *socket,
                                                  unsigned int index)
 {
-    return &socket->core[index];
+    return (void *)&socket->core[0] + index * pc_cpu_core_size();
 }
 
 static X86CPU *pc_new_cpu(const char *cpu_model, int64_t apic_id,
@@ -1135,7 +1135,13 @@ void pc_cpus_init(PCMachineState *pcms)
     X86CPUSocket *socket;
     X86CPUCore *core;
     X86CPU *cpu = NULL;
+    X86CPUClass *xcc;
+    CPUClass *cc;
+    ObjectClass *cpu_oc;
     MachineState *machine = MACHINE(pcms);
+    Error *error = NULL;
+    gchar **cpu_model_pieces;
+    char *cpu_name, *cpu_features;
     unsigned long apic_id_limit;
     int sockets, cpu_index = 0;
 
@@ -1146,6 +1152,23 @@ void pc_cpus_init(PCMachineState *pcms)
 #else
         machine->cpu_model = "qemu32";
 #endif
+    }
+    cpu_model_pieces = g_strsplit(machine->cpu_model, ",", 2);
+    cpu_name = cpu_model_pieces[0];
+    assert(cpu_name);
+    cpu_features = cpu_model_pieces[1];
+
+    cpu_oc = cpu_class_by_name(TYPE_X86_CPU, cpu_name);
+    if (cpu_oc == NULL) {
+        error_report("Unable to find CPU definition: %s", cpu_name);
+        exit(1);
+    }
+    cc = CPU_CLASS(cpu_oc);
+    xcc = X86_CPU_CLASS(cpu_oc);
+
+    if (xcc->kvm_required && !kvm_enabled()) {
+        error_report("CPU model '%s' requires KVM", cpu_name);
+        exit(1);
     }
 
     apic_id_limit = pc_apic_id_limit(max_cpus);
@@ -1171,12 +1194,16 @@ void pc_cpus_init(PCMachineState *pcms)
             }
 
             for (k = 0; k < smp_threads; k++) {
-                cpu = pc_new_cpu(machine->cpu_model,
-                                 x86_cpu_apic_id_from_index(cpu_index),
-                                 &error);
+                cpu = &core->thread[k];
+                object_initialize(cpu, sizeof(*cpu),
+                                  object_class_get_name(cpu_oc));
+                cc->parse_features(CPU(cpu), cpu_features, &error);
                 if (error) {
                     goto error;
                 }
+                object_property_set_int(OBJECT(cpu),
+                                        x86_cpu_apic_id_from_index(cpu_index),
+                                        "apic-id", &error);
                 object_property_add_child(OBJECT(core), "thread[*]",
                                           OBJECT(cpu), &error);
                 object_unref(OBJECT(cpu));
@@ -1196,6 +1223,7 @@ void pc_cpus_init(PCMachineState *pcms)
     smbios_set_cpuid(cpu->env.cpuid_version, cpu->env.features[FEAT_1_EDX]);
 
 error:
+    g_strfreev(cpu_model_pieces);
     if (error) {
         error_report_err(error);
         exit(1);
