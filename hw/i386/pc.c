@@ -1007,7 +1007,6 @@ static X86CPU *pc_new_cpu(const char *cpu_model, int64_t apic_id,
     }
 
     qdev_set_parent_bus(DEVICE(cpu), qdev_get_child_bus(icc_bridge, "icc"));
-    object_unref(OBJECT(cpu));
 
     object_property_set_int(OBJECT(cpu), apic_id, "apic-id", &local_err);
     object_property_set_bool(OBJECT(cpu), true, "realized", &local_err);
@@ -1026,7 +1025,9 @@ static const char *current_cpu_model;
 void pc_hot_add_cpu(const int64_t id, Error **errp)
 {
     DeviceState *icc_bridge;
+    X86CPU *cpu;
     int64_t apic_id = x86_cpu_apic_id_from_index(id);
+    Error *local_err = NULL;
 
     if (id < 0) {
         error_setg(errp, "Invalid CPU id: %" PRIi64, id);
@@ -1054,7 +1055,12 @@ void pc_hot_add_cpu(const int64_t id, Error **errp)
 
     icc_bridge = DEVICE(object_resolve_path_type("icc-bridge",
                                                  TYPE_ICC_BRIDGE, NULL));
-    pc_new_cpu(current_cpu_model, apic_id, icc_bridge, errp);
+    cpu = pc_new_cpu(current_cpu_model, apic_id, icc_bridge, &local_err);
+    if (local_err) {
+        error_propagate(errp, local_err);
+        return;
+    }
+    object_unref(OBJECT(cpu));
 }
 
 void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
@@ -1088,6 +1094,7 @@ void pc_cpus_init(const char *cpu_model, DeviceState *icc_bridge)
             error_report_err(error);
             exit(1);
         }
+        object_unref(OBJECT(cpu));
     }
 
     /* map APIC MMIO area if CPU has APIC */
