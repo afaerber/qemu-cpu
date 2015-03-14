@@ -1091,9 +1091,12 @@ out:
 
 void pc_hot_add_cpu(const int64_t id, Error **errp)
 {
-    X86CPU *cpu;
+    X86CPUSocket *socket;
+    X86CPUCore *core;
+    X86CPU *cpu = NULL;
     MachineState *machine = MACHINE(qdev_get_machine());
     int64_t apic_id = x86_cpu_apic_id_from_index(id);
+    int i;
     Error *local_err = NULL;
 
     if (id < 0) {
@@ -1120,12 +1123,55 @@ void pc_hot_add_cpu(const int64_t id, Error **errp)
         return;
     }
 
+    if (id % (smp_cores * smp_threads) == 0) {
+        /* First thread on new socket, let's create socket and cores */
+        socket = g_malloc0(sizeof(*socket) + smp_cores * pc_cpu_core_size());
+        object_initialize(socket, sizeof(*socket), TYPE_X86_CPU_SOCKET);
+        OBJECT(socket)->free = g_free;
+
+        for (i = 0; i < smp_cores; i++) {
+            core = pc_cpu_socket_get_core(socket, i);
+            object_initialize(core, sizeof(*core), TYPE_X86_CPU_CORE);
+            object_property_add_child(OBJECT(socket), "core[*]",
+                                      OBJECT(core), &local_err);
+            if (local_err) {
+                goto out;
+            }
+        }
+        core = X86_CPU_CORE(&socket->core[0]);
+    } else {
+        core = X86_CPU_CORE(OBJECT(qemu_get_cpu(id - 1))->parent);
+        if (id % smp_threads == 0) {
+            /* First thread on non-first core, advance to next core */
+            core = X86_CPU_CORE((void *)core + pc_cpu_core_size());
+        }
+        socket = NULL;
+    }
+
     cpu = pc_new_cpu(machine->cpu_model, apic_id, &local_err);
     if (local_err) {
-        error_propagate(errp, local_err);
-        return;
+        goto out;
     }
-    object_property_set_bool(OBJECT(cpu), true, "realized", errp);
+    object_property_add_child(OBJECT(core), "thread[*]",
+                              OBJECT(cpu), &local_err);
+    if (local_err) {
+        goto out;
+    }
+    object_property_set_bool(socket ? OBJECT(socket) : OBJECT(cpu),
+                             true, "realized", &local_err);
+
+out:
+    if (local_err) {
+        error_propagate(errp, local_err);
+        if (socket) {
+            object_unparent(OBJECT(socket));
+        } else {
+            object_unparent(OBJECT(cpu));
+        }
+    }
+    if (socket) {
+        object_unref(OBJECT(socket));
+    }
     object_unref(OBJECT(cpu));
 }
 
